@@ -18,13 +18,10 @@ public class Guard implements Interop.Agent.Guard {
         ScenarioGuardPercepts scenario = percepts.getScenarioGuardPercepts();
         //SmellPercepts smells = percepts.getSmells();
         //SoundPercepts sounds = percepts.getSounds();
-        //VisionPrecepts vision = percepts.getVision();
-        //ObjectPercepts objects = vision.getObjects();
+        VisionPrecepts vision = percepts.getVision();
+        ObjectPercepts objects = vision.getObjects();
 
-        //System.out.println("Test");
-
-
-
-        return new Rotate(scenario.getScenarioPercepts().getMaxRotationAngle());
+        return new Move(scenario.getMaxMoveDistanceGuard());
+       // return new Rotate(scenario.getScenarioPercepts().getMaxRotationAngle());
     }
 }
