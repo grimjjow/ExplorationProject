@@ -3,6 +3,7 @@ package Engine;
 import AreaProperty.AreaProperty;
 import Agents.*;
 import Environment.Environment;
+import Environment.Square;
 import GUI.EnvironmentGUI;
 import Interop.Action.Action;
 import Interop.Action.Move;
@@ -13,13 +14,14 @@ import Interop.Geometry.Distance;
 import Interop.Geometry.Point;
 import Interop.Percept.AreaPercepts;
 import Interop.Percept.GuardPercepts;
-import Interop.Percept.Percepts;
-import Interop.Percept.Vision.VisionPrecepts;
+import Environment.Grid;
 import Reader.*;
 import Interop.Percept.Scenario.*;
 import javafx.scene.layout.BorderPane;
 
+import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GameEngine {
@@ -41,6 +43,7 @@ public class GameEngine {
     private BorderPane envPane;
     private Environment env;
     private String path;
+    private Grid grid;
 
     public GameEngine(String path) {
 
@@ -67,6 +70,11 @@ public class GameEngine {
             infos.add(info);
         }
 
+
+
+    }
+
+    public void update(){
         do {
             for (Interop.Agent.Guard guard : guards) {
                 AgentInfo info = infos.get(0);
@@ -115,7 +123,6 @@ public class GameEngine {
                 System.out.println(info.getTargetDirection().getDegrees());
             }
         } while (true);
-
     }
 
     public void setHeightBound(double hb) {
@@ -132,6 +139,15 @@ public class GameEngine {
         this.environmentGUI = new EnvironmentGUI(this.env);
         this.environmentGUI.addAgentsGUI(infos);
         this.envPane = this.environmentGUI.getPane();
+        this.grid = this.env.getGrid();
+        Square[][] matrix = this.env.getGrid().getGridArray();
+      /*  for(int i = 0; i < matrix.length; i++){
+            for(int j = 0; j < matrix[i].length; j++){
+
+                System.out.println("this is i, j " + matrix[i][j].getType());
+            }
+        }*/
+
     }
 
     public EnvironmentGUI getEnvironmentGUI() {

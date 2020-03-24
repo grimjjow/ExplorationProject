@@ -3,6 +3,10 @@ package Environment;
 import AreaProperty.AreaProperty;
 import AreaProperty.Wall;
 import GUI.TestGUI;
+import com.sun.security.jgss.GSSUtil;
+
+import java.awt.geom.Area;
+import java.util.ArrayList;
 
 
 public class Grid {
@@ -12,6 +16,7 @@ public class Grid {
     public int height;
     public float cellSize;
     private float[] originPosition = new float[3];
+    private int count = 0;
 
     //Matrix containing grid info
     public Square[][] gridArray;
@@ -32,12 +37,26 @@ public class Grid {
         }
 
         for (AreaProperty ap : TestGUI.engine.readEnv.getProperties()) {
+
             //if Areaproperty is a wall
             if (ap instanceof Wall) {
                 Wall w = (Wall) ap;
+                System.out.println("getX 1  " + w.getP1().getX());
+                System.out.println("getX 2  " + w.getP2().getX());
+                System.out.println("getY 1 " + w.getP1().getY());
+                System.out.println("getY 2  " + w.getP2().getY());
+
+                double maxX = Math.max(w.getP1().getX(), Math.max(w.getP2().getX(), Math.max(w.getP3().getX(), w.getP4().getX())));
+                double minX = Math.min(w.getP1().getX(), Math.min(w.getP2().getX(), Math.min(w.getP3().getX(), w.getP4().getX())));
+                double maxY = Math.max(w.getP1().getY(), Math.max(w.getP2().getY(), Math.max(w.getP3().getY(), w.getP4().getY())));
+                double minY = Math.min(w.getP1().getY(), Math.min(w.getP2().getY(), Math.min(w.getP3().getY(), w.getP4().getY())));
+
+
                 //Loop that goes over all Xs and Ys in a wall, setting type of the square to "Wall"
-                for (int x = (int) w.getP1().getX(); x < w.getP2().getX(); x++) {
-                    for (int y = (int) w.getP1().getY(); y > w.getP3().getY(); y++) {
+                for (int x = (int) minX; x < maxX; x++) {
+                    for (int y = (int) minY; y < maxY; y++) {
+                        System.out.println("count : " + count);
+                        count++;
                         gridArray[x][y].setType("Wall");
                         gridArray[x][y].setWalkable(false);
                     }
@@ -46,7 +65,10 @@ public class Grid {
             }
         }
 
+
     }
+
+    public Square[][] getGridArray(){ return this.gridArray; }
 
     public float[] getWorldPosition(int x, int y) //Returns a vector(float[]) with position
     {

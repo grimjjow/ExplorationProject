@@ -6,7 +6,7 @@ public class RunSimulation {
 
     public static void main(String[] args) throws IOException {
 
-        new GameEngine("/Users/bertrand/IdeaProjects/ExplorationProject/src/testenv.txt");
+        new GameEngine("/Users/laurenzohnemuller/IdeaProjects/ExplorationProject/src/testenv.txt");
 
     }
 }
