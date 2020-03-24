@@ -52,7 +52,7 @@ public class GameEngine {
         gameInfo = readEnv.getInfo();
 
         GameMode gameMode = (gameInfo.getGameMode() == 0) ? GameMode.CaptureOneIntruder : GameMode.CaptureAllIntruders;
-        ScenarioPercepts scenarioPercepts = new ScenarioPercepts(
+        scenarioPercepts = new ScenarioPercepts(
                 gameMode,
                 new Distance(gameInfo.getCaptureDistance()),
                 Angle.fromDegrees(gameInfo.getMaxRotationAngle()),
