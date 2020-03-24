@@ -5,6 +5,7 @@ import AreaProperty.AreaProperty;
 import Environment.Environment;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;

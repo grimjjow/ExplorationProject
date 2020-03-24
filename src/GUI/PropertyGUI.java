@@ -5,16 +5,18 @@ import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Ellipse;
+import javafx.scene.shape.Shape;
 
 public class PropertyGUI {
 
     AreaProperty property;
-    Polygon shape;
+    Shape shape;
 
     public PropertyGUI(AreaProperty property, double scalingFactor) {
         this.property = property;
         this.shape = new Polygon();
-        this.shape.getPoints().addAll(new Double[] {
+        ((Polygon) this.shape).getPoints().addAll(new Double[] {
                 (double)property.getP1().getX()*scalingFactor, (double)property.getP1().getY()*scalingFactor,
                 (double)property.getP2().getX()*scalingFactor, (double)property.getP2().getY()*scalingFactor,
                 (double)property.getP3().getX()*scalingFactor, (double)property.getP3().getY()*scalingFactor,
@@ -35,7 +37,6 @@ public class PropertyGUI {
         }else if(property instanceof SpawnGuards) {
             shape.setFill(Color.CORNFLOWERBLUE);
         }
-
     }
-    public Polygon getShape(){	return  this.shape;	}
+    public Shape getShape(){	return  this.shape;	}
 }
