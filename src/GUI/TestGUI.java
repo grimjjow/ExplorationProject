@@ -53,7 +53,7 @@ public class TestGUI extends Application {
             pane.setCenter(engine.getEnvPane());
             Scene scene = new Scene(pane, bounds.getWidth(), bounds.getHeight());
             primaryStage.setScene(scene);
-            primaryStage.show();
+            //primaryStage.show();
             engine.update();
 
         } catch (Exception e) {

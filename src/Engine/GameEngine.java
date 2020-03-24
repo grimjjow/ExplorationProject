@@ -20,6 +20,7 @@ import Reader.*;
 import Interop.Percept.Scenario.*;
 import javafx.scene.layout.BorderPane;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -196,7 +197,7 @@ public class GameEngine {
         // TODO: check if area is shaded or normal
         double viewRange = gameInfo.getViewRangeGuardNormal();
 
-        Set<ObjectPercept> objectPercepts = null;
+        Set<ObjectPercept> objectPercepts = new HashSet<>();
 
         for (double i = -(viewAngle / 2); i < viewAngle / 2; i += steps) {
 
@@ -255,15 +256,17 @@ public class GameEngine {
 
                     if (square.getType() == "Wall") {
                         objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX(), square.getSY()));
-                        break;
+                        objectPercepts.add(objectPercept);
+                    }else{
+                        objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(square.getSX(), square.getSY()));
+                        objectPercepts.add(objectPercept);
                     }
 
                 }
-                if(objectPercept == null){
+                /*if(objectPercept == null){
                     objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(0, 0));
-                }
+                }*/
 
-            objectPercepts.add(objectPercept);
         }
 
         return new ObjectPercepts(objectPercepts);
