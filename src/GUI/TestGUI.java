@@ -20,6 +20,7 @@ import java.util.Arrays;
 
 public class TestGUI extends Application {
 
+    public static GameEngine engine;
     String path;
     public void start(Stage primaryStage) throws Exception {
         try {
@@ -36,7 +37,7 @@ public class TestGUI extends Application {
 
             Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             try {
-                File f = new File("/Users/bertrand/IdeaProjects/ExplorationProject/src/testenv.txt");
+                File f = new File("/Users/laurenzohnemuller/IdeaProjects/ExplorationProject/src/testenv.txt");
                 String file = f.toString();
                 this.path = file;
             }
@@ -45,7 +46,7 @@ public class TestGUI extends Application {
             }
             double mapBoundWidth = bounds.getWidth();
             double mapBoundHeight = (bounds.getHeight()*9)/10;
-            GameEngine engine = new GameEngine(this.path);
+            engine = new GameEngine(this.path);
             engine.setHeightBound(mapBoundHeight);
             engine.setWidthBound(mapBoundWidth);
             engine.createEnvironment(path);

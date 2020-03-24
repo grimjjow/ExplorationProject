@@ -29,7 +29,7 @@ public class GameEngine {
 
     List<Interop.Agent.Guard> guards;
 
-    Reader readEnv;
+    public Reader readEnv;
     static GameInfo gameInfo;
 
     Object agent;
@@ -85,6 +85,10 @@ public class GameEngine {
                     double endY = currentPosition.getY() + distance.getValue() * Math.sin(direction.getRadians());
 
                     // Check if end point is not a wall
+                    Point checkPoint = new Point(endX, endY);
+
+                    //if()
+
 
                     info.setCurrentPosition(new Point(endX, endY));
                     info.setLastAction(action);

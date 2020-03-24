@@ -13,6 +13,8 @@ public class Environment {
     //initial coordinates of the objects
     private ArrayList<AreaProperty> initialProperties;
 
+    Grid grid;
+    private  float[] originPosition = {0, 0, 0};
 
     public String path;
 
@@ -24,11 +26,15 @@ public class Environment {
         this.height = env.getInfo().getHeight()*scalingFactor;
         this.width = env.getInfo().getWidth()*scalingFactor;
 
+        this.grid = new Grid((int)this.width, (int)this.height, (float)scalingFactor, originPosition);
+
         this.initialProperties = env.getProperties();
     }
 
     public double getWidth() {	return this.width; }
     public double getHeight() { return this.height; }
+
+    public Grid getGrid(){ return this.grid; }
 
     public double getScalingFactor(double screenWidth, double screenHeight, double mapWidth, double mapHeight) {
         double scalingFactor;
