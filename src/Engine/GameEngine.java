@@ -122,8 +122,8 @@ public class GameEngine {
                         info.setLastAction(action);
                         info.setLastActionExecuted(true);
                     } else{
-                       info.setLastActionExecuted(false);
-                       info.setLastAction(action);
+                        info.setLastActionExecuted(false);
+                        info.setLastAction(action);
                     }
 
                 } else if(action instanceof Rotate) {

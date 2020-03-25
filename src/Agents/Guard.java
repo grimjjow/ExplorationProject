@@ -70,7 +70,7 @@ public class Guard implements Interop.Agent.Guard {
         }
 
         return action;
-       // return new Rotate(scenario.getScenarioPercepts().getMaxRotationAngle());
+        // return new Rotate(scenario.getScenarioPercepts().getMaxRotationAngle());
     }
 
     public void updateState(){

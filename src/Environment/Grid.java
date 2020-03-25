@@ -1,7 +1,7 @@
 package Environment;
 
 import AreaProperty.AreaProperty;
-import AreaProperty.Wall;
+import AreaProperty.*;
 import Reader.Reader;
 
 
