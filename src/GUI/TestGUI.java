@@ -20,6 +20,7 @@ import java.util.Arrays;
 
 public class TestGUI extends Application {
 
+    public static GameEngine engine;
     String path;
     public void start(Stage primaryStage) throws Exception {
         try {
@@ -43,6 +44,7 @@ public class TestGUI extends Application {
             catch (Exception e) {
                 System.err.println(e.getMessage());
             }
+
             double envWidth = bounds.getWidth();
             double envHeight = (bounds.getHeight()*9)/10;
             GameEngine engine = new GameEngine(this.path);
@@ -53,6 +55,7 @@ public class TestGUI extends Application {
             Scene scene = new Scene(pane, bounds.getWidth(), bounds.getHeight());
             primaryStage.setScene(scene);
             primaryStage.show();
+
 
         } catch (Exception e) {
             System.out.println("Exception in creating GUI" + Arrays.toString(e.getStackTrace()));

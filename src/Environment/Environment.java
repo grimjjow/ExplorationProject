@@ -14,6 +14,8 @@ public class Environment {
     private ArrayList<AreaProperty> initialProperties;
     private GameInfo gameInfo;
 
+    Grid grid;
+    private  float[] originPosition = {0, 0};
 
     public String path;
 
@@ -31,6 +33,8 @@ public class Environment {
 
     public double getWidth() {	return this.width; }
     public double getHeight() { return this.height; }
+
+    public Grid getGrid(){ return this.grid; }
 
     public double getScalingFactor(double screenWidth, double screenHeight, double mapWidth, double mapHeight) {
         double scalingFactor;

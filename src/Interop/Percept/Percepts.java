@@ -37,10 +37,12 @@ public class Percepts {
         AreaPercepts areaPercepts,
         boolean wasLastActionExecuted
     ) {
+
         Require.notNull(vision);
         Require.notNull(sounds);
         Require.notNull(smells);
         Require.notNull(areaPercepts);
+
         this.vision = vision;
         this.sounds = sounds;
         this.smells = smells;

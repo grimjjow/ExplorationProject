@@ -10,6 +10,7 @@ public class AgentInfo {
     private boolean lastActionExecuted = false;
     private Direction agentDirection;
     private Object agent;
+    private boolean teleported = false;
     private Action lastAction;
 
 
@@ -17,6 +18,7 @@ public class AgentInfo {
         setCurrentPosition(position);
         this.agentDirection = agentDirection;
         this.agent = agent;
+
     }
 
     public boolean isLastActionExecuted() {
@@ -31,8 +33,8 @@ public class AgentInfo {
         return agentDirection;
     }
 
-    public void setTargetDirection(Direction targetDirection) {
-        this.agentDirection = targetDirection;
+    public void setDirection(Direction agentDirection) {
+        this.agentDirection = agentDirection;
     }
 
     public Object getAgent() {
@@ -47,11 +49,20 @@ public class AgentInfo {
         this.lastAction = lastAction;
     }
 
+
     public Point getCurrentPosition() {
         return currentPosition;
     }
 
     public void setCurrentPosition(Point currentPosition) {
         this.currentPosition = currentPosition;
+    }
+
+    public boolean isTeleported() {
+        return teleported;
+    }
+
+    public void setTeleported(boolean teleported) {
+        this.teleported = teleported;
     }
 }

@@ -4,58 +4,47 @@ import Interop.Geometry.Point;
 
 public class AreaProperty {
 
-    private Point p1;
-    private Point p2;
-    private Point p3;
-    private Point p4;
+    private Point topLeft;
+    private Point topRight;
+    private Point botLeft;
+    private Point botRight;
 
     public AreaProperty(Point topLeft, Point topRight, Point bottomLeft, Point bottomRight) {
-        this.p1 = topLeft;
-        this.p2 = topRight;
-        this.p3 = bottomLeft;
-        this.p4 = bottomRight;
+        this.topLeft = topLeft;
+        this.topRight = topRight;
+        this.botLeft = bottomLeft;
+        this.botRight = bottomRight;
     }
 
-    /**
-     * @param x
-     * @param y
-     * @return true if given point lies inside the rectangle object
-     */
-    public boolean isInArea(double x, double y) {
-        if (x > p1.getX() && x < p4.getX() &&
-                y > p1.getY() && y < p4.getY()) return true;
-        return false;
-    }
-
-    public Point getP1() {
-        return p1;
+    public Point getTopLeft() {
+        return topLeft;
     }
 
     public void setP1(Point p1) {
-        this.p1 = p1;
+        this.topLeft = p1;
     }
 
-    public Point getP2() {
-        return p2;
+    public Point getTopRight() {
+        return topRight;
     }
 
-    public void setP2(Point p2) {
-        this.p2 = p2;
+    public void setTopRight(Point topRight) {
+        this.topRight = topRight;
     }
 
-    public Point getP3() {
-        return p3;
+    public Point getBotLeft() {
+        return botLeft;
     }
 
-    public void setP3(Point p3) {
-        this.p3 = p3;
+    public void setBotLeft(Point botLeft) {
+        this.botLeft = botLeft;
     }
 
-    public Point getP4() {
-        return p4;
+    public Point getBotRight() {
+        return botRight;
     }
 
-    public void setP4(Point p4) {
-        this.p4 = p4;
+    public void setBotRight(Point botRight) {
+        this.botRight = botRight;
     }
 }

@@ -15,6 +15,7 @@ public class Reader {
 
     private GameInfo gameInfo = new GameInfo();
     private ArrayList<AreaProperty> properties = new ArrayList<AreaProperty>();
+    private SpawnGuards spawnGuards;
     private Shade shaded;
     private Wall wall;
     private Teleport teleport;
@@ -175,6 +176,12 @@ public class Reader {
                         break;
 
                     case "spawnAreaGuards":
+                        doubleSplit = split[1].split(",");
+                        for (int i = 0; i < doubleSplit.length; i++) {
+                            doubleSplit[i] = doubleSplit[i].trim();
+                        }
+                        spawnGuards = new SpawnGuards(new Point(Double.parseDouble(doubleSplit[0]), Double.parseDouble(doubleSplit[1])), new Point(Double.parseDouble(doubleSplit[2]), Double.parseDouble(doubleSplit[3])), new Point(Double.parseDouble(doubleSplit[4]), Double.parseDouble(doubleSplit[5])), new Point(Double.parseDouble(doubleSplit[6]), Double.parseDouble(doubleSplit[7])));
+                        properties.add(spawnGuards);
                         break;
 
                     case "wall":

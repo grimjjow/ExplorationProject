@@ -50,7 +50,6 @@ public class AgentGUI {
 
 
     }
-
     public Ellipse getCircle() {	return this.circle;	}
 
     public Line getDirection() {

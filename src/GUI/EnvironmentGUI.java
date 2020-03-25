@@ -14,6 +14,7 @@ public class EnvironmentGUI {
     BorderPane pane = new BorderPane();
     Rectangle shape;
     Environment env;
+
     ArrayList<AgentGUI> agentsGUI = null;
     private ArrayList<AgentGUI> agents;
 
@@ -25,6 +26,7 @@ public class EnvironmentGUI {
         for (AreaProperty pr : env.getInitialProperties()) {
             PropertyGUI property = new PropertyGUI(pr, env.getScalingFactor());
             this.pane.getChildren().add(property.getShape());
+            //this.pane.getChildren().add(property.getCircleShape());
         }
     }
     public BorderPane getPane() {	return this.pane; 	}
