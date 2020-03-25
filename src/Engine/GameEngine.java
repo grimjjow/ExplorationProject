@@ -131,20 +131,65 @@ public class GameEngine {
                 // HERE COMPUTE ACTION
                 if(action instanceof Move) {
                     Distance distance = ((Move) action).getDistance();
-                    Point currentPosition = info.getCurrentPosition();
+                    double agentX = info.getCurrentPosition().getX();
+                    double agentY = info.getCurrentPosition().getY();
                     Direction direction = info.getDirection();
 
-                    double endX = currentPosition.getX() + distance.getValue() * Math.cos(direction.getRadians());
-                    double endY = currentPosition.getY() + distance.getValue() * Math.sin(direction.getRadians());
+                    double targetX = agentX + distance.getValue() * Math.cos(direction.getRadians());
+                    double targetY = agentY + distance.getValue() * Math.sin(direction.getRadians());
 
-                    // Check if end point is not a wall
-                    Point checkPoint = new Point(endX, endY);
+                    // Compute the line
+                    double slope = (targetX - agentX) / (targetY - agentY);
+                    double intercept = targetY - (slope * targetX);
 
-                    if(grid.getSquare(new float[]{(float)endX, (float)endY}).getWalkable()){
-                        info.setCurrentPosition(new Point(endX, endY));
+                    boolean accept = true;
+
+                    // Go through all the square of the grid
+                    label:
+                    for (Square[] matrix : this.grid.getGridArray()) {
+                        for (Square square : matrix) {
+                            // Store the square and its X and Y
+                            double squareX = square.getSX();
+                            double squareY = square.getSY();
+                            // Check if it is on the computed line
+                            if(!square.getWalkable()) {
+                                if (Math.round(squareX * slope + intercept) == squareY) {
+                                    // Check if it is between the agent (excluded) and the end point (included)
+                                    if (agentX < targetX) {
+                                        if (agentY < targetY) {
+                                            if (squareX > agentX && squareX <= targetX && squareY > agentY && squareY <= targetY) {
+                                                accept = false;
+                                                break label;
+                                            }
+                                        } else {
+                                            if (squareX > agentX && squareX <= targetX && squareY < agentY && squareY >= targetY) {
+                                                accept = false;
+                                                break label;
+                                            }
+                                        }
+                                    } else {
+                                        if (agentY < targetY) {
+                                            if (squareX < agentX && squareX >= targetX && squareY > agentY && squareY <= targetY) {
+                                                accept = false;
+                                                break label;
+                                            }
+                                        } else {
+                                            if (squareX < agentX && squareX >= targetX && squareY < agentY && squareY >= targetY) {
+                                                accept = false;
+                                                break label;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if(accept){
+                        info.setCurrentPosition(new Point(targetX, targetY));
                         info.setLastAction(action);
                         info.setLastActionExecuted(true);
-                    } else{
+                    } else {
                         info.setLastActionExecuted(false);
                         info.setLastAction(action);
                     }
@@ -303,7 +348,7 @@ public class GameEngine {
                 }
             }
 
-            ObjectPercept objectPercept = null;
+            ObjectPercept objectPercept;
 
             label:
             for (Square square : vectorSquare.values()) {
