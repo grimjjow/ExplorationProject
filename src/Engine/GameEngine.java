@@ -91,7 +91,6 @@ public class GameEngine {
                 Angle viewAngle = Angle.fromDegrees(gameInfo.getViewAngle());
 
                 // HERE COMPUTE PERCEPTS
-                System.out.println(vision().getAll().size());
                 VisionPrecepts vision = new VisionPrecepts(new FieldOfView(range, viewAngle), vision());
 
                 boolean wasLastActionExecuted = info.isLastActionExecuted();
@@ -180,8 +179,8 @@ public class GameEngine {
                 }
 
                 System.out.println("--- New round ---");
-                System.out.println(info.getCurrentPosition().toString());
-                System.out.println(info.getDirection().getDegrees());
+                System.out.println("Position: " + info.getCurrentPosition().toString());
+                System.out.println("Direction: " + info.getDirection().getDegrees());
             }
         } while (true);
     }
@@ -358,6 +357,9 @@ public class GameEngine {
                 }
                 objectPercepts.add(objectPercept);
             }
+        }
+        for(Square square : visibleSquare) {
+            System.out.println(square.getType());
         }
         return new ObjectPercepts(objectPercepts);
     }
