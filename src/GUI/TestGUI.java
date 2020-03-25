@@ -37,7 +37,7 @@ public class TestGUI extends Application {
 
             Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             try {
-                File f = new File("/Users/mariasurgan/Downloads/ExplorationProject/src/testenv.txt");
+                File f = new File("/Users/laurenzohnemuller/IdeaProjects/ExplorationProject/src/testenv.txt");
                 String file = f.toString();
                 this.path = file;
             }
@@ -55,6 +55,7 @@ public class TestGUI extends Application {
             Scene scene = new Scene(pane, bounds.getWidth(), bounds.getHeight());
             primaryStage.setScene(scene);
             primaryStage.show();
+            engine.update();
 
 
         } catch (Exception e) {
