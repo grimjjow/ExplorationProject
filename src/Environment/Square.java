@@ -1,6 +1,9 @@
 package Environment;
 
+import AreaProperty.AreaProperty;
 import Interop.Geometry.Point;
+
+import java.awt.geom.Area;
 
 public class Square {
 
@@ -12,11 +15,16 @@ public class Square {
     private String type;
     private boolean walkable = true;
     private boolean explored = false;
+    private AreaProperty areaProperty = null;
 
     public Square(int x, int y) {
         this.x = x;
         this.y = y;
     }
+
+    public AreaProperty getAreaProperty(){ return this.areaProperty;}
+
+    public void setAreaProperty(AreaProperty areaProperty){ this.areaProperty = areaProperty; }
 
     public Square(Point topLeft, Point bottomRight) {
         this.topLeft = topLeft;

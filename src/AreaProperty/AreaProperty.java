@@ -47,4 +47,5 @@ public class AreaProperty {
     public void setBotRight(Point botRight) {
         this.botRight = botRight;
     }
+
 }

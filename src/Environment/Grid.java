@@ -58,6 +58,7 @@ public class Grid {
                 for (int x = (int) minX; x < maxX; x++) {
                     for (int y = (int) minY; y < maxY; y++) {
                         gridArray[x][y].setType("Door");
+                        gridArray[x][y].setAreaProperty(door);
                     }
                 }
             }
@@ -76,6 +77,7 @@ public class Grid {
                 for (int x = (int) minX; x < maxX; x++) {
                     for (int y = (int) minY; y < maxY; y++) {
                         gridArray[x][y].setType("Sentry");
+                        gridArray[x][y].setAreaProperty(sentry);
                     }
                 }
             }
@@ -94,6 +96,7 @@ public class Grid {
                 for (int x = (int) minX; x < maxX; x++) {
                     for (int y = (int) minY; y < maxY; y++) {
                         gridArray[x][y].setType("Shade");
+                        gridArray[x][y].setAreaProperty(shade);
                     }
                 }
             }
@@ -112,6 +115,7 @@ public class Grid {
                 for (int x = (int) minX; x < maxX; x++) {
                     for (int y = (int) minY; y < maxY; y++) {
                         gridArray[x][y].setType("Teleport");
+                        gridArray[x][y].setAreaProperty(teleport);
                     }
                 }
             }
@@ -130,6 +134,7 @@ public class Grid {
                 for (int x = (int) minX; x < maxX; x++) {
                     for (int y = (int) minY; y < maxY; y++) {
                         gridArray[x][y].setType("Window");
+                        gridArray[x][y].setAreaProperty(window);
                     }
                 }
             }
@@ -148,6 +153,7 @@ public class Grid {
                 for (int x = (int) minX; x < maxX; x++) {
                     for (int y = (int) minY; y < maxY; y++) {
                         gridArray[x][y].setType("Wall");
+                        gridArray[x][y].setAreaProperty(wall);
                         gridArray[x][y].setWalkable(false);
                     }
                 }

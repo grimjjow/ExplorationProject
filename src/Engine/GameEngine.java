@@ -26,6 +26,7 @@ import Interop.Percept.AreaPercepts;
 import Interop.Percept.GuardPercepts;
 import Environment.Grid;
 import Interop.Percept.Vision.*;
+import AreaProperty.Teleport;
 import Reader.*;
 import Interop.Percept.Scenario.*;
 import javafx.scene.layout.BorderPane;
@@ -94,13 +95,32 @@ public class GameEngine {
                 VisionPrecepts vision = new VisionPrecepts(new FieldOfView(range, viewAngle), vision());
 
                 boolean wasLastActionExecuted = info.isLastActionExecuted();
+                boolean inWindow = false;
+                boolean inDoor = false;
+                boolean inSentryTower = false;
+
+                float currentX = (float) info.getCurrentPosition().getX();
+                float currentY = (float) info.getCurrentPosition().getY();
+                // checking the area type of our current position
+                if(grid.getSquare(new float[]{currentX, currentY}).getType().equals("Window")){
+                    inWindow = true;
+                }
+                if(grid.getSquare(new float[]{currentX, currentY}).getType().equals("Door")){
+                    inDoor = true;
+                }
+                if(grid.getSquare(new float[]{currentX, currentY}).getType().equals("Sentry")){
+                    inSentryTower = true;
+                }
+                if((grid.getSquare(new float[]{currentX, currentY}).getType().equals("Teleport")) && (info.isTeleported())){
+                    info.setTeleported(false);
+                }
 
                 Action action = guard.getAction(
                         new GuardPercepts(
                                 vision,
                                 null,
                                 null,
-                                new AreaPercepts(false, false, false, false),
+                                new AreaPercepts(inWindow, inDoor, inSentryTower, info.isTeleported()),
                                 new ScenarioGuardPercepts(scenarioPercepts, gameInfo.getMaxMoveDistanceGuard()),
                                 wasLastActionExecuted)
                 );
@@ -142,6 +162,21 @@ public class GameEngine {
                     info.setDirection(newDirection);
                     info.setLastAction(action);
                     info.setLastActionExecuted(true);
+                }
+
+                // check if the current positon is inside of a teleport area -> if yes then move to new position
+                float[] currentPos = new float[]{(float)info.getCurrentPosition().getX(),(float) info.getCurrentPosition().getY()};
+                Point currentPosPoint = new Point(currentPos[0], currentPos[1]);
+                Square currentSquare = grid.getSquare(currentPos);
+
+                Teleport teleport = null;
+                Point newPosPoint = null;
+
+                if(currentSquare.getType().equals("Teleport")){
+                    teleport = (Teleport) currentSquare.getAreaProperty();
+                    info.setTeleported(true);
+                    newPosPoint = teleport.getTeleportTo();
+                    info.setCurrentPosition(newPosPoint);
                 }
 
                 System.out.println("--- New round ---");
