@@ -20,6 +20,7 @@ import java.util.Arrays;
 
 public class TestGUI extends Application {
 
+    public static GameEngine engine;
     String path;
     public void start(Stage primaryStage) throws Exception {
         try {
@@ -55,6 +56,7 @@ public class TestGUI extends Application {
             primaryStage.setScene(scene);
             primaryStage.show();
             engine.update();
+
 
         } catch (Exception e) {
             System.out.println("Exception in creating GUI " + e.getMessage() + " " + Arrays.toString(e.getStackTrace()));
