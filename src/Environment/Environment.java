@@ -3,6 +3,7 @@ package Environment;
 import java.util.ArrayList;
 
 import AreaProperty.AreaProperty;
+import Engine.GameInfo;
 import Reader.Reader;
 
 public class Environment {
@@ -10,8 +11,8 @@ public class Environment {
     public static double width;
     public static double height;
     public final double scalingFactor;
-    //initial coordinates of the objects
     private ArrayList<AreaProperty> initialProperties;
+    private GameInfo gameInfo;
 
 
     public String path;
@@ -19,6 +20,7 @@ public class Environment {
     public Environment(String path, double screenWidth, double screenHeight) {
         this.path = path;
         Reader env = new Reader(path);
+        this.gameInfo = env.getInfo();
         this.scalingFactor = getScalingFactor(screenWidth, screenHeight, env.getInfo().getWidth() , env.getInfo().getHeight());
 
         this.height = env.getInfo().getHeight()*scalingFactor;
@@ -43,4 +45,8 @@ public class Environment {
     }
     public double getScalingFactor() {	return this.scalingFactor;	}
     public ArrayList<AreaProperty> getInitialProperties() {	return this.initialProperties;}
+
+    public GameInfo getGameInfo() {
+        return gameInfo;
+    }
 }

@@ -38,7 +38,6 @@ public class GameEngine {
         this.path = path;
         readEnv = new Reader(path);
         gameInfo = readEnv.getInfo();
-        //scenarioPercepts = scenarioPercepts();
         properties = readEnv.getProperties();
 
         guards = AgentFactory.createGuards(gameInfo.getNumGuards());

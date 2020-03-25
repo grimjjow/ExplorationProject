@@ -8,16 +8,14 @@ public class AgentInfo {
 
     private Point currentPosition;
     private boolean lastActionExecuted = false;
-    private Direction targetDirection;
+    private Direction agentDirection;
     private Object agent;
-    private int penalty;
     private Action lastAction;
-    private int inTarget;
 
 
-    public AgentInfo(Point position, Direction targetDirection, Object agent) {
+    public AgentInfo(Point position, Direction agentDirection, Object agent) {
         setCurrentPosition(position);
-        this.targetDirection = targetDirection;
+        this.agentDirection = agentDirection;
         this.agent = agent;
     }
 
@@ -29,24 +27,16 @@ public class AgentInfo {
         this.lastActionExecuted = lastActionExecuted;
     }
 
-    public Direction getTargetDirection() {
-        return targetDirection;
+    public Direction getDirection() {
+        return agentDirection;
     }
 
     public void setTargetDirection(Direction targetDirection) {
-        this.targetDirection = targetDirection;
+        this.agentDirection = targetDirection;
     }
 
     public Object getAgent() {
         return agent;
-    }
-
-    public int getPenalty() {
-        return penalty;
-    }
-
-    public void setPenalty(int penalty) {
-        this.penalty = penalty;
     }
 
     public Action getLastAction() {
@@ -55,14 +45,6 @@ public class AgentInfo {
 
     public void setLastAction(Action lastAction) {
         this.lastAction = lastAction;
-    }
-
-    public int getInTarget(){
-        return inTarget;
-    }
-
-    public void addInTarget(double a){
-        this.inTarget += a;
     }
 
     public Point getCurrentPosition() {

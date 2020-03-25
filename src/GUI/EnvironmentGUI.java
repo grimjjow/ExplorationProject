@@ -5,7 +5,6 @@ import AreaProperty.AreaProperty;
 import Environment.Environment;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
@@ -32,9 +31,11 @@ public class EnvironmentGUI {
     public void addAgentsGUI(ArrayList<AgentInfo> info) {
         this.agents = new ArrayList<AgentGUI>();
         for(AgentInfo i : info) {
-            AgentGUI agent = new AgentGUI(i, env.scalingFactor);
+            AgentGUI agent = new AgentGUI(i, this.env.getGameInfo(), env.scalingFactor);
             agents.add(agent);
-            this.pane.getChildren().add(agent.getShape());
+            this.pane.getChildren().add(agent.getCircle());
+            this.pane.getChildren().add(agent.getDirection());
+            this.pane.getChildren().add(agent.getArc());
         }
     }
     public AgentGUI getAgent(int i) {

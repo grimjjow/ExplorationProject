@@ -1,11 +1,8 @@
 package GUI;
 
 import AreaProperty.*;
-import javafx.event.EventHandler;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Shape;
 
 public class PropertyGUI {
@@ -34,8 +31,6 @@ public class PropertyGUI {
             shape.setFill(Color.BLUEVIOLET);
         }else if(property instanceof Shade) {
             shape.setFill(Color.SEAGREEN);
-        }else if(property instanceof SpawnGuards) {
-            shape.setFill(Color.CORNFLOWERBLUE);
         }
     }
     public Shape getShape(){	return  this.shape;	}

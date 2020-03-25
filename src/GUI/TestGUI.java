@@ -36,18 +36,18 @@ public class TestGUI extends Application {
 
             Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             try {
-                File f = new File("C:\\Users\\Liam\\Desktop\\ExplorationProject\\src/testenv.txt");
+                File f = new File("/Users/mariasurgan/Downloads/ExplorationProject/src/testenv.txt");
                 String file = f.toString();
                 this.path = file;
             }
             catch (Exception e) {
                 System.err.println(e.getMessage());
             }
-            double mapBoundWidth = bounds.getWidth();
-            double mapBoundHeight = (bounds.getHeight()*9)/10;
+            double envWidth = bounds.getWidth();
+            double envHeight = (bounds.getHeight()*9)/10;
             GameEngine engine = new GameEngine(this.path);
-            engine.setHeightBound(mapBoundHeight);
-            engine.setWidthBound(mapBoundWidth);
+            engine.setHeightBound(envHeight);
+            engine.setWidthBound(envWidth);
             engine.createEnvironment(path);
             pane.setCenter(engine.getEnvPane());
             Scene scene = new Scene(pane, bounds.getWidth(), bounds.getHeight());
