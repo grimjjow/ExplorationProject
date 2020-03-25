@@ -37,7 +37,7 @@ public class TestGUI extends Application {
 
             Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             try {
-                File f = new File("/Users/bertrand/IdeaProjects/ExplorationProject/src/testenv.txt");
+                File f = new File("C:\\Users\\Liam\\Desktop\\ExplorationProject\\src\\testenv2.txt");
                 String file = f.toString();
                 this.path = file;
             }
