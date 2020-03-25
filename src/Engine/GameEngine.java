@@ -222,6 +222,8 @@ public class GameEngine {
                     info.setCurrentPosition(teleport.getTeleportTo());
                 }
             }
+            if(grid.checkExplored())
+                System.out.println(">>> Everything is explored <<<");
         } while (true);
     }
 
@@ -354,6 +356,7 @@ public class GameEngine {
             for (Square square : vectorSquare.values()) {
                 // Add to the visibleSquare list to removed duplicate
                 visibleSquare.add(square);
+                square.setExplored(true);
 
                 switch (square.getType()) {
                     case "Door":

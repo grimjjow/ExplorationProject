@@ -228,4 +228,14 @@ public class Grid {
     public float getCellSize() {
         return this.cellSize;
     }
+
+    public boolean checkExplored() {
+        for (Square[] matrix : getGridArray()) {
+            for (Square square : matrix) {
+                if(!square.getExplored())
+                    return false;
+            }
+        }
+        return true;
+    }
 }

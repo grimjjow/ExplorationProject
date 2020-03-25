@@ -52,6 +52,10 @@ public class Square {
         return explored;
     }
 
+    public void setExplored(boolean BOOL) {
+        walkable = BOOL;
+    }
+
     public boolean getWalkable() {
         return walkable;
     }
