@@ -19,14 +19,14 @@ public class Environment {
 
     public Environment(String path, double screenWidth, double screenHeight) {
         this.path = path;
-        Reader env = new Reader(path);
-        this.gameInfo = env.getInfo();
-        this.scalingFactor = getScalingFactor(screenWidth, screenHeight, env.getInfo().getWidth() , env.getInfo().getHeight());
+        Reader readEnv = new Reader(path);
+        this.gameInfo = readEnv.getInfo();
+        this.scalingFactor = getScalingFactor(screenWidth, screenHeight, readEnv.getInfo().getWidth() , readEnv.getInfo().getHeight());
 
-        this.height = env.getInfo().getHeight()*scalingFactor;
-        this.width = env.getInfo().getWidth()*scalingFactor;
+        this.height = readEnv.getInfo().getHeight()*scalingFactor;
+        this.width = readEnv.getInfo().getWidth()*scalingFactor;
 
-        this.initialProperties = env.getProperties();
+        this.initialProperties = readEnv.getProperties();
     }
 
     public double getWidth() {	return this.width; }

@@ -14,7 +14,7 @@ public class EnvironmentGUI {
     BorderPane pane = new BorderPane();
     Rectangle shape;
     Environment env;
-    ArrayList<AgentGUI> visualAgents = null;
+    ArrayList<AgentGUI> agentsGUI = null;
     private ArrayList<AgentGUI> agents;
 
     public EnvironmentGUI(Environment env) {
@@ -39,7 +39,7 @@ public class EnvironmentGUI {
         }
     }
     public AgentGUI getAgent(int i) {
-        return this.visualAgents.get(i);
+        return this.agentsGUI.get(i);
     }
     public ArrayList<AgentGUI> getAgents(){
         return this.agents;
