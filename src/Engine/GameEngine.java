@@ -12,8 +12,8 @@ import Interop.Percept.Scenario.*;
 import javafx.scene.layout.BorderPane;
 
 import java.sql.SQLOutput;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
 import Environment.Square;
 import Interop.Action.Action;
 import Interop.Action.Move;
@@ -30,9 +30,7 @@ import Reader.*;
 import Interop.Percept.Scenario.*;
 import javafx.scene.layout.BorderPane;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class GameEngine {
 
@@ -196,95 +194,136 @@ public class GameEngine {
     }
 
     public ObjectPercepts vision() {
-
-        // agent info
+        // Agent infos
         AgentInfo info = infos.get(0);
         double agentX = info.getCurrentPosition().getX();
         double agentY = info.getCurrentPosition().getY();
+        Square currentSquare = this.grid.getSquare(new float[]{(float) agentX, (float) agentY});
         Direction agentDirection = info.getDirection();
 
-        // of line y = slope*x+intercept
+        // Slope and intercept of the line passing through agent and end point of the ray
         double slope;
         double intercept;
 
+        // Game infos
+        double viewRange;
         double viewAngle = gameInfo.getViewAngle();
         double viewRays = gameInfo.getViewRays();
         double steps = viewAngle / viewRays;
 
+        // Matrix of all square of the grid
         Square[][] gridMatrix = this.grid.getGridArray();
 
-        // if area is normal
-        // TODO: check if area is shaded or normal
-        double viewRange = gameInfo.getViewRangeGuardNormal();
+        if(this.grid.getSquare(new float[]{(float)agentX, (float)agentY}).getType().equals("Shade"))
+            viewRange = gameInfo.getViewRangeGuardShaded();
+        else
+            viewRange = gameInfo.getViewRangeGuardNormal();
 
         Set<ObjectPercept> objectPercepts = new HashSet<>();
         ArrayList<Square> visibleSquare = new ArrayList<>();
 
+        // Go through all rays
         for (double i = -(viewAngle / 2); i < viewAngle / 2; i += steps) {
 
-            // compute the lines (vectors)
-            // get endpoints of the 45 vectors
+            // Get end point of the current ray
             double targetX = agentX + viewRange * Math.cos(agentDirection.getRadians() + Math.toRadians(i));
             double targetY = agentY + viewRange * Math.sin(agentDirection.getRadians() + Math.toRadians(i));
+
+            // Compute the line
             slope = (targetY - agentY) / (targetX - agentX);
             intercept = targetY - (slope * targetX);
 
-            ArrayList<Square> vectorSquare = new ArrayList<>();
+            TreeMap<Double, Square> vectorSquare = new TreeMap<>();
 
-            // iterating through all squares
-            for (int p = 0; p < gridMatrix.length; p++) {
-                for (int q = 0; q < gridMatrix[p].length; q++) {
+            // Go through all the square of the grid
+            for (Square[] matrix : gridMatrix) {
+                for (Square square : matrix) {
 
-                    double squareX = gridMatrix[p][q].getSX();
-                    double squareY = gridMatrix[p][q].getSY();
+                    // Store the square and its X and Y
+                    double squareX = square.getSX();
+                    double squareY = square.getSY();
 
-                    // is on the line
-                    if(!visibleSquare.contains(gridMatrix[p][q]))
+                    // If it is not already seen by an other ray
+                    if (!visibleSquare.contains(square)) {
+                        // Check if it is on the computed line
                         if (Math.round(squareX * slope + intercept) == squareY) {
+                            // Check if it is between the agent (excluded) and the end point (included)
                             if (agentX < targetX) {
                                 if (agentY < targetY) {
-                                    //check if agentX <= squareX <= targetX and agentY <= squareY <= targetY
                                     if (squareX > agentX && squareX <= targetX && squareY > agentY && squareY <= targetY) {
-                                        vectorSquare.add(gridMatrix[p][q]);
+                                        vectorSquare.put(new Point(squareX - agentX, squareY - agentY).getDistanceFromOrigin().getValue(), square);
                                     }
                                 } else {
-                                    //check if agentX <= squareX <= targetX and targetY <= squareY <= agentY
                                     if (squareX > agentX && squareX <= targetX && squareY < agentY && squareY >= targetY) {
-                                        vectorSquare.add(gridMatrix[p][q]);
+                                        vectorSquare.put(new Point(squareX - agentX, squareY - agentY).getDistanceFromOrigin().getValue(), square);
                                     }
                                 }
                             } else {
                                 if (agentY < targetY) {
-                                    //check if targetX <= squareX <= agentX and agentY <= squareY <= targetY
                                     if (squareX < agentX && squareX >= targetX && squareY > agentY && squareY <= targetY) {
-                                        vectorSquare.add(gridMatrix[p][q]);
+                                        vectorSquare.put(new Point(squareX - agentX, squareY - agentY).getDistanceFromOrigin().getValue(), square);
                                     }
                                 } else {
-                                    //check if targetX <= squareX <= agentX and targetY <= squareY <= agentY
                                     if (squareX < agentX && squareX >= targetX && squareY < agentY && squareY >= targetY) {
-                                        vectorSquare.add(gridMatrix[p][q]);
+                                        vectorSquare.put(new Point(squareX - agentX, squareY - agentY).getDistanceFromOrigin().getValue(), square);
                                     }
                                 }
-
                             }
                         }
+                    }
                 }
             }
-            visibleSquare.addAll(vectorSquare);
-            ObjectPercept objectPercept = null;
-            for (Square square : vectorSquare) {
 
-                // TODO: implement all types of possible areas and if it is a wall we cannot see after it, if it is a target area, we can see through the area
-                if (square.getType().equals("Wall")) {
-                    objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX()-info.getCurrentPosition().getX(), square.getSY()-info.getCurrentPosition().getY()));
-                }else{
-                    objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(square.getSX()-info.getCurrentPosition().getX(), square.getSY()-info.getCurrentPosition().getY()));
+            ObjectPercept objectPercept = null;
+
+            label:
+            for (Square square : vectorSquare.values()) {
+                // Add to the visibleSquare list to removed duplicate
+                visibleSquare.add(square);
+
+                switch (square.getType()) {
+                    case "Door":
+                        objectPercept = new ObjectPercept(ObjectPerceptType.Door, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
+                        // Break if we are not in because it is opaque from outside
+                        if (!currentSquare.getType().equals("Door")) {
+                            objectPercepts.add(objectPercept);
+                            break label;
+                        }
+                        break;
+                    case "Sentry":
+                        objectPercept = new ObjectPercept(ObjectPerceptType.SentryTower, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
+                        // Break if we are not in because it is opaque from outside
+                        if (!currentSquare.getType().equals("Sentry")) {
+                            objectPercepts.add(objectPercept);
+                            break label;
+                        }
+                        break;
+                    case "Shade":
+                        objectPercept = new ObjectPercept(ObjectPerceptType.ShadedArea, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
+                        // Break if we are not in because it is opaque from outside
+                        if (!currentSquare.getType().equals("Shade")) {
+                            objectPercepts.add(objectPercept);
+                            break label;
+                        }
+                        break;
+                    case "Teleport":
+                        objectPercept = new ObjectPercept(ObjectPerceptType.Teleport, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
+                        break;
+                    case "Wall":
+                        objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
+                        // Break because it is opaque
+                        objectPercepts.add(objectPercept);
+                        break label;
+                    case "Window":
+                        objectPercept = new ObjectPercept(ObjectPerceptType.Window, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
+                        break;
+                    default:
+                        objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
+                        break;
                 }
                 objectPercepts.add(objectPercept);
-
             }
         }
-
         return new ObjectPercepts(objectPercepts);
     }
 }
