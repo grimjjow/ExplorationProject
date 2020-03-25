@@ -10,6 +10,8 @@ import Interop.Geometry.Point;
 import Reader.*;
 import Interop.Percept.Scenario.*;
 import javafx.scene.layout.BorderPane;
+
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 import Environment.Square;
@@ -273,14 +275,12 @@ public class GameEngine {
             for (Square square : vectorSquare) {
 
                 // TODO: implement all types of possible areas and if it is a wall we cannot see after it, if it is a target area, we can see through the area
-
-                if (square.getType() == "Wall") {
+                if (square.getType().equals("Wall")) {
                     objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX(), square.getSY()));
-                    objectPercepts.add(objectPercept);
                 }else{
                     objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(square.getSX(), square.getSY()));
-                    objectPercepts.add(objectPercept);
                 }
+                objectPercepts.add(objectPercept);
 
             }
                 /*if(objectPercept == null){
