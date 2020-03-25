@@ -5,7 +5,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 
-
 public class PropertyGUI {
 
     AreaProperty property;
