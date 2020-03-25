@@ -72,8 +72,8 @@ public class GameEngine {
                 gameInfo.getPheromoneCoolDown()
         );
         properties = readEnv.getProperties();
-
-        guards = AgentFactory.createGuards(gameInfo.getNumGuards());
+        // calling normal guard
+        guards = AgentFactory.createGuards(gameInfo.getNumGuards(), "Guard");
         infos = new ArrayList<AgentInfo>();
 
         for (Interop.Agent.Guard guard : guards) {
