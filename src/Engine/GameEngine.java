@@ -244,24 +244,24 @@ public class GameEngine {
                             if (agentX < targetX) {
                                 if (agentY < targetY) {
                                     //check if agentX <= squareX <= targetX and agentY <= squareY <= targetY
-                                    if (squareX >= agentX && squareX <= targetX && squareY >= agentY && squareY <= targetY) {
+                                    if (squareX > agentX && squareX <= targetX && squareY > agentY && squareY <= targetY) {
                                         vectorSquare.add(gridMatrix[p][q]);
                                     }
                                 } else {
                                     //check if agentX <= squareX <= targetX and targetY <= squareY <= agentY
-                                    if (squareX >= agentX && squareX <= targetX && squareY <= agentY && squareY >= targetY) {
+                                    if (squareX > agentX && squareX <= targetX && squareY < agentY && squareY >= targetY) {
                                         vectorSquare.add(gridMatrix[p][q]);
                                     }
                                 }
                             } else {
                                 if (agentY < targetY) {
                                     //check if targetX <= squareX <= agentX and agentY <= squareY <= targetY
-                                    if (squareX <= agentX && squareX >= targetX && squareY >= agentY && squareY <= targetY) {
+                                    if (squareX < agentX && squareX >= targetX && squareY > agentY && squareY <= targetY) {
                                         vectorSquare.add(gridMatrix[p][q]);
                                     }
                                 } else {
                                     //check if targetX <= squareX <= agentX and targetY <= squareY <= agentY
-                                    if (squareX <= agentX && squareX >= targetX && squareY <= agentY && squareY >= targetY) {
+                                    if (squareX < agentX && squareX >= targetX && squareY < agentY && squareY >= targetY) {
                                         vectorSquare.add(gridMatrix[p][q]);
                                     }
                                 }
@@ -276,17 +276,13 @@ public class GameEngine {
 
                 // TODO: implement all types of possible areas and if it is a wall we cannot see after it, if it is a target area, we can see through the area
                 if (square.getType().equals("Wall")) {
-                    objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX(), square.getSY()));
+                    objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX()-info.getCurrentPosition().getX(), square.getSY()-info.getCurrentPosition().getY()));
                 }else{
-                    objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(square.getSX(), square.getSY()));
+                    objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(square.getSX()-info.getCurrentPosition().getX(), square.getSY()-info.getCurrentPosition().getY()));
                 }
                 objectPercepts.add(objectPercept);
 
             }
-                /*if(objectPercept == null){
-                    objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(0, 0));
-                }*/
-
         }
 
         return new ObjectPercepts(objectPercepts);

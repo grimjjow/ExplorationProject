@@ -24,13 +24,13 @@ public class Grid {
     public Grid(int width, int height, float cellSize, float[] originPosition, Reader readEnv) {
 
         // Initialize attributes
-        this.width = width;
-        this.height = height;
+        this.width = width+2;
+        this.height = height+2;
         this.cellSize = cellSize;
         this.originPosition = originPosition;
 
         // Initialize gridArray
-        gridArray = new Square[width+2][height+2];
+        gridArray = new Square[this.width][this.height];
 
         //Filling gridArray with new Squares
         for (int x = 0; x < gridArray.length; x++) {
@@ -164,12 +164,12 @@ public class Grid {
 
     public int getX(float[] worldPosition) //Returns X with position
     {
-        return (int) ((worldPosition[0] - originPosition[0]) / cellSize);
+        return (int) Math.floor((worldPosition[0] - originPosition[0]) / cellSize);
     }
 
     public int getY(float[] worldPosition) //Returns Y with position
     {
-        return (int) ((worldPosition[1] - originPosition[1]) / cellSize);
+        return (int) Math.floor((worldPosition[1] - originPosition[1]) / cellSize);
     }
 
     public void setSquare(int x, int y, Square value) //Set a Square using X and Y
@@ -209,11 +209,13 @@ public class Grid {
         int x, y;
         x = getX(worldPosition);
         y = getY(worldPosition);
-        if (x >= 0 && y >= 0 && x < width && y < height) {
-            return gridArray[x][y];
-        } else {
-            return null;
-        }
+
+        if(x < 0) { x = 0; }
+        if(x > width-1) { x = width-1; }
+        if(y < 0) { x = 0; }
+        if(y > height-1) { y = height-1; }
+
+        return gridArray[x][y];
     }
 
     public float getCellSize() {
