@@ -87,6 +87,10 @@ public class GameEngine {
             for (Interop.Agent.Guard guard : guards) {
                 AgentInfo info = infos.get(0);
 
+                System.out.println("---- New round -----");
+                System.out.println("Position: " + info.getCurrentPosition().toString());
+                System.out.println("Direction: " + info.getDirection().getDegrees());
+
                 Distance range = new Distance(gameInfo.getViewRangeGuardNormal());
                 Angle viewAngle = Angle.fromDegrees(gameInfo.getViewAngle());
 
@@ -98,22 +102,22 @@ public class GameEngine {
                 boolean inDoor = false;
                 boolean inSentryTower = false;
 
-                float currentX = (float) info.getCurrentPosition().getX();
-                float currentY = (float) info.getCurrentPosition().getY();
+                Square currentSquare = grid.getSquare(new float[]{(float)info.getCurrentPosition().getX(),(float) info.getCurrentPosition().getY()});
                 // checking the area type of our current position
-                if(grid.getSquare(new float[]{currentX, currentY}).getType().equals("Window")){
+                if(currentSquare.getType().equals("Window")){
                     inWindow = true;
                 }
-                if(grid.getSquare(new float[]{currentX, currentY}).getType().equals("Door")){
+                if(currentSquare.getType().equals("Door")){
                     inDoor = true;
                 }
-                if(grid.getSquare(new float[]{currentX, currentY}).getType().equals("Sentry")){
+                if(currentSquare.getType().equals("Sentry")){
                     inSentryTower = true;
                 }
-                if((grid.getSquare(new float[]{currentX, currentY}).getType().equals("Teleport")) && (info.isTeleported())){
+                if((currentSquare.getType().equals("Teleport")) && (info.isTeleported())){
                     info.setTeleported(false);
                 }
 
+                System.out.println("--- Agent action ---");
                 Action action = guard.getAction(
                         new GuardPercepts(
                                 vision,
@@ -163,24 +167,15 @@ public class GameEngine {
                     info.setLastActionExecuted(true);
                 }
 
-                // check if the current positon is inside of a teleport area -> if yes then move to new position
-                float[] currentPos = new float[]{(float)info.getCurrentPosition().getX(),(float) info.getCurrentPosition().getY()};
-                Point currentPosPoint = new Point(currentPos[0], currentPos[1]);
-                Square currentSquare = grid.getSquare(currentPos);
-
-                Teleport teleport = null;
-                Point newPosPoint = null;
+                // check if the current position is inside of a teleport area -> if yes then move to new position
+                currentSquare = grid.getSquare(new float[]{(float)info.getCurrentPosition().getX(),(float) info.getCurrentPosition().getY()});
 
                 if(currentSquare.getType().equals("Teleport")){
-                    teleport = (Teleport) currentSquare.getAreaProperty();
+                    System.out.println("--- Teleporation ---");
+                    Teleport teleport = (Teleport) currentSquare.getAreaProperty();
                     info.setTeleported(true);
-                    newPosPoint = teleport.getTeleportTo();
-                    info.setCurrentPosition(newPosPoint);
+                    info.setCurrentPosition(teleport.getTeleportTo());
                 }
-
-                System.out.println("--- New round ---");
-                System.out.println("Position: " + info.getCurrentPosition().toString());
-                System.out.println("Direction: " + info.getDirection().getDegrees());
             }
         } while (true);
     }
@@ -358,9 +353,12 @@ public class GameEngine {
                 objectPercepts.add(objectPercept);
             }
         }
+
+        System.out.print("Vision: ");
         for(Square square : visibleSquare) {
-            System.out.println(square.getType());
+            System.out.print(" " + square.getType());
         }
+        System.out.print("\n");
         return new ObjectPercepts(objectPercepts);
     }
 }
