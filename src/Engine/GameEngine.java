@@ -59,7 +59,7 @@ public class GameEngine {
         this.path = path;
         readEnv = new Reader(path);
         gameInfo = readEnv.getInfo();
-        grid = new Grid((int)gameInfo.getWidth(), (int)gameInfo.getHeight(), 1, new float[]{0, 0, 0}, readEnv);
+        grid = new Grid((int)gameInfo.getWidth(), (int)gameInfo.getHeight(), 1, new float[]{-1, -1}, readEnv);
 
         GameMode gameMode = (gameInfo.getGameMode() == 0) ? GameMode.CaptureOneIntruder : GameMode.CaptureAllIntruders;
         scenarioPercepts = new ScenarioPercepts(
@@ -76,7 +76,7 @@ public class GameEngine {
         infos = new ArrayList<AgentInfo>();
 
         for (Interop.Agent.Guard guard : guards) {
-            AgentInfo info = new AgentInfo(new Point(12, 12), Direction.fromDegrees(0), guard);
+            AgentInfo info = new AgentInfo(new Point(11, 11), Direction.fromDegrees(0), guard);
             infos.add(info);
         }
     }
@@ -90,15 +90,14 @@ public class GameEngine {
                 Angle viewAngle = Angle.fromDegrees(gameInfo.getViewAngle());
 
                 // HERE COMPUTE PERCEPTS
-                FieldOfView fieldOfView = new FieldOfView(range, viewAngle);
                 System.out.println(vision().getAll().size());
-                VisionPrecepts visionPrecepts = new VisionPrecepts(new FieldOfView(range, viewAngle), vision());
+                VisionPrecepts vision = new VisionPrecepts(new FieldOfView(range, viewAngle), vision());
 
                 boolean wasLastActionExecuted = info.isLastActionExecuted();
 
                 Action action = guard.getAction(
                         new GuardPercepts(
-                                visionPrecepts,
+                                vision,
                                 null,
                                 null,
                                 new AreaPercepts(false, false, false, false),
@@ -118,7 +117,7 @@ public class GameEngine {
                     // Check if end point is not a wall
                     Point checkPoint = new Point(endX, endY);
 
-                    if(grid.getGridArray()[(int)endX][(int)endY].getWalkable()){
+                    if(grid.getSquare(new float[]{(float)endX, (float)endY}).getWalkable()){
                         info.setCurrentPosition(new Point(endX, endY));
                         info.setLastAction(action);
                         info.setLastActionExecuted(true);
@@ -217,6 +216,7 @@ public class GameEngine {
         double viewRange = gameInfo.getViewRangeGuardNormal();
 
         Set<ObjectPercept> objectPercepts = new HashSet<>();
+        ArrayList<Square> visibleSquare = new ArrayList<>();
 
         for (double i = -(viewAngle / 2); i < viewAngle / 2; i += steps) {
 
@@ -237,51 +237,52 @@ public class GameEngine {
                     double squareY = gridMatrix[p][q].getSY();
 
                     // is on the line
-                    if (Math.round(squareX * slope + intercept) == squareY) {
-
-                        if (agentX < targetX) {
-                            if (agentY < targetY) {
-                                //check if agentX <= squareX <= targetX and agentY <= squareY <= targetY
-                                if (squareX >= agentX && squareX <= targetX && squareY >= agentY && squareY <= targetY) {
-                                    vectorSquare.add(gridMatrix[p][q]);
+                    if(!visibleSquare.contains(gridMatrix[p][q]))
+                        if (Math.round(squareX * slope + intercept) == squareY) {
+                            if (agentX < targetX) {
+                                if (agentY < targetY) {
+                                    //check if agentX <= squareX <= targetX and agentY <= squareY <= targetY
+                                    if (squareX >= agentX && squareX <= targetX && squareY >= agentY && squareY <= targetY) {
+                                        vectorSquare.add(gridMatrix[p][q]);
+                                    }
+                                } else {
+                                    //check if agentX <= squareX <= targetX and targetY <= squareY <= agentY
+                                    if (squareX >= agentX && squareX <= targetX && squareY <= agentY && squareY >= targetY) {
+                                        vectorSquare.add(gridMatrix[p][q]);
+                                    }
                                 }
                             } else {
-                                //check if agentX <= squareX <= targetX and targetY <= squareY <= agentY
-                                if (squareX >= agentX && squareX <= targetX && squareY <= agentY && squareY >= targetY) {
-                                    vectorSquare.add(gridMatrix[p][q]);
+                                if (agentY < targetY) {
+                                    //check if targetX <= squareX <= agentX and agentY <= squareY <= targetY
+                                    if (squareX <= agentX && squareX >= targetX && squareY >= agentY && squareY <= targetY) {
+                                        vectorSquare.add(gridMatrix[p][q]);
+                                    }
+                                } else {
+                                    //check if targetX <= squareX <= agentX and targetY <= squareY <= agentY
+                                    if (squareX <= agentX && squareX >= targetX && squareY <= agentY && squareY >= targetY) {
+                                        vectorSquare.add(gridMatrix[p][q]);
+                                    }
                                 }
-                            }
-                        } else {
-                            if (agentY < targetY) {
-                                //check if targetX <= squareX <= agentX and agentY <= squareY <= targetY
-                                if (squareX <= agentX && squareX >= targetX && squareY >= agentY && squareY <= targetY) {
-                                    vectorSquare.add(gridMatrix[p][q]);
-                                }
-                            } else {
-                                //check if targetX <= squareX <= agentX and targetY <= squareY <= agentY
-                                if (squareX <= agentX && squareX >= targetX && squareY <= agentY && squareY >= targetY) {
-                                    vectorSquare.add(gridMatrix[p][q]);
-                                }
-                            }
 
+                            }
                         }
-                    }
                 }
             }
+            visibleSquare.addAll(vectorSquare);
             ObjectPercept objectPercept = null;
-                for (Square square : vectorSquare) {
+            for (Square square : vectorSquare) {
 
-                    // TODO: implement all types of possible areas and if it is a wall we cannot see after it, if it is a target area, we can see through the area
+                // TODO: implement all types of possible areas and if it is a wall we cannot see after it, if it is a target area, we can see through the area
 
-                    if (square.getType() == "Wall") {
-                        objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX(), square.getSY()));
-                        objectPercepts.add(objectPercept);
-                    }else{
-                        objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(square.getSX(), square.getSY()));
-                        objectPercepts.add(objectPercept);
-                    }
-
+                if (square.getType() == "Wall") {
+                    objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX(), square.getSY()));
+                    objectPercepts.add(objectPercept);
+                }else{
+                    objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(square.getSX(), square.getSY()));
+                    objectPercepts.add(objectPercept);
                 }
+
+            }
                 /*if(objectPercept == null){
                     objectPercept = new ObjectPercept(ObjectPerceptType.EmptySpace, new Point(0, 0));
                 }*/

@@ -39,8 +39,8 @@ public class Percepts {
     ) {
 
         Require.notNull(vision);
-        Require.notNull(sounds);
-        Require.notNull(smells);
+//        Require.notNull(sounds);
+//        Require.notNull(smells);
         Require.notNull(areaPercepts);
 
         this.vision = vision;

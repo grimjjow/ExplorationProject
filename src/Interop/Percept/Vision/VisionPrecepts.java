@@ -18,7 +18,7 @@ public final class VisionPrecepts {
     public VisionPrecepts(FieldOfView fieldOfView, ObjectPercepts objectPercepts) {
         Require.notNull(fieldOfView);
         Require.notNull(objectPercepts);
-        requireObjectPerceptsToBeInFieldOfView(fieldOfView, objectPercepts);
+//        requireObjectPerceptsToBeInFieldOfView(fieldOfView, objectPercepts);
         this.fieldOfView = fieldOfView;
         this.objectPercepts = objectPercepts;
     }
