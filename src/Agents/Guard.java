@@ -1,6 +1,5 @@
 package Agents;
 
-import Engine.GameInfo;
 import Interop.Action.*;
 import Interop.Geometry.*;
 import Interop.Percept.*;
@@ -30,24 +29,13 @@ public class Guard implements Interop.Agent.Guard {
         VisionPrecepts vision = percepts.getVision();
         ObjectPercepts objects = vision.getObjects();
 
-
-        for(ObjectPercept objectPercept : objects.getAll()){
-
-            if(objectPercept.getType() == ObjectPerceptType.Wall){
-                System.out.println("found a wall");
-                System.out.println(objectPercept.toString());
-            }
-        }
-
         GuardAction action = new NoAction();
         Distance distance = scenario.getMaxMoveDistanceGuard();
         Angle angle = scenario.getScenarioPercepts().getMaxRotationAngle();
 
-
         switch(statecounter){
-
             case 0:
-                System.out.println("move until get stuck");
+                System.out.println("Move until get stuck");
                 // if last executed failed, then change to statecounter 1 and rotate 45 degrees
                 if(!lastActionExecuted){
                     // stuck, because of wall -> rotate
@@ -56,9 +44,8 @@ public class Guard implements Interop.Agent.Guard {
                     action = new Move(distance);
                 }
                 break;
-
             case 1:
-                System.out.println("rotate");
+                System.out.println("Rotate");
                 action = new Rotate(angle);
                 if(lastActionExecuted){
                     // rotate again
@@ -70,13 +57,5 @@ public class Guard implements Interop.Agent.Guard {
         }
 
         return action;
-        // return new Rotate(scenario.getScenarioPercepts().getMaxRotationAngle());
     }
-
-    public void updateState(){
-
-
-
-    }
-
 }

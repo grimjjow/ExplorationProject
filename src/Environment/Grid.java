@@ -135,6 +135,7 @@ public class Grid {
                     for (int y = (int) minY; y < maxY; y++) {
                         gridArray[x][y].setType("Window");
                         gridArray[x][y].setAreaProperty(window);
+                        gridArray[x][y].setWalkable(false);
                     }
                 }
             }
