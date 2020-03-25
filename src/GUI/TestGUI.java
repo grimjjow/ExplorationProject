@@ -37,7 +37,7 @@ public class TestGUI extends Application {
 
             Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             try {
-                File f = new File("C:\\Users\\Liam\\Desktop\\ExplorationProject\\src\\testenv2.txt");
+                File f = new File("/Users/bertrand/IdeaProjects/ExplorationProject/src/testenv.txt");
                 String file = f.toString();
                 this.path = file;
             }
@@ -55,10 +55,11 @@ public class TestGUI extends Application {
             Scene scene = new Scene(pane, bounds.getWidth(), bounds.getHeight());
             primaryStage.setScene(scene);
             primaryStage.show();
+            engine.update();
 
 
         } catch (Exception e) {
-            System.out.println("Exception in creating GUI" + Arrays.toString(e.getStackTrace()));
+            System.out.println("Exception in creating GUI " + e.getMessage() + " " + Arrays.toString(e.getStackTrace()));
         }
     }
 }

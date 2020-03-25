@@ -14,9 +14,6 @@ public class Environment {
     private ArrayList<AreaProperty> initialProperties;
     private GameInfo gameInfo;
 
-    Grid grid;
-    private  float[] originPosition = {0, 0};
-
     public String path;
 
     public Environment(String path, double screenWidth, double screenHeight) {
@@ -25,16 +22,11 @@ public class Environment {
         this.gameInfo = readEnv.getInfo();
         this.scalingFactor = getScalingFactor(screenWidth, screenHeight, readEnv.getInfo().getWidth() , readEnv.getInfo().getHeight());
 
-        this.height = readEnv.getInfo().getHeight()*scalingFactor;
-        this.width = readEnv.getInfo().getWidth()*scalingFactor;
-
         this.initialProperties = readEnv.getProperties();
     }
 
-    public double getWidth() {	return this.width; }
-    public double getHeight() { return this.height; }
-
-    public Grid getGrid(){ return this.grid; }
+    public double getWidth() {	return width; }
+    public double getHeight() { return height; }
 
     public double getScalingFactor(double screenWidth, double screenHeight, double mapWidth, double mapHeight) {
         double scalingFactor;

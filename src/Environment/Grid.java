@@ -2,60 +2,64 @@ package Environment;
 
 import AreaProperty.AreaProperty;
 import AreaProperty.Wall;
-import GUI.TestGUI;
+import Reader.Reader;
 
 
 public class Grid {
 
-    //Basic grid variables
-    public int width;
-    public int height;
-    public float cellSize;
-    private float[] originPosition = new float[2];
-
-    //Matrix containing grid info
+    // Grid Attributes
+    private int width;
+    private int height;
+    private float cellSize;
+    private float[] originPosition;
     public Square[][] gridArray;
 
-    public Grid(int width, int height, float cellSize, float[] originPosition) {
+    /**
+     * @param width width of the grid (= width of the game)
+     * @param height height of the grid (= width of the game)
+     * @param cellSize
+     * @param originPosition
+     * @param readEnv reader of the file, use to check if a point is a wall
+     */
+    public Grid(int width, int height, float cellSize, float[] originPosition, Reader readEnv) {
 
+        // Initialize attributes
         this.width = width;
         this.height = height;
         this.cellSize = cellSize;
         this.originPosition = originPosition;
 
-        gridArray = new Square[width][height]; //Initializing gridArray with Squares
+        // Initialize gridArray
+        gridArray = new Square[width+2][height+2];
 
+        //Filling gridArray with new Squares
         for (int x = 0; x < gridArray.length; x++) {
             for (int y = 0; y < gridArray[0].length; y++) {
-                gridArray[x][y] = new Square(x, y); //Filling gridarray with Squares
+                gridArray[x][y] = new Square(x, y);
             }
         }
 
-        for (AreaProperty ap : TestGUI.engine.readEnv.getProperties()) {
+        for (AreaProperty ap : readEnv.getProperties()) {
 
-            //if Areaproperty is a wall
+            // If the AreaProperty is a wall
             if (ap instanceof Wall) {
                 Wall w = (Wall) ap;
 
-                double maxX = Math.max(w.getTopLeft().getX(), Math.max(w.getTopRight().getX(), Math.max(w.getBotLeft().getX(), w.getBotRight().getX())));
-                double minX = Math.min(w.getTopLeft().getX(), Math.min(w.getTopRight().getX(), Math.min(w.getBotLeft().getX(), w.getBotRight().getX())));
-                double maxY = Math.max(w.getTopLeft().getY(), Math.max(w.getTopRight().getY(), Math.max(w.getBotLeft().getY(), w.getBotRight().getY())));
-                double minY = Math.min(w.getTopLeft().getY(), Math.min(w.getTopRight().getY(), Math.min(w.getBotLeft().getY(), w.getBotRight().getY())));
+                // Find the two opposite corner coordinates
+                double maxX = Math.max(w.getTopLeft().getX(), Math.max(w.getTopRight().getX(), Math.max(w.getBotLeft().getX(), w.getBotRight().getX()))) + 1;
+                double minX = Math.min(w.getTopLeft().getX(), Math.min(w.getTopRight().getX(), Math.min(w.getBotLeft().getX(), w.getBotRight().getX()))) + 1;
+                double maxY = Math.max(w.getTopLeft().getY(), Math.max(w.getTopRight().getY(), Math.max(w.getBotLeft().getY(), w.getBotRight().getY()))) + 1;
+                double minY = Math.min(w.getTopLeft().getY(), Math.min(w.getTopRight().getY(), Math.min(w.getBotLeft().getY(), w.getBotRight().getY()))) + 1;
 
-
-                //Loop that goes over all Xs and Ys in a wall, setting type of the square to "Wall"
+                // Loop that goes over all Xs and Ys in a wall, setting type of the square of the gridArray to "Wall" and not walkable
                 for (int x = (int) minX; x < maxX; x++) {
                     for (int y = (int) minY; y < maxY; y++) {
-
                         gridArray[x][y].setType("Wall");
                         gridArray[x][y].setWalkable(false);
                     }
                 }
-
             }
         }
-
-
     }
 
     public Square[][] getGridArray(){ return this.gridArray; }
