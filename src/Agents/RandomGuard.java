@@ -27,7 +27,6 @@ public class RandomGuard implements Interop.Agent.Guard {
      * @return GuardAction
      */
     public GuardAction getAction(GuardPercepts percepts) {
-
         boolean lastActionExecuted = percepts.wasLastActionExecuted();
         //AreaPercepts area = percepts.getAreaPercepts();
         ScenarioGuardPercepts scenario = percepts.getScenarioGuardPercepts();
@@ -35,15 +34,6 @@ public class RandomGuard implements Interop.Agent.Guard {
         //SoundPercepts sounds = percepts.getSounds();
         VisionPrecepts vision = percepts.getVision();
         ObjectPercepts objects = vision.getObjects();
-
-
-        for (ObjectPercept objectPercept : objects.getAll()) {
-
-            if (objectPercept.getType() == ObjectPerceptType.Wall) {
-                System.out.println("found a wall");
-                System.out.println(objectPercept.toString());
-            }
-        }
 
         GuardAction action = new NoAction();
         Distance distance = scenario.getMaxMoveDistanceGuard();
@@ -58,8 +48,6 @@ public class RandomGuard implements Interop.Agent.Guard {
         else{
             action = new Rotate(angle);
         }
-
         return action;
     }
-
 }

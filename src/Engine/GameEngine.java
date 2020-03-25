@@ -73,7 +73,7 @@ public class GameEngine {
         );
         properties = readEnv.getProperties();
         // calling normal guard
-        guards = AgentFactory.createGuards(gameInfo.getNumGuards(), "Guard");
+        guards = AgentFactory.createGuards(gameInfo.getNumGuards(), "RandomGuard");
         infos = new ArrayList<AgentInfo>();
 
         for (Interop.Agent.Guard guard : guards) {
@@ -171,7 +171,7 @@ public class GameEngine {
                 currentSquare = grid.getSquare(new float[]{(float)info.getCurrentPosition().getX(),(float) info.getCurrentPosition().getY()});
 
                 if(currentSquare.getType().equals("Teleport")){
-                    System.out.println("--- Teleporation ---");
+                    System.out.println("--- Teleportation --");
                     Teleport teleport = (Teleport) currentSquare.getAreaProperty();
                     info.setTeleported(true);
                     info.setCurrentPosition(teleport.getTeleportTo());
