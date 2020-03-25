@@ -59,6 +59,7 @@ public class GameEngine {
         this.path = path;
         readEnv = new Reader(path);
         gameInfo = readEnv.getInfo();
+        grid = new Grid((int)gameInfo.getWidth(), (int)gameInfo.getHeight(), 1, new float[]{0, 0, 0}, readEnv);
 
         GameMode gameMode = (gameInfo.getGameMode() == 0) ? GameMode.CaptureOneIntruder : GameMode.CaptureAllIntruders;
         scenarioPercepts = new ScenarioPercepts(
@@ -89,9 +90,21 @@ public class GameEngine {
                 Angle viewAngle = Angle.fromDegrees(gameInfo.getViewAngle());
 
                 // HERE COMPUTE PERCEPTS
+                FieldOfView fieldOfView = new FieldOfView(range, viewAngle);
+                System.out.println(vision().getAll().size());
                 VisionPrecepts visionPrecepts = new VisionPrecepts(new FieldOfView(range, viewAngle), vision());
 
-                Action action = guard.getAction(new GuardPercepts(visionPrecepts, null, null, new AreaPercepts(false, false, false, false), new ScenarioGuardPercepts(scenarioPercepts, gameInfo.getMaxMoveDistanceGuard()), true));
+                boolean wasLastActionExecuted = info.isLastActionExecuted();
+
+                Action action = guard.getAction(
+                        new GuardPercepts(
+                                visionPrecepts,
+                                null,
+                                null,
+                                new AreaPercepts(false, false, false, false),
+                                new ScenarioGuardPercepts(scenarioPercepts, gameInfo.getMaxMoveDistanceGuard()),
+                                wasLastActionExecuted)
+                );
 
                 // HERE COMPUTE ACTION
                 if(action instanceof Move) {
@@ -197,8 +210,7 @@ public class GameEngine {
         double viewRays = gameInfo.getViewRays();
         double steps = viewAngle / viewRays;
 
-        Square[][] gridMatrix = this.env.getGrid().getGridArray();
-
+        Square[][] gridMatrix = this.grid.getGridArray();
 
         // if area is normal
         // TODO: check if area is shaded or normal
