@@ -53,7 +53,7 @@ public class Square {
     }
 
     public void setExplored(boolean BOOL) {
-        walkable = BOOL;
+        explored = BOOL;
     }
 
     public boolean getWalkable() {
@@ -78,6 +78,15 @@ public class Square {
 
     public void setType(String typeName) {
         type = typeName;
+    }
+
+    public String toString() {
+        return "Square{" +
+                "type=" + type +
+                ", x=" + x +
+                ", y=" + y +
+                ", walkable=" + walkable +
+                '}';
     }
 
 }

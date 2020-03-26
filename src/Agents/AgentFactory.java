@@ -11,7 +11,7 @@ public class AgentFactory {
     static public List<Guard> createGuards(int number, String guardname) {
 
         List<Guard> guards = new ArrayList<Guard>();
-        if (guardname.equals("RandomGuard")) {
+        if (guardname.equals("Guard")) {
             for (int i = 0; i < number; i++) {
                 Agents.Guard guard = new Agents.Guard();
                 guards.add(guard);

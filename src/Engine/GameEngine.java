@@ -5,6 +5,7 @@ import Agents.*;
 import Environment.Environment;
 
 import GUI.EnvironmentGUI;
+import Interop.Action.NoAction;
 import Interop.Geometry.Direction;
 import Interop.Geometry.Point;
 import Reader.*;
@@ -44,20 +45,18 @@ public class GameEngine {
 
     static GameInfo gameInfo;
 
-    Object agent;
-
     double widthBound;
     double heightBound;
     private ScenarioPercepts scenarioPercepts;
     private EnvironmentGUI environmentGUI;
     private BorderPane envPane;
     private Environment env;
-    private String path;
     private Grid grid;
+
+    private final boolean DEBUG = true;
 
     public GameEngine(String path) {
 
-        this.path = path;
         readEnv = new Reader(path);
         gameInfo = readEnv.getInfo();
         grid = new Grid((int)gameInfo.getWidth(), (int)gameInfo.getHeight(), 1, new float[]{-1, -1}, readEnv);
@@ -84,18 +83,25 @@ public class GameEngine {
 
     public void update(){
         do {
-            for (Interop.Agent.Guard guard : guards) {
-                AgentInfo info = infos.get(0);
+            if(this.DEBUG)
+                System.out.println(ConsoleColor.BRIGHT_GREEN + "--------- Start round ------\n" + ConsoleColor.RESET);
 
-                System.out.println("---- New round -----");
-                System.out.println("Position: " + info.getCurrentPosition().toString());
-                System.out.println("Direction: " + info.getDirection().getDegrees());
+            int count = 0;
+            for (Interop.Agent.Guard guard : guards) {
+                AgentInfo info = infos.get(count);
+                count++;
+
+                if(this.DEBUG) {
+                    System.out.println(ConsoleColor.GREEN + "--------- Start agent ------" + ConsoleColor.RESET);
+                    System.out.println(ConsoleColor.WHITE + "Position: " + ConsoleColor.CYAN + info.getCurrentPosition().toString() + ConsoleColor.RESET);
+                    System.out.println(ConsoleColor.WHITE + "Direction: " + ConsoleColor.CYAN + info.getDirection().getDegrees() + ConsoleColor.RESET);
+                }
 
                 Distance range = new Distance(gameInfo.getViewRangeGuardNormal());
                 Angle viewAngle = Angle.fromDegrees(gameInfo.getViewAngle());
 
                 // HERE COMPUTE PERCEPTS
-                VisionPrecepts vision = new VisionPrecepts(new FieldOfView(range, viewAngle), vision());
+                VisionPrecepts vision = new VisionPrecepts(new FieldOfView(range, viewAngle), vision(info));
 
                 boolean wasLastActionExecuted = info.isLastActionExecuted();
                 boolean inWindow = false;
@@ -117,7 +123,9 @@ public class GameEngine {
                     info.setTeleported(false);
                 }
 
-                System.out.println("--- Agent action ---");
+                if(this.DEBUG)
+                    System.out.println(ConsoleColor.YELLOW + "-------- Agent Action -----" + ConsoleColor.RESET);
+
                 Action action = guard.getAction(
                         new GuardPercepts(
                                 vision,
@@ -131,67 +139,103 @@ public class GameEngine {
                 // HERE COMPUTE ACTION
                 if(action instanceof Move) {
                     Distance distance = ((Move) action).getDistance();
-                    double agentX = info.getCurrentPosition().getX();
-                    double agentY = info.getCurrentPosition().getY();
+                    Point currentPosition = info.getCurrentPosition();
                     Direction direction = info.getDirection();
 
-                    double targetX = agentX + distance.getValue() * Math.cos(direction.getRadians());
-                    double targetY = agentY + distance.getValue() * Math.sin(direction.getRadians());
+                    double endX = currentPosition.getX() + distance.getValue() * Math.cos(direction.getRadians());
+                    double endY = currentPosition.getY() + distance.getValue() * Math.sin(direction.getRadians());
 
-                    // Compute the line
-                    double slope = (targetX - agentX) / (targetY - agentY);
-                    double intercept = targetY - (slope * targetX);
+                    Square square = grid.getSquare(new float[]{(float)endX, (float)endY});
 
-                    boolean accept = true;
+                    // Check if end point is not a wall
+                    Point checkPoint = new Point(endX, endY);
 
-                    // Go through all the square of the grid
-                    label:
-                    for (Square[] matrix : this.grid.getGridArray()) {
-                        for (Square square : matrix) {
-                            // Store the square and its X and Y
-                            double squareX = square.getSX();
-                            double squareY = square.getSY();
-                            // Check if it is on the computed line
-                            if(!square.getWalkable()) {
-                                if (Math.round(squareX * slope + intercept) == squareY) {
-                                    // Check if it is between the agent (excluded) and the end point (included)
-                                    if (agentX < targetX) {
-                                        if (agentY < targetY) {
-                                            if (squareX > agentX && squareX <= targetX && squareY > agentY && squareY <= targetY) {
-                                                accept = false;
-                                                break label;
-                                            }
-                                        } else {
-                                            if (squareX > agentX && squareX <= targetX && squareY < agentY && squareY >= targetY) {
-                                                accept = false;
-                                                break label;
-                                            }
-                                        }
-                                    } else {
-                                        if (agentY < targetY) {
-                                            if (squareX < agentX && squareX >= targetX && squareY > agentY && squareY <= targetY) {
-                                                accept = false;
-                                                break label;
-                                            }
-                                        } else {
-                                            if (squareX < agentX && squareX >= targetX && squareY < agentY && squareY >= targetY) {
-                                                accept = false;
-                                                break label;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if(accept){
-                        info.setCurrentPosition(new Point(targetX, targetY));
+                    if(grid.getSquare(new float[]{(float)endX, (float)endY}).getWalkable()){
+                        info.setCurrentPosition(new Point(endX, endY));
                         info.setLastAction(action);
                         info.setLastActionExecuted(true);
-                    } else {
+                    } else{
                         info.setLastActionExecuted(false);
                         info.setLastAction(action);
+                    }
+
+//                    Distance distance = ((Move) action).getDistance();
+//                    double agentX = info.getCurrentPosition().getX();
+//                    double agentY = info.getCurrentPosition().getY();
+//                    Direction direction = info.getDirection();
+//
+//                    double targetX = agentX + distance.getValue() * Math.cos(direction.getRadians());
+//                    double targetY = agentY + distance.getValue() * Math.sin(direction.getRadians());
+//
+//                    System.out.println(targetX + " --- " + targetY);
+//
+//                    // Compute the line
+//                    double slope = (targetX - agentX) / (targetY - agentY);
+//                    double intercept = targetY - (slope * targetX);
+//
+//                    boolean accept = true;
+//
+//                    // Go through all the square of the grid
+//                    label:
+//                    for (Square[] matrix : this.grid.getGridArray()) {
+//                        for (Square square : matrix) {
+//                            // Store the square and its X and Y
+//                            double squareX = square.getSX();
+//                            double squareY = square.getSY();
+//                            // Check if it is on the computed line
+//                            if(!square.getWalkable()) {
+//                                System.out.println("test1");
+//                                if (Math.round(squareX * slope + intercept) == squareY) {
+//                                    System.out.println("test2" + squareX + " " + squareY);
+//                                    // Check if it is between the agent (excluded) and the end point (included)
+//                                    if (agentX < targetX) {
+//                                        if (agentY < targetY) {
+//                                            if (squareX >= agentX && squareX <= targetX && squareY >= agentY && squareY <= targetY) {
+//                                                accept = false;
+//                                                System.out.println("test");
+//                                                break label;
+//                                            }
+//                                        } else {
+//                                            if (squareX >= agentX && squareX <= targetX && squareY <= agentY && squareY >= targetY) {
+//                                                accept = false;
+//                                                System.out.println("test");
+//                                                break label;
+//                                            }
+//                                        }
+//                                    } else {
+//                                        if (agentY < targetY) {
+//                                            if (squareX <= agentX && squareX >= targetX && squareY >= agentY && squareY <= targetY) {
+//                                                accept = false;
+//                                                System.out.println("test");
+//                                                break label;
+//                                            }
+//                                        } else {
+//                                            if (squareX <= agentX && squareX >= targetX && squareY <= agentY && squareY >= targetY) {
+//                                                accept = false;
+//                                                System.out.println("test");
+//                                                break label;
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//
+//                    if(accept){
+//                        info.setCurrentPosition(new Point(targetX, targetY));
+//                        info.setLastAction(action);
+//                        info.setLastActionExecuted(true);
+//                    } else {
+//                        info.setLastActionExecuted(false);
+//                        info.setLastAction(action);
+//                    }
+
+                    if(this.DEBUG) {
+                        System.out.println(ConsoleColor.WHITE + "Action: " + ConsoleColor.CYAN + "Moving" + ConsoleColor.RESET);
+                        System.out.println(ConsoleColor.WHITE + "End X/Y: " + ConsoleColor.CYAN + endX + " " + endY + ConsoleColor.RESET);
+                        System.out.println(ConsoleColor.WHITE + "End Square: " + ConsoleColor.CYAN + square.toString() + ConsoleColor.RESET);
+                        System.out.println(ConsoleColor.WHITE + "Executed: " + info.isLastActionExecuted() + ConsoleColor.RESET);
                     }
 
                 } else if(action instanceof Rotate) {
@@ -210,18 +254,25 @@ public class GameEngine {
                     info.setDirection(newDirection);
                     info.setLastAction(action);
                     info.setLastActionExecuted(true);
+
+                    System.out.println(ConsoleColor.WHITE + "Action:" + ConsoleColor.CYAN + "Rotating" + ConsoleColor.RESET);
+                    System.out.println(ConsoleColor.WHITE + "End direction:" + ConsoleColor.CYAN + newDirection.getDegrees() + ConsoleColor.RESET);
+                } else if(action instanceof NoAction) {
+                    System.out.println(ConsoleColor.WHITE + "Action:" + ConsoleColor.CYAN + "Do nothing" + ConsoleColor.RESET);
                 }
 
                 // check if the current position is inside of a teleport area -> if yes then move to new position
                 currentSquare = grid.getSquare(new float[]{(float)info.getCurrentPosition().getX(),(float) info.getCurrentPosition().getY()});
 
                 if(currentSquare.getType().equals("Teleport")){
-                    System.out.println("--- Teleportation --");
+                    System.out.println(ConsoleColor.PURPLE + "-------- Teleportation ----" + ConsoleColor.RESET);
                     Teleport teleport = (Teleport) currentSquare.getAreaProperty();
                     info.setTeleported(true);
                     info.setCurrentPosition(teleport.getTeleportTo());
                 }
+                System.out.println(ConsoleColor.RED + "--------- End agent --------\n" + ConsoleColor.RESET);
             }
+            System.out.println(ConsoleColor.BRIGHT_RED + "--------- End round --------\n\n\n" + ConsoleColor.RESET);
             if(grid.checkExplored())
                 System.out.println(">>> Everything is explored <<<");
         } while (true);
@@ -269,9 +320,9 @@ public class GameEngine {
         return this.envPane;
     }
 
-    public ObjectPercepts vision() {
+    public ObjectPercepts vision(AgentInfo info) {
         // Agent infos
-        AgentInfo info = infos.get(0);
+//        AgentInfo info = infos.get(0);
         double agentX = info.getCurrentPosition().getX();
         double agentY = info.getCurrentPosition().getY();
         Square currentSquare = this.grid.getSquare(new float[]{(float) agentX, (float) agentY});
@@ -402,11 +453,11 @@ public class GameEngine {
             }
         }
 
-        System.out.print("Vision: ");
+        System.out.print(ConsoleColor.WHITE + "Vision: " + ConsoleColor.CYAN);
         for(Square square : visibleSquare) {
             System.out.print(" " + square.getType());
         }
-        System.out.print("\n");
+        System.out.print(ConsoleColor.RESET + "\n");
         return new ObjectPercepts(objectPercepts);
     }
 }

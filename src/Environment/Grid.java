@@ -37,7 +37,6 @@ public class Grid {
             for (int y = 0; y < gridArray[0].length; y++) {
                 Square square = new Square(x, y);
                 square.setType("Empty");
-                square.setWalkable(true);
                 gridArray[x][y] = square;
             }
         }
