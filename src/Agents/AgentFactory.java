@@ -16,9 +16,14 @@ public class AgentFactory {
                 Agents.Guard guard = new Agents.Guard();
                 guards.add(guard);
             }
-        } else {
+        } else if(guardname.equals("RandomGuard")) {
             for (int i = 0; i < number; i++) {
                 Agents.RandomGuard guard = new Agents.RandomGuard();
+                guards.add(guard);
+            }
+        } else {
+            for (int i = 0; i < number; i++) {
+                Agents.BoltzmannGuard guard = new Agents.BoltzmannGuard();
                 guards.add(guard);
             }
         }

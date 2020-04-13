@@ -72,7 +72,7 @@ public class GameEngine {
         );
         properties = readEnv.getProperties();
         // calling normal guard
-        guards = AgentFactory.createGuards(gameInfo.getNumGuards(), "RandomGuard");
+        guards = AgentFactory.createGuards(gameInfo.getNumGuards(), "BoltzmannGuard");
         infos = new ArrayList<AgentInfo>();
 
         for (Interop.Agent.Guard guard : guards) {
@@ -145,7 +145,7 @@ public class GameEngine {
                     double endX = currentPosition.getX() + distance.getValue() * Math.cos(direction.getRadians());
                     double endY = currentPosition.getY() + distance.getValue() * Math.sin(direction.getRadians());
 
-                    Square square = grid.getSquare(new float[]{(float)endX, (float)endY});
+                  //  Square square = grid.getSquare(new float[]{(float)endX, (float)endY});
 
                     // Check if end point is not a wall
                     Point checkPoint = new Point(endX, endY);
@@ -159,77 +159,78 @@ public class GameEngine {
                         info.setLastAction(action);
                     }
 
-//                    Distance distance = ((Move) action).getDistance();
-//                    double agentX = info.getCurrentPosition().getX();
-//                    double agentY = info.getCurrentPosition().getY();
-//                    Direction direction = info.getDirection();
-//
-//                    double targetX = agentX + distance.getValue() * Math.cos(direction.getRadians());
-//                    double targetY = agentY + distance.getValue() * Math.sin(direction.getRadians());
-//
-//                    System.out.println(targetX + " --- " + targetY);
-//
-//                    // Compute the line
-//                    double slope = (targetX - agentX) / (targetY - agentY);
-//                    double intercept = targetY - (slope * targetX);
-//
-//                    boolean accept = true;
-//
-//                    // Go through all the square of the grid
-//                    label:
-//                    for (Square[] matrix : this.grid.getGridArray()) {
-//                        for (Square square : matrix) {
-//                            // Store the square and its X and Y
-//                            double squareX = square.getSX();
-//                            double squareY = square.getSY();
-//                            // Check if it is on the computed line
-//                            if(!square.getWalkable()) {
-//                                System.out.println("test1");
-//                                if (Math.round(squareX * slope + intercept) == squareY) {
-//                                    System.out.println("test2" + squareX + " " + squareY);
-//                                    // Check if it is between the agent (excluded) and the end point (included)
-//                                    if (agentX < targetX) {
-//                                        if (agentY < targetY) {
-//                                            if (squareX >= agentX && squareX <= targetX && squareY >= agentY && squareY <= targetY) {
-//                                                accept = false;
-//                                                System.out.println("test");
-//                                                break label;
-//                                            }
-//                                        } else {
-//                                            if (squareX >= agentX && squareX <= targetX && squareY <= agentY && squareY >= targetY) {
-//                                                accept = false;
-//                                                System.out.println("test");
-//                                                break label;
-//                                            }
-//                                        }
-//                                    } else {
-//                                        if (agentY < targetY) {
-//                                            if (squareX <= agentX && squareX >= targetX && squareY >= agentY && squareY <= targetY) {
-//                                                accept = false;
-//                                                System.out.println("test");
-//                                                break label;
-//                                            }
-//                                        } else {
-//                                            if (squareX <= agentX && squareX >= targetX && squareY <= agentY && squareY >= targetY) {
-//                                                accept = false;
-//                                                System.out.println("test");
-//                                                break label;
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    if(accept){
-//                        info.setCurrentPosition(new Point(targetX, targetY));
-//                        info.setLastAction(action);
-//                        info.setLastActionExecuted(true);
-//                    } else {
-//                        info.setLastActionExecuted(false);
-//                        info.setLastAction(action);
-//                    }
+                    distance = ((Move) action).getDistance();
+                    double agentX = info.getCurrentPosition().getX();
+                    double agentY = info.getCurrentPosition().getY();
+                    direction = info.getDirection();
+
+                    double targetX = agentX + distance.getValue() * Math.cos(direction.getRadians());
+                    double targetY = agentY + distance.getValue() * Math.sin(direction.getRadians());
+
+                    System.out.println(targetX + " --- " + targetY);
+
+                    // Compute the line
+                    double slope = (targetX - agentX) / (targetY - agentY);
+                    double intercept = targetY - (slope * targetX);
+
+                    boolean accept = true;
+
+                    // Go through all the square of the grid
+                    label:
+                    for (Square[] matrix : this.grid.getGridArray()) {
+                        for (Square square : matrix) {
+                            // Store the square and its X and Y
+                            double squareX = square.getSX();
+                            double squareY = square.getSY();
+                            // Check if it is on the computed line
+                            if(!square.getWalkable()) {
+                                System.out.println("test1");
+                                if (Math.round(squareX * slope + intercept) == squareY) {
+                                    System.out.println("test2" + squareX + " " + squareY);
+                                    // Check if it is between the agent (excluded) and the end point (included)
+                                    if (agentX < targetX) {
+                                        if (agentY < targetY) {
+                                            if (squareX >= agentX && squareX <= targetX && squareY >= agentY && squareY <= targetY) {
+                                                accept = false;
+                                                System.out.println("test");
+                                                break label;
+                                            }
+                                        } else {
+                                            if (squareX >= agentX && squareX <= targetX && squareY <= agentY && squareY >= targetY) {
+                                                accept = false;
+                                                System.out.println("test");
+                                                break label;
+                                            }
+                                        }
+                                    } else {
+                                        if (agentY < targetY) {
+                                            if (squareX <= agentX && squareX >= targetX && squareY >= agentY && squareY <= targetY) {
+                                                accept = false;
+                                                System.out.println("test");
+                                                break label;
+                                            }
+                                        } else {
+                                            if (squareX <= agentX && squareX >= targetX && squareY <= agentY && squareY >= targetY) {
+                                                accept = false;
+                                                System.out.println("test");
+                                                break label;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if(accept){
+                        info.setCurrentPosition(new Point(targetX, targetY));
+                        info.setLastAction(action);
+                        info.setLastActionExecuted(true);
+                    } else {
+                        info.setLastActionExecuted(false);
+                        info.setLastAction(action);
+                     }
+                    Square square = grid.getSquare(new float[]{(float)endX, (float)endY});
 
                     if(this.DEBUG) {
                         System.out.println(ConsoleColor.WHITE + "Action: " + ConsoleColor.CYAN + "Moving" + ConsoleColor.RESET);
@@ -457,6 +458,9 @@ public class GameEngine {
         for(Square square : visibleSquare) {
             System.out.print(" " + square.getType());
         }
+       /* for(ObjectPercept objectPercept : objectPercepts){
+            System.out.println(objectPercept.getPoint());
+        }*/
         System.out.print(ConsoleColor.RESET + "\n");
         return new ObjectPercepts(objectPercepts);
     }
