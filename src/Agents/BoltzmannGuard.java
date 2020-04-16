@@ -38,6 +38,14 @@ public class BoltzmannGuard implements Interop.Agent.Guard{
         double temperature = 5;
         double [][] actionArray = new double[3][2];
 
+        // iterate through vision to check for sentry tower
+        for(ObjectPercept objectPercept : objects.getAll()){
+            if(objectPercept.getType() == ObjectPerceptType.SentryTower){
+                findAngle(objectPercept.getPoint(), objects);
+
+            }
+        }
+
         double actionMoveSingle = Math.exp(evaluateAction(new Move(distance), objects)*temperature);
         double actionRotateLeftSingle = Math.exp(evaluateAction(new Rotate(angle), objects)*temperature);
         double actionRotateRightSingle = Math.exp(evaluateAction(new Rotate(Angle.fromRadians(-angle.getRadians())),objects)*temperature);
@@ -110,5 +118,32 @@ public class BoltzmannGuard implements Interop.Agent.Guard{
             return countWalls;
         }
         return 0;
+    }
+
+    /**
+     * Given a point and the vision percepts
+     *
+     * @param point
+     * @param objectPercepts
+     * @return
+     */
+    public Angle findAngle(Point point, ObjectPercepts objectPercepts){
+
+        double yMean = 0;
+        double xMean = 0;
+
+        // calculate middle point
+        for(ObjectPercept objectPercept : objectPercepts.getAll()){
+            xMean += objectPercept.getPoint().getX();
+            yMean += objectPercept.getPoint().getY();
+        }
+
+        xMean = xMean/objectPercepts.getAll().size();
+        yMean = yMean/objectPercepts.getAll().size();
+
+        double m = (yMean-point.getY())/(xMean-point.getX());
+        double angle = Math.atan(m);
+
+        return Angle.fromRadians(angle);
     }
 }

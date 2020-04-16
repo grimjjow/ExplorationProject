@@ -406,7 +406,7 @@ public class GameEngine {
 
             label:
             for (Square square : vectorSquare.values()) {
-                // Add to the visibleSquare list to removed duplicate
+                // Add to the visibleSquare for the whole vision
                 visibleSquare.add(square);
                 square.setExplored(true);
 
@@ -416,7 +416,7 @@ public class GameEngine {
                         // Break if we are not in because it is opaque from outside
                         if (!currentSquare.getType().equals("Door")) {
                             objectPercepts.add(objectPercept);
-                            break label;
+                            //break label;
                         }
                         break;
                     case "Sentry":
@@ -424,7 +424,7 @@ public class GameEngine {
                         // Break if we are not in because it is opaque from outside
                         if (!currentSquare.getType().equals("Sentry")) {
                             objectPercepts.add(objectPercept);
-                            break label;
+                            //break label;
                         }
                         break;
                     case "Shade":
@@ -432,7 +432,7 @@ public class GameEngine {
                         // Break if we are not in because it is opaque from outside
                         if (!currentSquare.getType().equals("Shade")) {
                             objectPercepts.add(objectPercept);
-                            break label;
+                            //break label;
                         }
                         break;
                     case "Teleport":
@@ -442,7 +442,8 @@ public class GameEngine {
                         objectPercept = new ObjectPercept(ObjectPerceptType.Wall, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
                         // Break because it is opaque
                         objectPercepts.add(objectPercept);
-                        break label;
+                        //break label;
+                        break;
                     case "Window":
                         objectPercept = new ObjectPercept(ObjectPerceptType.Window, new Point(square.getSX() - info.getCurrentPosition().getX(), square.getSY() - info.getCurrentPosition().getY()));
                         break;
@@ -453,7 +454,7 @@ public class GameEngine {
                 objectPercepts.add(objectPercept);
             }
         }
-
+        System.out.println("Size of the visible squares: " + visibleSquare.size());
         System.out.print(ConsoleColor.WHITE + "Vision: " + ConsoleColor.CYAN);
         for(Square square : visibleSquare) {
             System.out.print(" " + square.getType());
