@@ -1,0 +1,52 @@
+gameMode = 0
+height = 101
+width = 150
+numGuards = 4
+numIntruders = 3
+captureDistance = 0.5
+winConditionIntruderRounds = 1
+maxRotationAngle = 45.0
+maxMoveDistanceIntruder = 1.4
+maxSprintDistanceIntruder = 4.0
+maxMoveDistanceGuard = 1.4
+sprintCooldown = 2
+pheromoneCooldown = 3
+radiusPheromone = 5.0
+slowDownModifierWindow = 0.5
+slowDownModifierDoor = 0.5
+slowDownModifierSentryTower = 0.1
+viewAngle = 45.0
+viewRays = 45
+viewRangeIntruderNormal = 7.5
+viewRangeIntruderShaded = 4.0
+viewRangeGuardNormal = 6.0
+viewRangeGuardShaded = 3.5
+viewRangeSentry = 2.0, 20.0
+yellSoundRadius = 30.0
+maxMoveSoundRadius = 10.0
+windowSoundRadius = 10.0
+doorSoundRadius = 5.0
+pheromoneExpireRounds = 5
+
+wall = 0.0,0.0,149.0,0.0,149.0,1.0,0.0,1.0
+wall = 149.0,0.0,150.0,0.0,150.0,100.0,149.0,100.0
+wall = 1.0,100.0,150.0,100.0,150.0,101.0,1.0,101.0
+wall = 0.0,1.0,1.0,1.0,1.0,101.0,0.0,101.0
+
+wall = 1.0,69.0,25.0,69.0,25.0,70.0,1.0,70.0
+wall = 30.0,75.0,31.0,75.0,31.0,100.0,30.0,100.0
+
+wall = 100.0,1.0,101.0,1.0,101.0,30.0,100.0,30.0
+
+wall = 125.0,1.0,126.0,1.0,126.0,10.0,125.0,10.0
+wall = 125.0,15.0,126.0,15.0,126.0,25.0,125.0,25.0
+wall = 126.0,24.0,149.0,24.0,149.0,25.0,126.0,25.0
+
+wall = 85.0,60.0,105.0,60.0,105.0,61.0,85.0,61.0
+wall = 115.0,60.0,130.0,60.0,130.0,61.0,115.0,61.0
+
+window = 105.0,60.0,115.0,60.0,115.0,61.0,105.0,61.0
+door = 125.0,10.0,126.0,10.0,126.0,15.0,125.0,15.0
+spawnAreaGuards = 10.0,80.0,20.0,80.0,20.0,90.0,10.0,90.0
+spawnAreaIntruders = 10.0,10.0,20.0,10.0,20.0,20.0,10.0,20.0
+targetArea = 140.0,5.0,145.0,5.0,145.0,10.0,140.0,10.0

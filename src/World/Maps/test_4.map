@@ -1,0 +1,66 @@
+gameMode = 0
+height = 121
+width = 250
+numGuards = 4
+numIntruders = 3
+captureDistance = 0.5
+winConditionIntruderRounds = 1
+maxRotationAngle = 45.0
+maxMoveDistanceIntruder = 1.4
+maxSprintDistanceIntruder = 4.0
+maxMoveDistanceGuard = 1.4
+sprintCooldown = 2
+pheromoneCooldown = 3
+radiusPheromone = 5.0
+slowDownModifierWindow = 0.5
+slowDownModifierDoor = 0.5
+slowDownModifierSentryTower = 0.1
+viewAngle = 45.0
+viewRays = 45
+viewRangeIntruderNormal = 7.5
+viewRangeIntruderShaded = 4.0
+viewRangeGuardNormal = 6.0
+viewRangeGuardShaded = 3.5
+viewRangeSentry = 2.0, 20.0
+yellSoundRadius = 30.0
+maxMoveSoundRadius = 10.0
+windowSoundRadius = 10.0
+doorSoundRadius = 5.0
+pheromoneExpireRounds = 5
+
+wall = 0.0,0.0,119.0,0.0,119.0,1.0,0.0,1.0
+wall = 119.0,0.0,120.0,0.0,120.0,120.0,119.0,120.0
+wall = 1.0,120.0,120.0,120.0,120.0,121.0,1.0,121.0
+wall = 0.0,1.0,1.0,1.0,1.0,121.0,0.0,121.0
+
+wall = 130.0,0.0,249.0,0.0,249.0,1.0,130.0,1.0
+wall = 249.0,0.0,250.0,0.0,250.0,120.0,249.0,120.0
+wall = 131.0,120.0,250.0,120.0,250.0,121.0,131.0,121.0
+wall = 130.0,1.0,131.0,1.0,131.0,121.0,130.0,121.0
+
+wall = 1.0,29.0,30.0,29.0,30.0,30.0,1.0,30.0
+wall = 29.0,1.0,30.0,1.0,30.0,23.0,29.0,23.0
+door = 29.0,23.0,30.0,23.0,30.0,29.0,29.0,29.0
+
+wall = 89.0,29.0,119.0,29.0,119.0,30.0,89.0,30.0
+wall = 89.0,30.0,90.0,30.0,90.0,60.0,89.0,60.0
+wall = 89.0,65.0,90.0,65.0,90.0,70.0,89.0,70.0
+window = 89.0,60.0,90.0,60.0,90.0,65.0,89.0,65.0
+wall = 90.0,69.0,112.0,69.0,112.0,70.0,90.0,70.0
+door = 112.0,69.0,119.0,69.0,119.0,70.0,112.0,70.0
+
+wall = 200.0,80.0,201.0,80.0,201.0,120,200.0,120.0
+
+wall = 131.0,40.0,153.0,40.0,153.0,41.0,131.0,41.0
+wall = 160.0,40.0,200.0,40.0,200.0,41.0,160.0,41.0
+wall = 207.0,40.0,249.0,40.0,249.0,41.0,207.0,41.0
+door = 153.0,40.0,160.0,40.0,160.0,41.0,153.0,41.0
+door = 200.0,40.0,207.0,40.0,207.0,41.0,200.0,41.0
+wall = 180.0,1.0,181.0,1.0,181.0,15.0,180.0,15.0
+wall = 180.0,25.0,181.0,25.0,181.0,40.0,180.0,40.0
+window = 180.0,15.0,181.0,15.0,181.0,25.0,180.0,25.0
+
+spawnAreaGuards = 10.0,100.0,20.0,100.0,20.0,110.0,10.0,110.0
+spawnAreaIntruders = 10.0,10.0,20.0,10.0,20.0,20.0,10.0,20.0
+targetArea = 240.0,5.0,245.0,5.0,245.0,10.0,240.0,10.0
+teleportArea = 104.0,44.0,114.0,44.0,114.0,54.0,104.0,54.0,140.0,100.0,150.0,100.0,150.0,110.0,140.0,110.0
