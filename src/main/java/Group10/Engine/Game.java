@@ -44,10 +44,11 @@ import java.util.stream.Collectors;
 
 public class Game implements Runnable {
 
+    public final static Boolean DEBUG = true;
     public final static Random _RANDOM;
     public final static long _RANDOM_SEED = System.nanoTime();
     static {
-        System.out.println("seed: " + _RANDOM_SEED);
+        if(DEBUG) System.out.println("seed: " + _RANDOM_SEED);
         _RANDOM = new Random(_RANDOM_SEED);
     }
 

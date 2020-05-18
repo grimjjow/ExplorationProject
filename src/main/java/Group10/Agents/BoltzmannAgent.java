@@ -23,7 +23,7 @@ public class BoltzmannAgent implements Guard{
     private ArrayList<int[]> memory;
 
     public BoltzmannAgent() {
-        System.out.println("This is the boltzmann guard");
+        if(Game.DEBUG) System.out.println("This is the boltzmann guard");
     }
 
 
@@ -48,7 +48,7 @@ public class BoltzmannAgent implements Guard{
         Angle randomAngle = Angle.fromDegrees(randomNum);
 
         for(ObjectPercept objectPercept : objects.getAll()){
-            System.out.println(objectPercept);
+            if(Game.DEBUG) System.out.println(objectPercept);
         }
 
         double [][] actionArray = new double[3][2];
@@ -107,7 +107,7 @@ public class BoltzmannAgent implements Guard{
 
 
 
-        System.out.println("Action: " + action.toString());
+        if(Game.DEBUG) System.out.println("Action: " + action.toString());
         return action;
     }
 
