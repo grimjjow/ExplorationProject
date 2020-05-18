@@ -120,7 +120,7 @@ public class MainScene extends Scene {
     private Label helpButton = new Label("Help");
 
     ///Agent
-    private List<MapObject> elements;
+    private List<AbstractObject> elements;
     public MainScene(StackPane mainStack, GameMap map,Gui gui) {
         super(mainStack);
         this.gui = gui;
@@ -301,9 +301,9 @@ public class MainScene extends Scene {
             gui.restartGame(history.isSelected());
             updateButtons();
             if(maxSpeed.isSelected()){
-                gui.getMainController().updateGameSpeed(-1);
+                gui.getController().updateGameSpeed(-1);
             }else{
-                gui.getMainController().updateGameSpeed((int) animationSpeedSlider.getValue());
+                gui.getController().updateGameSpeed((int) animationSpeedSlider.getValue());
             }
         });
         helpButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
@@ -315,7 +315,7 @@ public class MainScene extends Scene {
             int shiftModifier = event.isShiftDown() ? 10 : 0;
             if(event.getCode() == KeyCode.RIGHT)
             {
-                slider.setValue(Math.min((int) (slider.getValue() + 1 + shiftModifier), gui.getMainController().getHistoryIndex()));
+                slider.setValue(Math.min((int) (slider.getValue() + 1 + shiftModifier), gui.getController().getHistoryIndex()));
             }
             else if(event.getCode() == KeyCode.LEFT)
             {
@@ -325,19 +325,19 @@ public class MainScene extends Scene {
         slider.valueProperty().addListener((observableValue, number, t1) -> {
            if(hasHistory){
                int newVal = t1.intValue();
-               gui.getMainController().getHistoryViewIndex().set(newVal);
+               gui.getController().getHistoryViewIndex().set(newVal);
            }
         });
         animationSpeedSlider.valueProperty().addListener((observableValue, number, t1) -> {
             int newVal = t1.intValue();
             animationSliderInfo.setText(String.valueOf(newVal));
-            gui.getMainController().updateGameSpeed(newVal);
+            gui.getController().updateGameSpeed(newVal);
         });
         maxSpeed.selectedProperty().addListener((observableValue, aBoolean, t1) -> {
             if(t1){
-                gui.getMainController().updateGameSpeed(-1);
+                gui.getController().updateGameSpeed(-1);
             }else{
-                gui.getMainController().updateGameSpeed((int) animationSpeedSlider.getValue());
+                gui.getController().updateGameSpeed((int) animationSpeedSlider.getValue());
             }
         });
 
@@ -346,7 +346,7 @@ public class MainScene extends Scene {
                     .sub(canvasAgents.getBoundsInParent().getMinX(), canvasAgents.getBoundsInParent().getMinY())
                     .mul(1D / mapScale);
 
-            MainController.History entry = gui.getMainController().getCurrentHistory();
+            Controller.History entry = gui.getController().getCurrentHistory();
             Optional<IntruderContainer> intruder = entry.intruderContainers.stream()
                     .filter(e -> e.getPosition().distance(scene) < 15).findAny();
             Optional<GuardContainer> guard = entry.guardContainers.stream()
@@ -381,14 +381,14 @@ public class MainScene extends Scene {
 
                         if(delta >= frameTime)
                         {
-                            if(gui.getMainController().getHistoryViewIndex().get() < gui.getMainController().getHistoryIndex())
+                            if(gui.getController().getHistoryViewIndex().get() < gui.getController().getHistoryIndex())
                             {
                                 this.lastFrame = now;
                                 drawFrames += (delta / frameTime);
 
                                 final int frames = (int) drawFrames;
                                 drawFrames -= frames;
-                                slider.setValue(gui.getMainController().getHistoryViewIndex().get() + frames);
+                                slider.setValue(gui.getController().getHistoryViewIndex().get() + frames);
                             }
                             else
                             {
@@ -425,7 +425,7 @@ public class MainScene extends Scene {
     }
     public void activateHistory(){
         hasHistory =true;
-        int age = gui.getMainController().getHistoryIndex();
+        int age = gui.getController().getHistoryIndex();
         slider.setMax(age);
         slider.setValue(age);
         slider.setMin(0);
@@ -446,8 +446,8 @@ public class MainScene extends Scene {
         g.setFill(GuiSettings.backgroundColor);
         g.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
         g.setFont(new Font("TimesRoman", 3*mapScale));
-        for(MapObject e : elements){
-            GraphicElement graphicElement = calculateGraphicElement(e);
+        for(AbstractObject e : elements){
+            GuiObject guiObject = calculateGraphicElement(e);
 
             Vector[] points = e.getArea().getAsPolygon().getPoints();
 
@@ -460,11 +460,11 @@ public class MainScene extends Scene {
                 yPoints[i] = point.getY();
             }
 
-            if(graphicElement.fill){
-                g.setFill(graphicElement.color);
+            if(guiObject.fill){
+                g.setFill(guiObject.color);
                 g.fillPolygon(scalePoints(xPoints,mapScale),scalePoints(yPoints,mapScale),4);
             }else {
-                g.setStroke(graphicElement.color);
+                g.setStroke(guiObject.color);
                 g.setLineWidth(2);
                 g.strokePolygon(scalePoints(xPoints,mapScale),scalePoints(yPoints,mapScale),4);
             }
@@ -473,12 +473,12 @@ public class MainScene extends Scene {
             g.setTextAlign(TextAlignment.CENTER);
             if(settings.showText){
                 g.setFill(Color.WHITE);
-                g.fillText(graphicElement.text,center.getX()*mapScale,center.getY()*mapScale+1.5*mapScale);
+                g.fillText(guiObject.text,center.getX()*mapScale,center.getY()*mapScale+1.5*mapScale);
             }
         }
     }
 
-    private void generateScreenshot(AtomicBoolean rendering, MainController.History history, File file)
+    private void generateScreenshot(AtomicBoolean rendering, Controller.History history, File file)
     {
 
         Function<WritableImage, BufferedImage> convert = (input) -> {
@@ -677,14 +677,14 @@ public class MainScene extends Scene {
 
                         Thread generateFramesThread = new Thread(() -> {
                             renderButton.setDisable(true);
-                            for(int i = 0; i <= gui.getMainController().getHistoryIndex() && rendering.get(); i++)
+                            for(int i = 0; i <= gui.getController().getHistoryIndex() && rendering.get(); i++)
                             {
-                                gui.getMainController().getHistoryViewIndex().set(i);
-                                MainController.History entry = gui.getMainController().getCurrentHistory();
+                                gui.getController().getHistoryViewIndex().set(i);
+                                Controller.History entry = gui.getController().getCurrentHistory();
 
                                 generateScreenshot(rendering, entry, new File(String.format("%s%s%d.png", tempDirectory.getAbsolutePath(),
                                         File.separator, i)));
-                                progressBar.setProgress((i / (double) gui.getMainController().getHistoryIndex()) * 0.9D);
+                                progressBar.setProgress((i / (double) gui.getController().getHistoryIndex()) * 0.9D);
                             };
                             renderVideoThread.start();
 
@@ -825,7 +825,7 @@ public class MainScene extends Scene {
 
         {
 
-            FieldOfView fov = agent.getFOV(map.getEffectAreas(agent));
+            FieldOfView fov = agent.getFOV(map.getPropertyAreas(agent));
 
             final double r = fov.getRange().getValue() * mapScale;
             final double alpha = fov.getViewAngle().getRadians();
@@ -851,36 +851,36 @@ public class MainScene extends Scene {
         }
     }
 
-    protected GraphicElement calculateGraphicElement(MapObject element){
+    protected GuiObject calculateGraphicElement(AbstractObject element){
         if(element instanceof Wall){
-            return new GraphicElement(GuiSettings.wallColor,"",true);
+            return new GuiObject(GuiSettings.wallColor,"",true);
         }
         if(element instanceof TargetArea){
-            return new GraphicElement(GuiSettings.targetAreaColor,"T",false);
+            return new GuiObject(GuiSettings.targetAreaColor,"T",false);
         }
         if(element instanceof Spawn.Intruder){
-            return new GraphicElement(GuiSettings.spawnIntrudersColor,"SI",false);
+            return new GuiObject(GuiSettings.spawnIntrudersColor,"SI",false);
         }
         if(element instanceof Spawn.Guard){
-            return new GraphicElement(GuiSettings.spawnGuardsColor,"SG",false);
+            return new GuiObject(GuiSettings.spawnGuardsColor,"SG",false);
         }
         if(element instanceof ShadedArea){
-            return new GraphicElement(GuiSettings.shadedColor,"",true);
+            return new GuiObject(GuiSettings.shadedColor,"",true);
         }
         if(element instanceof Door){
-            return new GraphicElement(GuiSettings.doorColor,"D",true);
+            return new GuiObject(GuiSettings.doorColor,"D",true);
         }
         if(element instanceof Window){
-            return new GraphicElement(GuiSettings.windowColor,"",true);
+            return new GuiObject(GuiSettings.windowColor,"",true);
         }
         if(element instanceof SentryTower){
-            return new GraphicElement(GuiSettings.sentryColor,"",true);
+            return new GuiObject(GuiSettings.sentryColor,"",true);
         }
         if(element instanceof TeleportArea){
-            return new GraphicElement(GuiSettings.teleportColor,"Tp",true);
+            return new GuiObject(GuiSettings.teleportColor,"Tp",true);
         }
         System.out.println("Unknown");
-        return new GraphicElement(Color.RED,"",false);
+        return new GuiObject(Color.RED,"",false);
     }
     protected double[]  scalePoints(double[] points,double scale){
         double[] newPoints = new double[points.length];

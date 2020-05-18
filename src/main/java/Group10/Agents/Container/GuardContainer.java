@@ -14,7 +14,7 @@ public class GuardContainer extends AgentContainer<Guard> {
     @Override
     public GuardContainer clone(Game game) {
         GuardContainer cloned =  new GuardContainer(getAgent(), getPosition().clone(), getDirection().clone(),
-                getFOV(game.getGameMap().getEffectAreas(this)));
+                getFOV(game.getGameMap().getPropertyAreas(this)));
         for(Cooldown cooldown : Cooldown.values())
         {
             cloned.addCooldown(cooldown, this.getCooldown(cooldown));

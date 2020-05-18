@@ -1,21 +1,21 @@
 package Group10.World.Objects;
 
-import Group10.Tree.PointContainer;
+import Group10.Container.DataContainer;
 import Interop.Percept.Vision.ObjectPerceptType;
 
-public abstract class Spawn extends MapObject  {
+public abstract class Spawn extends AbstractObject {
 
-    public Spawn(PointContainer.Polygon area) {
+    public Spawn(DataContainer.Polygon area) {
         super(area, ObjectPerceptType.EmptySpace);
     }
 
     public static class Intruder extends Spawn {
-        public Intruder(PointContainer.Polygon area) {
+        public Intruder(DataContainer.Polygon area) {
             super(area);
         }
     }
     public static class Guard extends Spawn {
-        public Guard(PointContainer.Polygon area) {
+        public Guard(DataContainer.Polygon area) {
             super(area);
         }
     }

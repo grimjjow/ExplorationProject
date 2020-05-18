@@ -1,11 +1,11 @@
 package Group10.World.Objects;
 
-import Group10.Tree.PointContainer;
+import Group10.Container.DataContainer;
 import Interop.Percept.Vision.ObjectPerceptType;
 
-public class TargetArea extends MapObject {
+public class TargetArea extends AbstractObject {
 
-    public TargetArea(PointContainer.Polygon area) {
+    public TargetArea(DataContainer.Polygon area) {
         super(area, ObjectPerceptType.TargetArea);
     }
 

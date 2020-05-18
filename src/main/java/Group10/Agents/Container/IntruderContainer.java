@@ -37,7 +37,7 @@ public class IntruderContainer extends AgentContainer<Intruder> {
     @Override
     public IntruderContainer clone(Game game) {
         IntruderContainer cloned = new IntruderContainer(getAgent(), getPosition().clone(), getDirection().clone(),
-                getFOV(game.getGameMap().getEffectAreas(this)));
+                getFOV(game.getGameMap().getPropertyAreas(this)));
         cloned.setZoneCounter(getZoneCounter());
         cloned.setCaptured(isCaptured());
         for(Cooldown cooldown : Cooldown.values())

@@ -1,4 +1,4 @@
-package Group10.Tree;
+package Group10.Container;
 
 public interface Container<T> {
 

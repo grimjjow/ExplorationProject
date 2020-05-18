@@ -11,27 +11,7 @@ import Interop.Percept.Smell.SmellPerceptType;
 
 public class RandomAgent implements Guard {
 
-    public RandomAgent() {}
-
-    @Override
-    public GuardAction getAction(GuardPercepts percepts) {
-
-        if(!percepts.wasLastActionExecuted())
-        {
-            if(Math.random() < 0.1)
-            {
-                return new DropPheromone(SmellPerceptType.values()[(int) (Math.random() * SmellPerceptType.values().length)]);
-            }
-            return new Rotate(Angle.fromRadians(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble()));
-        }
-        else
-        {
-            return new Move(new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts)));
-        }
-    }
-
-    private double getSpeedModifier(GuardPercepts guardPercepts)
-    {
+    private double getSpeedModifier(GuardPercepts guardPercepts) {
         SlowDownModifiers slowDownModifiers =  guardPercepts.getScenarioGuardPercepts().getScenarioPercepts().getSlowDownModifiers();
         if(guardPercepts.getAreaPercepts().isInWindow())
         {
@@ -47,6 +27,23 @@ public class RandomAgent implements Guard {
         }
 
         return 1;
+    }
+
+    @Override
+    public GuardAction getAction(GuardPercepts percepts) {
+
+        if(!percepts.wasLastActionExecuted())
+        {
+            if(Math.random() < 0.3)
+            {
+                return new DropPheromone(SmellPerceptType.values()[(int) (Math.random() * SmellPerceptType.values().length)]);
+            }
+            return new Rotate(Angle.fromRadians(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble()));
+        }
+        else
+        {
+            return new Move(new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts)));
+        }
     }
 
 }

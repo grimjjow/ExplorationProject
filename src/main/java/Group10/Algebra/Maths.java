@@ -20,7 +20,7 @@ public class Maths {
      * @param b
      * @return
      */
-    public static boolean geq(double a, double b)
+    public static boolean abcheck(double a, double b)
     {
         return (a > b) || Math.abs(a - b) < 1E-10;
     }
@@ -31,7 +31,7 @@ public class Maths {
      * @param b
      * @return
      */
-    public static boolean leq(double a, double b)
+    public static boolean bacheck(double a, double b)
     {
         return (a < b) || Math.abs(a - b) < 1E-10;
     }

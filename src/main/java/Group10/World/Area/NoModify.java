@@ -2,7 +2,7 @@ package Group10.World.Area;
 
 import Group10.Agents.Container.AgentContainer;
 
-public class NoModify extends EffectArea<Double> {
+public class NoModify extends PropertyArea<Double> {
 
     public NoModify() {
         super(null, null);

@@ -2,7 +2,7 @@ package Group10.World.Reader;
 
 import Group10.World.GameMap;
 import Group10.Algebra.Vector;
-import Group10.Tree.PointContainer;
+import Group10.Container.DataContainer;
 import Interop.Percept.Scenario.GameMode;
 
 import java.io.IOException;
@@ -197,23 +197,23 @@ public class Reader {
 
     }
 
-    private static PointContainer.Polygon quadrilateralFromData(String[] data, int offset)
+    private static DataContainer.Polygon quadrilateralFromData(String[] data, int offset)
     {
-        PointContainer.Polygon polygon = new PointContainer.Polygon(
+        DataContainer.Polygon polygon = new DataContainer.Polygon(
                 new Vector(Double.parseDouble(data[0 + offset]), Double.parseDouble(data[1 + offset])),
                 new Vector(Double.parseDouble(data[2 + offset]), Double.parseDouble(data[3 + offset])),
                 new Vector(Double.parseDouble(data[4 + offset]), Double.parseDouble(data[5 + offset])),
                 new Vector(Double.parseDouble(data[6 + offset]), Double.parseDouble(data[7 + offset]))
         );
-        for(PointContainer.Line l : polygon.getLines()) {
+        for(DataContainer.Line l : polygon.getLines()) {
             if(l.getStart().distance(l.getEnd()) == 0)
             {
-                throw new IllegalArgumentException("Invalid line (start, end) are the same.");
+                throw new IllegalArgumentException("Invalid data");
             }
         }
         return polygon;
     }
-    private static PointContainer.Polygon quadrilateralFromData(String[] data)
+    private static DataContainer.Polygon quadrilateralFromData(String[] data)
     {
         return quadrilateralFromData(data, 0);
     }

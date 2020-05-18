@@ -1,4 +1,4 @@
-package Group10.Tree;
+package Group10.Container;
 
 import Group10.Engine.Game;
 import Group10.Algebra.Vector;
@@ -6,10 +6,10 @@ import Group10.Algebra.Vector;
 import java.util.*;
 import java.util.function.Function;
 
-import static Group10.Algebra.Maths.geq;
-import static Group10.Algebra.Maths.leq;
+import static Group10.Algebra.Maths.abcheck;
+import static Group10.Algebra.Maths.bacheck;
 
-public abstract class PointContainer {
+public abstract class DataContainer {
 
     /**
      * Move the container by applying `x_i = x_i + vector.x` and `y_i = y_i + vector.y`
@@ -30,7 +30,7 @@ public abstract class PointContainer {
     abstract public double getArea();
 
     @Override
-    public PointContainer clone() throws CloneNotSupportedException {
+    public DataContainer clone() throws CloneNotSupportedException {
         if(this instanceof Line)
         {
             return ((Line) this).clone();
@@ -46,20 +46,20 @@ public abstract class PointContainer {
         throw new CloneNotSupportedException();
     }
 
-    public PointContainer.Polygon getAsPolygon()
+    public DataContainer.Polygon getAsPolygon()
     {
-        return (PointContainer.Polygon) this;
+        return (DataContainer.Polygon) this;
     }
 
-    public PointContainer.Circle getAsCircle()
+    public DataContainer.Circle getAsCircle()
     {
-        return (PointContainer.Circle) this;
+        return (DataContainer.Circle) this;
     }
 
     /**
      * This class supports non-self-intersecting closed polygons of arbitrary size >= 3.
      */
-    public static class Polygon extends PointContainer {
+    public static class Polygon extends DataContainer {
 
         private Vector[] points;
         private Line[] lines;
@@ -108,15 +108,11 @@ public abstract class PointContainer {
             return this.lines;
         }
 
-        public List<Vector[]> getTriangles()
-        {
+        public List<Vector[]> getTriangles() {
 
-            //---
+
             if(triangles.isEmpty())
             {
-                //---
-                //TODO implememt https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-                // very important
                 if(false)
                 {
                     for(Vector a : points)
@@ -167,12 +163,7 @@ public abstract class PointContainer {
             return triangles;
         }
 
-        public Vector generateRandomLocation()
-        {
-            //--- follows: https://www.cs.princeton.edu/~funk/tog02.pdf @ 4.2
-
-            // TODO if we wanted to make this actually uniform, we would need to calculate the area of the triangles
-            //  and weight them appropriately... (low priority)
+        public Vector generateRandomLocation() {
             List<Vector[]> triangles = getTriangles();
             Vector[] triangle = triangles.get(Math.round(Game._RANDOM.nextFloat() * (triangles.size() - 1)));
 
@@ -192,14 +183,6 @@ public abstract class PointContainer {
             return r;
         }
 
-        /**
-         * Splits the Polygon into triangles and uses a Barycentric technique to check whether it is in one of the
-         * triangles.
-         *
-         * @link https://blackpawn.com/texts/pointinpoly/default.html
-         * @param point
-         * @return true, if inside, otherwise false.
-         */
         public boolean isPointInside(Vector point)
         {
             for (Vector[] e : getTriangles()) {
@@ -266,7 +249,7 @@ public abstract class PointContainer {
         }
 
         @Override
-        public PointContainer.Polygon clone() {
+        public DataContainer.Polygon clone() {
             return new Polygon(
                     Arrays.stream(this.points).map(Vector::clone).toArray(Vector[]::new)
             );
@@ -281,7 +264,7 @@ public abstract class PointContainer {
         }
     }
 
-    public static class Circle extends PointContainer
+    public static class Circle extends DataContainer
     {
         private Vector center;
         private double radius;
@@ -332,7 +315,7 @@ public abstract class PointContainer {
         }
     }
 
-    public static class Line extends PointContainer{
+    public static class Line extends DataContainer {
 
         private Vector start;
         private Vector end;
@@ -419,12 +402,12 @@ public abstract class PointContainer {
         }
 
         @Override
-        public PointContainer.Line clone() {
+        public DataContainer.Line clone() {
             return new Line(this.start.clone(), this.end.clone());
         }
     }
 
-    public static boolean intersect(PointContainer containerA, PointContainer containerB)
+    public static boolean intersect(DataContainer containerA, DataContainer containerB)
     {
 
         if (containerA instanceof Polygon || containerB instanceof Polygon)
@@ -496,7 +479,7 @@ public abstract class PointContainer {
             if(containerA instanceof Line && containerB instanceof Line)
             {
                 Line other = (line == containerA) ? (Line) containerB : (Line) containerA;
-                return PointContainer.twoLinesIntersect(line.getStart(), line.getEnd(), other.getStart(), other.getEnd()) != null;
+                return DataContainer.twoLinesIntersect(line.getStart(), line.getEnd(), other.getStart(), other.getEnd()) != null;
             }
             else if(containerA instanceof Circle || containerB instanceof Circle)
             {
@@ -510,15 +493,15 @@ public abstract class PointContainer {
 
     }
 
-    public static Set<Vector> intersectionPoints(PointContainer pointContainer, Line l) {
+    public static Set<Vector> intersectionPoints(DataContainer dataContainer, Line l) {
         Set<Vector> intersectionPoints = new HashSet<>();
 
-        if (pointContainer instanceof Line) {
-            intersectionPoints.add(twoLinesIntersect((Line) pointContainer,l));
-        } else if (pointContainer instanceof Circle) {
-            Collections.addAll(intersectionPoints, circleLineIntersect((Circle) pointContainer, l));
-        } else if (pointContainer instanceof Polygon) {
-            Polygon q = (Polygon) pointContainer;
+        if (dataContainer instanceof Line) {
+            intersectionPoints.add(twoLinesIntersect((Line) dataContainer,l));
+        } else if (dataContainer instanceof Circle) {
+            Collections.addAll(intersectionPoints, circleLineIntersect((Circle) dataContainer, l));
+        } else if (dataContainer instanceof Polygon) {
+            Polygon q = (Polygon) dataContainer;
 
             for (Line ql : q.getLines()) {
                 Vector intersectPoint = twoLinesIntersect(ql, l);
@@ -563,21 +546,7 @@ public abstract class PointContainer {
                 return new Vector[] {left.getEnd()};
             }
 
-            /*Line a = new Line(circle.getCenter(), circle.getCenter().add(line.getStart().sub(circle.getCenter()).normalise().mul(circle.getRadius())));
-            Line b = new Line(circle.getCenter(), circle.getCenter().add(line.getEnd().sub(circle.getCenter()).normalise().mul(circle.getRadius())));
-
-            if(twoLinesIntersect(line, a) != null)
-            {
-                return new Vector2[] {circle.getCenter().add(line.getStart().sub(circle.getCenter()).normalise().mul(circle.getRadius()))};
-            }
-
-            if(twoLinesIntersect(line, b) != null)
-            {
-                return new Vector2[] {circle.getCenter().add(line.getEnd().sub(circle.getCenter()).normalise().mul(circle.getRadius()))};
-            }*/
-
             return new Vector[0];
-            //return new Vector2[0];
         }
 
         double dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
@@ -635,14 +604,7 @@ public abstract class PointContainer {
         return new Vector[0];
     }
 
-    /**
-     * Calculate whether 2 lines intersect with each other
-     * @param a_start start point of line 1.
-     * @param a_end end point of line 1.
-     * @param b_start start point of line 2.
-     * @param b_end end point of line 2.
-     * @return the vector that points to the intersection point, returns null when no intersection is found
-     */
+
     private static Vector twoLinesIntersect(Vector a_start, Vector a_end, Vector b_start, Vector b_end){
         //http://mathworld.wolfram.com/Line-LineIntersection.html
         double x1 = a_start.getX();
@@ -707,9 +669,9 @@ public abstract class PointContainer {
         double xToCheck = xValue/parallelDenominator;
         double yToCheck = yValue/parallelDenominator;
 
-        if (((geq(x1, xToCheck) && leq(x2, xToCheck)) || (geq(x2, xToCheck) && leq(x1, xToCheck))) && ((geq(y1, yToCheck) && leq(y2, yToCheck)) || (geq(y2, yToCheck) && leq(y1, yToCheck))))
+        if (((abcheck(x1, xToCheck) && bacheck(x2, xToCheck)) || (abcheck(x2, xToCheck) && bacheck(x1, xToCheck))) && ((abcheck(y1, yToCheck) && bacheck(y2, yToCheck)) || (abcheck(y2, yToCheck) && bacheck(y1, yToCheck))))
         {
-            if (((geq(x3, xToCheck) && leq(x4, xToCheck)) || (geq(x4, xToCheck) && leq(x3, xToCheck))) && ((geq(y3, yToCheck) && leq(y4, yToCheck)) || (geq(y4, yToCheck) && leq(y3, yToCheck)))) {
+            if (((abcheck(x3, xToCheck) && bacheck(x4, xToCheck)) || (abcheck(x4, xToCheck) && bacheck(x3, xToCheck))) && ((abcheck(y3, yToCheck) && bacheck(y4, yToCheck)) || (abcheck(y4, yToCheck) && bacheck(y3, yToCheck)))) {
                 return new Vector(xToCheck, yToCheck);
             }
         }

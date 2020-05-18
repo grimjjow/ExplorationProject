@@ -1,18 +1,18 @@
 package Group10.World.Area;
 
 import Group10.Agents.Container.AgentContainer;
-import Group10.World.Objects.MapObject;
-import Group10.Tree.PointContainer;
+import Group10.World.Objects.AbstractObject;
+import Group10.Container.DataContainer;
 import Interop.Agent.Guard;
 import Interop.Agent.Intruder;
 
-public class ModifySpeedEffect extends EffectArea<Double> {
+public class ModifySpeedProperty extends PropertyArea<Double> {
 
     private double guardModifier;
     private double intruderModifier;
 
-    public ModifySpeedEffect(MapObject parent, PointContainer pointContainer, double guardModifier, double intruderModifier) {
-        super(parent, pointContainer);
+    public ModifySpeedProperty(AbstractObject parent, DataContainer dataContainer, double guardModifier, double intruderModifier) {
+        super(parent, dataContainer);
 
         this.guardModifier = guardModifier;
         this.intruderModifier = intruderModifier;

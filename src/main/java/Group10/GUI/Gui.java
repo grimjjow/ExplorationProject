@@ -11,9 +11,9 @@ import java.io.File;
 import java.util.List;
 
 public class Gui extends Application {
-    private File mapFile = new File("src/main/java/Group10/World/Maps/test_2.map");
-    private MainController mainController = new MainController(this,mapFile,true);
-    private MainScene scene = new MainScene(new StackPane(), mainController.getGame().getGameMap(),this);
+    private File mapFile = new File("src/main/java/Group10/World/Maps/test_3.map");
+    private Controller controller = new Controller(this,mapFile,true);
+    private MainScene scene = new MainScene(new StackPane(), controller.getGame().getGameMap(),this);
     private Stage primary = new Stage();
 
     public static void Gui(String[] args) {
@@ -29,11 +29,11 @@ public class Gui extends Application {
         primary = primaryStage;
         primaryStage.show();
         scene.rescale();
-        Thread thread = new Thread(mainController);
+        Thread thread = new Thread(controller);
         thread.start();
         primaryStage.setOnCloseRequest(event -> {
             System.out.println("See Ya");
-            mainController.kill();
+            controller.kill();
         });
     }
 
@@ -50,13 +50,13 @@ public class Gui extends Application {
         return primary;
     }
 
-    public MainController getMainController() {
-        return mainController;
+    public Controller getController() {
+        return controller;
     }
     public void restartGame(boolean generateHistory){
-        mainController.kill();
-        mainController = new MainController(this,mapFile, generateHistory);
-        Thread thread = new Thread(mainController);
+        controller.kill();
+        controller = new Controller(this,mapFile, generateHistory);
+        Thread thread = new Thread(controller);
         thread.start();
     }
 

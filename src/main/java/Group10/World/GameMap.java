@@ -4,12 +4,11 @@ import Group10.Engine.Game;
 import Group10.Algebra.Maths;
 import Group10.Agents.Container.AgentContainer;
 import Group10.Agents.Container.IntruderContainer;
-import Group10.World.Area.EffectArea;
+import Group10.World.Area.PropertyArea;
 import Group10.World.Dynamic.DynamicObject;
-import Group10.World.Objects.MapObject;
+import Group10.World.Objects.AbstractObject;
 import Group10.Algebra.Vector;
-import Group10.Tree.PointContainer;
-import Group10.Tree.QuadTree;
+import Group10.Container.DataContainer;
 import Interop.Agent.Guard;
 import Interop.Percept.Vision.FieldOfView;
 import Interop.Percept.Vision.ObjectPercept;
@@ -23,46 +22,24 @@ import java.util.stream.Stream;
 
 public class GameMap {
 
-    private final static boolean _OPTIMISE_RAYS = true;
+    private final static boolean RAYS = true;
 
     private final GameSettings gameSettings;
 
-    private final double rayConstant;
-    private QuadTree<MapObject> quadTree;
-    private List<MapObject> mapObjects;
+    private final double rayTemp;
+    
+    private List<AbstractObject> abstractObjects;
 
     private List<DynamicObject<?>> dynamicObjects = new ArrayList<>();
 
     private Game game;
 
-    public GameMap(GameSettings gameSettings, List<MapObject> mapObjects)
+    public GameMap(GameSettings gameSettings, List<AbstractObject> abstractObjects)
     {
         this.gameSettings = gameSettings;
-        this.mapObjects = mapObjects;
+        this.abstractObjects = abstractObjects;
 
-        this.rayConstant = this.calculateRayConstant();
-
-        /*this.quadTree = new QuadTree<>(width, height, 10000, MapObject::getContainer);
-        AtomicInteger index = new AtomicInteger();
-        mapObjects.forEach(a -> {
-            AtomicInteger c = new AtomicInteger();
-            mapObjects.forEach(b -> {
-                if(a != b)
-                {
-                    if(PointContainer.intersect(a.getContainer(), b.getContainer()))
-                    {
-                        c.getAndIncrement();
-                    }
-                }
-            });
-            System.out.println(index.getAndIncrement() + "." + c);
-        });
-        index.set(0);
-        mapObjects.forEach(a -> {
-            System.out.println(index.getAndIncrement());
-            //quadTree.add(a);
-        });
-        System.out.print("");*/
+        this.rayTemp = this.calculateRayTemp();
     }
 
     public void setGame(Game game)
@@ -74,100 +51,66 @@ public class GameMap {
         return gameSettings;
     }
 
-    /**
-     * Calculates the amount of required rays based on the field of view. {@link GameMap#calculateRayConstant()}
-     * @param fov
-     * @return
-     */
-    public int calculateRequiredRays(FieldOfView fov)
+   
+    public int calculateRays(FieldOfView fov)
     {
-        return (int) Math.ceil(this.rayConstant * fov.getRange().getValue() * fov.getViewAngle().getRadians());
+        return (int) Math.ceil(this.rayTemp * fov.getRange().getValue() * fov.getViewAngle().getRadians());
     }
 
-    /**
-     * Note: The specifications let the user specify the amount of rays that should be casted every time when we generate
-     * the vision percepts for the agents, this is wasteful. There is a very efficient way to reduce the amount of rays,
-     * and this is simply achieved by doing the following:
-     *
-     *      ceil((2 * a * r) / d) = n
-     *          a -> view angle (rad)
-     *          r -> view distance
-     *          d -> width of smallest object divided by two
-     *          n -> amount of rays required
-     *
-     *  The code below figures out what the smallest object is, and generates a constant that can simply be multiplied
-     *  by a * r to get n. {@link GameMap#calculateRequiredRays(FieldOfView)}.
-     *  Performing tests by letting play the same agent 100k turns, the newer method yielded a gain of 51% faster simulation
-     *  computation.
-     *
-     * @return
-     */
-    private double calculateRayConstant()
-    {
+    private double calculateRayTemp() {
 
         double min = Math.min(AgentContainer._RADIUS,  // radius of agent
                 gameSettings.getScenarioPercepts().getRadiusPheromone().getValue() / gameSettings.getPheromoneExpireRounds());
 
-        Queue<PointContainer> containers = this.mapObjects.stream()
+        Queue<DataContainer> containers = this.abstractObjects.stream()
                 .map(e -> {
-                    List<PointContainer> pointContainers = new ArrayList<>();
-                    pointContainers.add(e.getContainer());
-                    pointContainers.addAll(e.getEffects().stream().map(EffectArea::getContainer).collect(Collectors.toList()));
-                    return pointContainers;
+                    List<DataContainer> dataContainers = new ArrayList<>();
+                    dataContainers.add(e.getContainer());
+                    dataContainers.addAll(e.getProperties().stream().map(PropertyArea::getContainer).collect(Collectors.toList()));
+                    return dataContainers;
                 })
                 .flatMap(Collection::stream)
                 .collect(Collectors.toCollection(LinkedList::new));
 
-        for(PointContainer container : containers)
+        for(DataContainer container : containers)
         {
-            if(container instanceof PointContainer.Circle)
+            if(container instanceof DataContainer.Circle)
             {
                 min = Math.min(min, container.getAsCircle().getRadius());
             }
-            else if(container instanceof PointContainer.Polygon)
+            else if(container instanceof DataContainer.Polygon)
             {
-                for(PointContainer.Line line : container.getAsPolygon().getLines())
+                for(DataContainer.Line line : container.getAsPolygon().getLines())
                 {
                     min = Math.min(min, line.getStart().distance(line.getEnd()) / 2);
                 }
             }
             else
             {
-                throw new IllegalArgumentException(String.format("Unsupported PointContainer: %s", container.getClass().getName()));
+                throw new IllegalArgumentException(String.format("Container error: %s", container.getClass().getName()));
             }
         }
 
         return 2D / min;
     }
 
-    /**
-     * This function returns all map objects that have a chance of being seen by the agent. This is done by drawing a
-     * line that is the normal to the agent's direction vector. Anything that lies on the wrong side of line gets culled
-     * since it is impossible to see for the agent.
-     *
-     * @param agentContainer
-     * @return
-     */
-    public List<MapObject> getFilteredObjects(AgentContainer<?> agentContainer, Predicate<MapObject> filter)
-    {
 
-        // --- If the field of view is greater than 180° (-> Pi) then this method does not work.
+    public List<AbstractObject> getFilteredObjects(AgentContainer<?> agentContainer, Predicate<AbstractObject> filter) {
+
         if(gameSettings.getViewAngle().getRadians() >= Math.PI) {
             if(filter == null)
             {
-                return this.mapObjects;
+                return this.abstractObjects;
             }
-            return this.mapObjects.stream().filter(filter).collect(Collectors.toList());
+            return this.abstractObjects.stream().filter(filter).collect(Collectors.toList());
         }
 
-        // --- Create a line that is perpendicular to the direction vector
         Vector end = agentContainer.getPosition().add(agentContainer.getDirection());
-        PointContainer.Line line = new PointContainer.Line(agentContainer.getPosition(), end);
+        DataContainer.Line line = new DataContainer.Line(agentContainer.getPosition(), end);
         Vector normal = line.getNormal();
         Vector a = agentContainer.getPosition().add(normal);
         Vector b = agentContainer.getPosition().sub(normal);
 
-        // --- Determine the sign of the end point. This tells us on which side of the line the objects are that we can see.
         final double sign = Math.signum((b.getX() - a.getX()) * (end.getY() - a.getY()) - (b.getY() - a.getY()) * (end.getX() - a.getX()));
 
         assert sign != 0;
@@ -177,16 +120,16 @@ public class GameMap {
 
             if(sign > 0)
             {
-                return Maths.geq(r, 0);
+                return Maths.abcheck(r, 0);
             }
             else if(sign < 0)
             {
-                return Maths.leq(r, 0);
+                return Maths.bacheck(r, 0);
             }
             return true;
         };
 
-        Stream<MapObject> stream = this.mapObjects
+        Stream<AbstractObject> stream = this.abstractObjects
                 .stream();
 
         if(filter != null)
@@ -198,7 +141,7 @@ public class GameMap {
                 .filter(e -> {
 
                     // --- Note: This only supports polygons as of now.
-                    if(!(e.getContainer() instanceof PointContainer.Polygon)) return true;
+                    if(!(e.getContainer() instanceof DataContainer.Polygon)) return true;
 
                     for(Vector c : e.getArea().getAsPolygon().getPoints())
                     {
@@ -210,16 +153,16 @@ public class GameMap {
                 .collect(Collectors.toList());
     }
 
-    public <T extends MapObject> List<T> getObjects(Class<T> clazz)
+    public <T extends AbstractObject> List<T> getObjects(Class<T> clazz)
     {
-        return this.mapObjects.stream()
+        return this.abstractObjects.stream()
                 .filter(e -> clazz.isAssignableFrom(e.getClass()))
                 .map(object -> (T) object).collect(Collectors.toList());
     }
 
-    public List<MapObject> getObjects()
+    public List<AbstractObject> getObjects()
     {
-        return this.mapObjects;
+        return this.abstractObjects;
     }
 
     public List<DynamicObject<?>> getDynamicObjects() {
@@ -230,42 +173,36 @@ public class GameMap {
         return getDynamicObjects().stream().filter(e -> clazz.isAssignableFrom(e.getClass())).collect(Collectors.toList());
     }
 
-    public <T, A extends MapObject> boolean isInMapObject(AgentContainer<T> agentContainer, Class<A> clazz) {
-        return this.mapObjects.stream()
+    public <T, A extends AbstractObject> boolean isInMapObject(AgentContainer<T> agentContainer, Class<A> clazz) {
+        return this.abstractObjects.stream()
                 .filter(e -> clazz.isAssignableFrom(e.getClass()))
-                .anyMatch(e -> PointContainer.intersect(agentContainer.getShape(), e.getContainer()));
+                .anyMatch(e -> DataContainer.intersect(agentContainer.getShape(), e.getContainer()));
     }
 
-    public Set<EffectArea> getEffectAreas(AgentContainer<?> agent)
+    public Set<PropertyArea> getPropertyAreas(AgentContainer<?> agent)
     {
-        return this.mapObjects.stream()
-                .filter(e -> !e.getEffects().isEmpty())
-                .filter(e -> PointContainer.intersect(agent.getShape(), e.getContainer()))
-                .flatMap((Function<MapObject, Stream<EffectArea>>) object -> object.getEffects().stream())
+        return this.abstractObjects.stream()
+                .filter(e -> !e.getProperties().isEmpty())
+                .filter(e -> DataContainer.intersect(agent.getShape(), e.getContainer()))
+                .flatMap((Function<AbstractObject, Stream<PropertyArea>>) object -> object.getProperties().stream())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    public boolean isMoveIntersecting(AgentContainer<?> agentContainer, PointContainer.Polygon agentMove){
-        for (MapObject e : getFilteredObjects(agentContainer, e -> e.getType().isSolid())) {
-            if (PointContainer.intersect(e.getContainer(), agentMove)) {
+    public boolean isMoveIntersecting(AgentContainer<?> agentContainer, DataContainer.Polygon agentMove){
+        for (AbstractObject e : getFilteredObjects(agentContainer, e -> e.getType().isSolid())) {
+            if (DataContainer.intersect(e.getContainer(), agentMove)) {
                 return true;
             }
         }
         return false;
     }
 
-    /**
-     * returns a set of ObjectPercepts that are found in a line (ObjectPercepts after opaque objects are excluded)
-     * @param line
-     * @return
-     */
-    public Set<ObjectPercept> getObjectPerceptsInLine(List<MapObject> filteredObjects, AgentContainer agentContainer, FieldOfView fov, PointContainer.Line line) {
-        // --- all points where line and objects intersect sorted by proximity to start of line
+    public Set<ObjectPercept> getObjectPerceptsInLine(List<AbstractObject> filteredObjects, AgentContainer agentContainer, FieldOfView fov, DataContainer.Line line) {
+
         Map<Vector, ObjectPerceptType> objectPoints = new HashMap<>();
 
-        // --- perceive map objects
-        for (MapObject mo : filteredObjects) {
-            for (Vector point : PointContainer.intersectionPoints(mo.getContainer(), line)) {
+        for (AbstractObject mo : filteredObjects) {
+            for (Vector point : DataContainer.intersectionPoints(mo.getContainer(), line)) {
                 Vector relative = point
                         .sub(agentContainer.getPosition()) // move relative to agent
                         .rotated(agentContainer.getDirection().getClockDirection()); //rotated back
@@ -276,10 +213,9 @@ public class GameMap {
             }
         }
 
-        // --- perceive intruders
         for (IntruderContainer intruder : this.game.getIntruders()) {
             if(intruder == agentContainer || intruder.isCaptured()) continue;
-            for (Vector point : PointContainer.intersectionPoints(intruder.getShape(), line)) {
+            for (Vector point : DataContainer.intersectionPoints(intruder.getShape(), line)) {
                 Vector relative = point
                         .sub(agentContainer.getPosition()) // move relative to agent
                         .rotated(agentContainer.getDirection().getClockDirection()); //rotated back
@@ -290,13 +226,12 @@ public class GameMap {
             }
         }
 
-        // --- perceive guards
         for (AgentContainer<Guard> guard : this.game.getGuards()) {
             if(guard == agentContainer) continue;
-            for (Vector point : PointContainer.intersectionPoints(guard.getShape(), line)) {
+            for (Vector point : DataContainer.intersectionPoints(guard.getShape(), line)) {
                 Vector relative = point
-                        .sub(agentContainer.getPosition()) // move relative to agent
-                        .rotated(agentContainer.getDirection().getClockDirection()); //rotated back
+                        .sub(agentContainer.getPosition())
+                        .rotated(agentContainer.getDirection().getClockDirection());
                 if(relative.length() > 0 && fov.isInView(relative.toVexing()))
                 {
                     objectPoints.put(relative, ObjectPerceptType.Guard);
@@ -304,7 +239,6 @@ public class GameMap {
             }
         }
 
-        // --- sort by distance
         List<Map.Entry<Vector, ObjectPerceptType>> entries = objectPoints.entrySet()
                 .stream()
                 .sorted(Comparator.comparingDouble(e -> line.getStart().distance(e.getKey())))
@@ -325,23 +259,14 @@ public class GameMap {
     }
 
 
-    /**
-     * Returns the set of all objects visible by an agent relative to the agent.
-     * It casts rays starting from the clockwise-most to the anticlock-wise most.
-     * Assuming Direction of an agent points to the middle of the this field of view
-     * (so Direction divides the field of view exactly into two equal sections)
-     * @param agentContainer
-     * @param <T>
-     * @return
-     * @see Interop.Percept.Vision.FieldOfView
-     */
-    public <T> Set<ObjectPercept> getObjectPerceptsForAgent(AgentContainer<T> agentContainer, FieldOfView fov, ViewRange viewRange) {
+
+    public <T> Set<ObjectPercept> getObjectPerceptsForAgent(AgentContainer<T> agentContainer, FieldOfView fov, DefaultViewRange defaultViewRange) {
         Set<ObjectPercept> objectsInSight = new HashSet<>();
         //System.out.println("angle-a: " + agentContainer.getDirection().getClockDirection());
-        List<MapObject> filteredObjects = getFilteredObjects(agentContainer, null);
-        for (Vector[] ray : getAgentVisionCone(agentContainer, fov, viewRange)) {
+        List<AbstractObject> filteredObjects = getFilteredObjects(agentContainer, null);
+        for (Vector[] ray : getAgentVisionCone(agentContainer, fov, defaultViewRange)) {
             objectsInSight.addAll(
-                    getObjectPerceptsInLine(filteredObjects, agentContainer, fov, new PointContainer.Line(ray[0], ray[1]))
+                    getObjectPerceptsInLine(filteredObjects, agentContainer, fov, new DataContainer.Line(ray[0], ray[1]))
                             .stream()
                             .filter(e -> fov.isInView(e.getPoint()))
                             .collect(Collectors.toList())
@@ -351,23 +276,22 @@ public class GameMap {
         return objectsInSight;
     }
 
-    public <T> Set<Vector[]> getAgentVisionCone(AgentContainer<T> agentContainer, FieldOfView fov, ViewRange viewRange) {
+    public <T> Set<Vector[]> getAgentVisionCone(AgentContainer<T> agentContainer, FieldOfView fov, DefaultViewRange defaultViewRange) {
         double range = fov.getRange().getValue();
         final double viewAngle = fov.getViewAngle().getRadians();
 
         Vector direction = agentContainer.getDirection().normalise();
         Vector startOfRay = agentContainer.getPosition();
 
-        //--- modify line to conform to modified view range (i.e. sentry tower)
-        if(viewRange != null)
+        if(defaultViewRange != null)
         {
-            startOfRay = startOfRay.add(direction.mul(viewRange.getMin()));
-            range = viewRange.getMax();
+            startOfRay = startOfRay.add(direction.mul(defaultViewRange.getFrom()));
+            range = defaultViewRange.getTo();
         }
 
         Vector ray = direction.mul(range).rotated(-viewAngle/2);
 
-        int viewRays = _OPTIMISE_RAYS ? this.calculateRequiredRays(fov) : gameSettings.get___viewRays();
+        int viewRays = RAYS ? this.calculateRays(fov) : gameSettings.get___viewRays();
         double stepAngle = viewAngle / viewRays;
         Set<Vector[]> objectsInSight = new HashSet<>();
         for (int rayNum = 0; rayNum < viewRays; rayNum++) {

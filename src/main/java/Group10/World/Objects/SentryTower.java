@@ -1,18 +1,18 @@
 package Group10.World.Objects;
 
-import Group10.World.ViewRange;
-import Group10.World.Area.ModifySpeedEffect;
-import Group10.World.Area.ModifyViewRangeEffect;
-import Group10.Tree.PointContainer;
+import Group10.World.DefaultViewRange;
+import Group10.World.Area.ModifySpeedProperty;
+import Group10.World.Area.ModifyViewRangeProperty;
+import Group10.Container.DataContainer;
 import Interop.Percept.Vision.ObjectPerceptType;
 
-public class SentryTower extends MapObject {
+public class SentryTower extends AbstractObject {
 
-    public SentryTower(PointContainer area, double sentrySlowdownModifier, ViewRange viewRange) {
+    public SentryTower(DataContainer area, double sentrySlowdownModifier, DefaultViewRange defaultViewRange) {
         super(area, ObjectPerceptType.SentryTower);
         this.addEffects(
-                new ModifySpeedEffect(this, area, sentrySlowdownModifier,sentrySlowdownModifier),
-                new ModifyViewRangeEffect(this, area, viewRange)
+                new ModifySpeedProperty(this, area, sentrySlowdownModifier,sentrySlowdownModifier),
+                new ModifyViewRangeProperty(this, area, defaultViewRange)
         );
     }
 

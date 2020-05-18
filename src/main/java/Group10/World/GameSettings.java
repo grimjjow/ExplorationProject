@@ -21,7 +21,7 @@ public class GameSettings {
     private Distance intruderViewRangeShaded;
     private Distance guardViewRangeNormal;
     private Distance guardViewRangeShaded;
-    private ViewRange sentryViewRange;
+    private DefaultViewRange sentryDefaultViewRange;
 
     private Distance yellSoundRadius;
     private Distance moveMaxSoundRadius;
@@ -36,13 +36,13 @@ public class GameSettings {
     private int width, height;
 
     public GameSettings(ScenarioPercepts scenarioPercepts,
-                int width, int height,
-                Distance guardMaxMoveDistance,
-                int turnsInTargetAreaToWin, Distance intruderMaxMoveDistance, Distance intruderMaxSprintDistance,
-                int sprintCooldown, int numGuards, int numIntruders, Distance intruderViewRangeNormal,
-                Distance intruderViewRangeShaded, Distance guardViewRangeNormal, Distance guardViewRangeShaded,
-                ViewRange sentryViewRange, Distance yellSoundRadius, Distance moveMaxSoundRadius,
-                Distance windowSoundRadius, Distance doorSoundRadius, Angle viewAngle, int ___viewRays, int pheromoneExpireRounds
+                        int width, int height,
+                        Distance guardMaxMoveDistance,
+                        int turnsInTargetAreaToWin, Distance intruderMaxMoveDistance, Distance intruderMaxSprintDistance,
+                        int sprintCooldown, int numGuards, int numIntruders, Distance intruderViewRangeNormal,
+                        Distance intruderViewRangeShaded, Distance guardViewRangeNormal, Distance guardViewRangeShaded,
+                        DefaultViewRange sentryDefaultViewRange, Distance yellSoundRadius, Distance moveMaxSoundRadius,
+                        Distance windowSoundRadius, Distance doorSoundRadius, Angle viewAngle, int ___viewRays, int pheromoneExpireRounds
     ) {
         this.scenarioPercepts = scenarioPercepts;
 
@@ -63,7 +63,7 @@ public class GameSettings {
         this.intruderViewRangeShaded = intruderViewRangeShaded;
         this.guardViewRangeNormal = guardViewRangeNormal;
         this.guardViewRangeShaded = guardViewRangeShaded;
-        this.sentryViewRange = sentryViewRange;
+        this.sentryDefaultViewRange = sentryDefaultViewRange;
 
         this.yellSoundRadius = yellSoundRadius;
         this.moveMaxSoundRadius = moveMaxSoundRadius;
@@ -132,8 +132,8 @@ public class GameSettings {
         return guardViewRangeShaded;
     }
 
-    public ViewRange getSentryViewRange() {
-        return sentryViewRange;
+    public DefaultViewRange getSentryDefaultViewRange() {
+        return sentryDefaultViewRange;
     }
 
     public Distance getYellSoundRadius() {

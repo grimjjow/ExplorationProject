@@ -3,17 +3,17 @@ package Group10.Engine;
 import Group10.Agents.Container.AgentContainer;
 import Group10.Agents.Container.GuardContainer;
 import Group10.Agents.Container.IntruderContainer;
-import Group10.Agents.Factories.DefaultAgentFactory;
+import Group10.Agents.Factories.DefaultFactory;
 import Group10.World.GameMap;
 import Group10.World.GameSettings;
-import Group10.World.ViewRange;
+import Group10.World.DefaultViewRange;
 import Group10.World.Area.*;
 import Group10.World.Dynamic.DynamicObject;
 import Group10.World.Dynamic.Pheromone;
 import Group10.World.Dynamic.Sound;
 import Group10.World.Objects.*;
 import Group10.Algebra.Vector;
-import Group10.Tree.PointContainer;
+import Group10.Container.DataContainer;
 import Interop.Action.*;
 import Interop.Agent.Guard;
 import Interop.Agent.Intruder;
@@ -74,16 +74,16 @@ public class Game implements Runnable {
 
     public Game(GameMap gameMap, final boolean queryIntent)
     {
-        this(gameMap, new DefaultAgentFactory(), queryIntent, -1, null);
+        this(gameMap, new DefaultFactory(), queryIntent, -1, null);
     }
 
-    public Game(GameMap gameMap, DefaultAgentFactory agentFactory, final boolean queryIntent)
+    public Game(GameMap gameMap, DefaultFactory agentFactory, final boolean queryIntent)
     {
         this(gameMap, agentFactory, queryIntent, -1, null);
     }
 
 
-    public Game(GameMap gameMap, DefaultAgentFactory agentFactory, final boolean queryIntent, int ticks,
+    public Game(GameMap gameMap, DefaultFactory agentFactory, final boolean queryIntent, int ticks,
                 Callback<Game> turnTickCallback)
     {
         gameMap.setGame(this);
@@ -95,15 +95,15 @@ public class Game implements Runnable {
         this.gameMap = gameMap;
         this.scenarioPercepts = gameMap.getGameSettings().getScenarioPercepts();
         this.settings = gameMap.getGameSettings();
-        List<MapObject> solids = this.getGameMap().getObjects().stream().filter(e -> e.getType().isSolid()).collect(Collectors.toList());
+        List<AbstractObject> solids = this.getGameMap().getObjects().stream().filter(e -> e.getType().isSolid()).collect(Collectors.toList());
 
         {
 
             Spawn.Guard guardSpawn = gameMap.getObjects(Spawn.Guard.class).get(0);
-            List<PointContainer.Circle> usedSpawns = new ArrayList<>();
+            List<DataContainer.Circle> usedSpawns = new ArrayList<>();
             agentFactory.createGuards(settings.getNumGuards()).forEach(a -> {
                 Vector spawn = generateRandomSpawnLocation(guardSpawn.getArea().getAsPolygon(),
-                        new PointContainer.Circle(new Vector.Origin(), AgentContainer._RADIUS), solids, usedSpawns);
+                        new DataContainer.Circle(new Vector.Origin(), AgentContainer._RADIUS), solids, usedSpawns);
                 GuardContainer guardContainer = new GuardContainer(a, spawn, new Vector(0, 1).normalise(),
                         new FieldOfView(settings.getGuardViewRangeNormal(), settings.getViewAngle()));
                 this.guards.add(guardContainer);
@@ -113,10 +113,10 @@ public class Game implements Runnable {
 
         {
             Spawn.Intruder intruderSpawn = gameMap.getObjects(Spawn.Intruder.class).get(0);
-            List<PointContainer.Circle> usedSpawns = new ArrayList<>();
+            List<DataContainer.Circle> usedSpawns = new ArrayList<>();
             agentFactory.createIntruders(settings.getNumIntruders()).forEach(e -> {
                 Vector spawn = generateRandomSpawnLocation(intruderSpawn.getArea().getAsPolygon(),
-                        new PointContainer.Circle(new Vector.Origin(), AgentContainer._RADIUS), solids, usedSpawns);
+                        new DataContainer.Circle(new Vector.Origin(), AgentContainer._RADIUS), solids, usedSpawns);
                 IntruderContainer intruderContainer = new IntruderContainer(e, spawn, new Vector(0, 1).normalise(),
                         new FieldOfView(settings.getIntruderViewRangeNormal(), settings.getViewAngle()));
                 this.intruders.add(intruderContainer);
@@ -142,8 +142,8 @@ public class Game implements Runnable {
      * @param occupied The circles that already have been placed, if no other objects need to be placed just pass an EmptyList.
      * @return A point where the circle can be placed without conflicts.
      */
-    public static Vector generateRandomSpawnLocation(PointContainer.Polygon area, PointContainer.Circle circle,
-                                                      List<MapObject> avoid, List<PointContainer.Circle> occupied)
+    public static Vector generateRandomSpawnLocation(DataContainer.Polygon area, DataContainer.Circle circle,
+                                                     List<AbstractObject> avoid, List<DataContainer.Circle> occupied)
     {
 
         final Vector[] point = new Vector[] { circle.getCenter() };
@@ -157,7 +157,7 @@ public class Game implements Runnable {
 
           Source: http://datagenetics.com/blog/june32014/index.html
          */
-        if(area.getArea() * 0.90 < occupied.stream().mapToDouble(PointContainer::getArea).sum() + circle.getArea())
+        if(area.getArea() * 0.90 < occupied.stream().mapToDouble(DataContainer::getArea).sum() + circle.getArea())
         {
             throw new IllegalArgumentException(String.format("The area can only hold %d circles with radius %.2f. The new " +
                     "circle will not be able to fit.", (int) ((area.getArea() * 0.9D) / circle.getArea()), circle.getRadius()));
@@ -183,7 +183,7 @@ public class Game implements Runnable {
             while (occupied.stream().anyMatch(e -> e.getCenter().distance(point[0]) <= radius * 2D));
 
         }
-        while (avoid.stream().anyMatch(e -> PointContainer.intersect(e.getContainer(), new PointContainer.Circle(point[0], radius))));
+        while (avoid.stream().anyMatch(e -> DataContainer.intersect(e.getContainer(), new DataContainer.Circle(point[0], radius))));
 
         return point[0];
 
@@ -379,7 +379,7 @@ public class Game implements Runnable {
 
     }
 
-    protected <T> boolean executeAction(AgentContainer<T> agentContainer, Action action)
+    protected  <T> boolean executeAction(AgentContainer<T> agentContainer, Action action)
     {
 
         boolean isGuard = agentContainer.getAgent() instanceof Guard;
@@ -398,10 +398,10 @@ public class Game implements Runnable {
         }
 
         //@performance cleanup
-        Set<EffectArea> effectAreas = gameMap.getEffectAreas(agentContainer);
-        Optional<EffectArea> modifySpeedEffect = effectAreas.stream().filter(e -> e instanceof ModifySpeedEffect).findAny();
-        Optional<EffectArea> soundEffect = effectAreas.stream().filter(e -> e instanceof SoundEffect).findAny();
-        Optional<EffectArea> modifyViewEffect = effectAreas.stream().filter(e -> e instanceof ModifyViewEffect).findAny();
+        Set<PropertyArea> propertyAreas = gameMap.getPropertyAreas(agentContainer);
+        Optional<PropertyArea> modifySpeedEffect = propertyAreas.stream().filter(e -> e instanceof ModifySpeedProperty).findAny();
+        Optional<PropertyArea> soundEffect = propertyAreas.stream().filter(e -> e instanceof SoundProperty).findAny();
+        Optional<PropertyArea> modifyViewEffect = propertyAreas.stream().filter(e -> e instanceof ModifyViewProperty).findAny();
         //---
 
 
@@ -409,7 +409,7 @@ public class Game implements Runnable {
         if(isIntruder)
         {
             IntruderContainer intruderContainer = (IntruderContainer) agentContainer;
-            if(gameMap.getObjects(TargetArea.class).stream().anyMatch(e -> PointContainer.intersect(e.getContainer(), agentContainer.getShape())))
+            if(gameMap.getObjects(TargetArea.class).stream().anyMatch(e -> DataContainer.intersect(e.getContainer(), agentContainer.getShape())))
             {
                 intruderContainer.setZoneCounter(intruderContainer.getZoneCounter() + 1);
             }
@@ -420,7 +420,7 @@ public class Game implements Runnable {
         } else
         //--- check if guard is close enough to capture
         {
-            FieldOfView fov = agentContainer.getFOV(this.getGameMap().getEffectAreas(agentContainer));
+            FieldOfView fov = agentContainer.getFOV(this.getGameMap().getPropertyAreas(agentContainer));
             this.intruders.stream()
                     .filter(e -> e.getPosition().distance(agentContainer.getPosition()) <= settings.getScenarioPercepts().getCaptureDistance().getValue())
                     .filter(e -> Math.abs(e.getDirection().angle(agentContainer.getDirection())) <= fov.getViewAngle().getRadians() / 2)
@@ -456,7 +456,7 @@ public class Game implements Runnable {
 
 
                 final Vector end = agentContainer.getPosition().add(agentContainer.getDirection().mul(length));
-                PointContainer.Line line = new PointContainer.Line(agentContainer.getPosition(), end);
+                DataContainer.Line line = new DataContainer.Line(agentContainer.getPosition(), end);
 
                 final Vector move = agentContainer.getDirection().mul(length);
 
@@ -465,7 +465,7 @@ public class Game implements Runnable {
                 Vector pointD = agentContainer.getPosition().sub(line.getNormal());
                 Vector pointC = pointD.add(move);
 
-                PointContainer.Polygon quadrilateral = new PointContainer.Polygon(pointA, pointB, pointC, pointD);
+                DataContainer.Polygon quadrilateral = new DataContainer.Polygon(pointA, pointB, pointC, pointD);
                 if(gameMap.isMoveIntersecting(agentContainer, quadrilateral))
                 {
                     return false;
@@ -480,18 +480,18 @@ public class Game implements Runnable {
             //--- move and then get new effects
             gameMap.getDynamicObjects().add(new Sound(SoundPerceptType.Noise, agentContainer, settings.getMoveMaxSoundRadius().getValue(), 1));
             agentContainer.move(distance);
-            Set<EffectArea> movedEffectAreas = gameMap.getEffectAreas(agentContainer);
-            soundEffect = movedEffectAreas.stream().filter(e -> e instanceof SoundEffect).findAny();
+            Set<PropertyArea> movedPropertyAreas = gameMap.getPropertyAreas(agentContainer);
+            soundEffect = movedPropertyAreas.stream().filter(e -> e instanceof SoundProperty).findAny();
 
 
-            Optional<EffectArea> locationEffect = movedEffectAreas.stream().filter(e -> e instanceof ModifyLocationEffect).findAny();
+            Optional<PropertyArea> locationEffect = movedPropertyAreas.stream().filter(e -> e instanceof ModifyLocationProperty).findAny();
 
             if(!justTeleported.contains(agentContainer) && locationEffect.isPresent())
             {
                 if(locationEffect.get().getParent() instanceof TeleportArea)
                 {
-                    PointContainer.Polygon connectedArea = ((TeleportArea) locationEffect.get().getParent()).getConnected().getArea().getAsPolygon();
-                    List<MapObject> solids = this.getGameMap().getObjects().stream().filter(e -> e.getType().isSolid()).collect(Collectors.toList());
+                    DataContainer.Polygon connectedArea = ((TeleportArea) locationEffect.get().getParent()).getConnected().getArea().getAsPolygon();
+                    List<AbstractObject> solids = this.getGameMap().getObjects().stream().filter(e -> e.getType().isSolid()).collect(Collectors.toList());
 
                     final Vector position = generateRandomSpawnLocation(connectedArea, agentContainer.getShape(), solids,
                             new ArrayList<>());
@@ -505,7 +505,7 @@ public class Game implements Runnable {
             }
 
             soundEffect.ifPresent(effectArea -> {
-                SoundEffect s = (SoundEffect) effectArea;
+                SoundProperty s = (SoundProperty) effectArea;
                 gameMap.getDynamicObjects().add(new Sound(s.getType(), agentContainer,
                         s.get(agentContainer) * (distance / maxSprint),
                         1
@@ -542,8 +542,8 @@ public class Game implements Runnable {
             //--- check whether there is already one in this place
             if(gameMap.getDynamicObjects(Pheromone.class).stream()
                     .filter(e -> e.getSource().getClass().isAssignableFrom(agentContainer.getClass()))
-                    .anyMatch(e -> PointContainer.intersect(e.getAsCircle(),
-                            new PointContainer.Circle(agentContainer.getPosition(), scenarioPercepts.getRadiusPheromone().getValue())))
+                    .anyMatch(e -> DataContainer.intersect(e.getAsCircle(),
+                            new DataContainer.Circle(agentContainer.getPosition(), scenarioPercepts.getRadiusPheromone().getValue())))
             )
             {
                 return false;
@@ -634,22 +634,22 @@ public class Game implements Runnable {
 
     private <T> VisionPrecepts generateVisionPercepts(AgentContainer<T> agentContainer)
     {
-        Set<EffectArea> effectAreas = gameMap.getEffectAreas(agentContainer);
-        final FieldOfView fov = agentContainer.getFOV(effectAreas);
+        Set<PropertyArea> propertyAreas = gameMap.getPropertyAreas(agentContainer);
+        final FieldOfView fov = agentContainer.getFOV(propertyAreas);
 
-        Optional<ModifyViewRangeEffect> viewRangeEffect = effectAreas.stream()
-                .filter(a -> a instanceof ModifyViewRangeEffect)
-                .map(a -> (ModifyViewRangeEffect) a).findAny();
+        Optional<ModifyViewRangeProperty> viewRangeEffect = propertyAreas.stream()
+                .filter(a -> a instanceof ModifyViewRangeProperty)
+                .map(a -> (ModifyViewRangeProperty) a).findAny();
 
-        ViewRange viewRange = null;
+        DefaultViewRange defaultViewRange = null;
         if(viewRangeEffect.isPresent())
         {
-            viewRange = viewRangeEffect.get().get(agentContainer);
+            defaultViewRange = viewRangeEffect.get().get(agentContainer);
         }
 
         return new VisionPrecepts(
                 fov,
-                new ObjectPercepts(gameMap.getObjectPerceptsForAgent(agentContainer, fov, viewRange))
+                new ObjectPercepts(gameMap.getObjectPerceptsForAgent(agentContainer, fov, defaultViewRange))
         );
     }
 
@@ -682,7 +682,7 @@ public class Game implements Runnable {
     {
         return new SmellPercepts(this.gameMap.getDynamicObjects().stream()
                 .filter(e -> e instanceof Pheromone && agentContainer.getClass().isAssignableFrom(e.getSource().getClass()))
-                .filter(e -> PointContainer.intersect(e.getAsCircle(), agentContainer.getShape()))
+                .filter(e -> DataContainer.intersect(e.getAsCircle(), agentContainer.getShape()))
                 .map(dynamicObject -> {
                     Pheromone pheromone = (Pheromone) dynamicObject;
                     return new SmellPercept(

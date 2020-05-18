@@ -1,22 +1,22 @@
 package Group10.World.Objects;
 
-import Group10.World.Area.ModifySpeedEffect;
-import Group10.World.Area.ModifyViewEffect;
-import Group10.World.Area.SoundEffect;
-import Group10.Tree.PointContainer;
+import Group10.World.Area.ModifySpeedProperty;
+import Group10.World.Area.ModifyViewProperty;
+import Group10.World.Area.SoundProperty;
+import Group10.Container.DataContainer;
 import Interop.Percept.Sound.SoundPerceptType;
 import Interop.Percept.Vision.ObjectPerceptType;
 
-public class Door extends MapObject {
+public class Door extends AbstractObject {
 
-    public Door(PointContainer.Polygon area,
+    public Door(DataContainer.Polygon area,
                 double guardViewModifier, double intruderViewModifier,
                 double soundRadius,
                 double guardSpeedModifier, double intruderSpeedModifier) {
         super(area, ObjectPerceptType.Door);
-        this.addEffects(new ModifyViewEffect(this, area, guardViewModifier, intruderViewModifier),
-                new SoundEffect(this, area, SoundPerceptType.Noise, soundRadius),
-                new ModifySpeedEffect(this, area, guardSpeedModifier, intruderSpeedModifier));
+        this.addEffects(new ModifyViewProperty(this, area, guardViewModifier, intruderViewModifier),
+                new SoundProperty(this, area, SoundPerceptType.Noise, soundRadius),
+                new ModifySpeedProperty(this, area, guardSpeedModifier, intruderSpeedModifier));
     }
 
 }

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Assertions;
 
 import Group10.Agents.Container.GuardContainer;
 import Group10.Agents.Container.IntruderContainer;
-import Group10.Agents.Factories.DefaultAgentFactory;
+import Group10.Agents.Factories.DefaultFactory;
 import Group10.Algebra.Vector;
 import Interop.Action.DropPheromone;
 import Interop.Action.Move;
@@ -29,8 +29,8 @@ import Group10.World.Reader.*;
 
 class GameTest {
 
-	File mapFile = new File("src/Map/Maps/test_2.map");
-	Game g = new Game(Reader.parseFile(mapFile.getAbsolutePath()), new DefaultAgentFactory(), false, 15, null);
+	File mapFile = new File("src/main/java/Group10/World/Maps/test_2.map");
+	Game g = new Game(Reader.parseFile(mapFile.getAbsolutePath()), new DefaultFactory(), false, 15, null);
 	
 	GuardPercepts GP;
 	IntruderPercepts IP;

@@ -1,9 +1,9 @@
 package Group10.World.Dynamic;
 
 import Group10.Algebra.Vector;
-import Group10.Tree.PointContainer;
+import Group10.Container.DataContainer;
 
-public abstract class DynamicObject<T> extends PointContainer.Circle implements Cloneable {
+public abstract class DynamicObject<T> extends DataContainer.Circle implements Cloneable {
 
     private T source;
     private int lifetime;

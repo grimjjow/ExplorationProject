@@ -2,9 +2,9 @@ package Group10.World.Reader;
 
 import Group10.World.GameMap;
 import Group10.World.GameSettings;
-import Group10.World.ViewRange;
+import Group10.World.DefaultViewRange;
 import Group10.World.Objects.*;
-import Group10.Tree.PointContainer;
+import Group10.Container.DataContainer;
 import Interop.Geometry.Angle;
 import Interop.Geometry.Distance;
 import Interop.Percept.Scenario.GameMode;
@@ -32,7 +32,7 @@ public class Builder
     private Distance intruderViewRangeShaded;
     private Distance guardViewRangeNormal;
     private Distance guardViewRangeShaded;
-    private ViewRange sentryViewRange;
+    private DefaultViewRange sentryDefaultViewRange;
     private Angle viewAngle;
     private int viewRays;
 
@@ -53,7 +53,7 @@ public class Builder
     private int sprintCooldown;
     private int pheromoneExpireRounds;
 
-    private List<MapObject> objects = new ArrayList<>();
+    private List<AbstractObject> objects = new ArrayList<>();
 
     public Builder() {}
 
@@ -125,7 +125,7 @@ public class Builder
 
     public Builder sentryViewRange(double min, double max)
     {
-        this.sentryViewRange = new ViewRange(min, max);
+        this.sentryDefaultViewRange = new DefaultViewRange(min, max);
         return this;
     }
 
@@ -230,27 +230,27 @@ public class Builder
         return this;
     }
 
-    public Builder wall(PointContainer.Polygon quadrilateral){
+    public Builder wall(DataContainer.Polygon quadrilateral){
         this.object(new Wall(quadrilateral));
         return this;
     }
 
-    public Builder targetArea(PointContainer.Polygon quadrilateral){
+    public Builder targetArea(DataContainer.Polygon quadrilateral){
         this.object(new TargetArea(quadrilateral));
         return this;
     }
 
-    public Builder spawnAreaIntruders(PointContainer.Polygon quadrilateral){
+    public Builder spawnAreaIntruders(DataContainer.Polygon quadrilateral){
         this.object(new Spawn.Intruder(quadrilateral));
         return this;
     }
 
-    public Builder spawnAreaGuards(PointContainer.Polygon quadrilateral){
+    public Builder spawnAreaGuards(DataContainer.Polygon quadrilateral){
         this.object(new Spawn.Guard(quadrilateral));
         return this;
     }
 
-    public Builder teleport(PointContainer.Polygon teleporterA, PointContainer.Polygon teleporterB){
+    public Builder teleport(DataContainer.Polygon teleporterA, DataContainer.Polygon teleporterB){
         TeleportArea teleportAreaA = new TeleportArea(teleporterA, null);
         TeleportArea teleportAreaB = new TeleportArea(teleporterB, teleportAreaA);
         teleportAreaA.setConnected(teleportAreaB);
@@ -259,13 +259,13 @@ public class Builder
         return this;
     }
 
-    public Builder shaded(PointContainer.Polygon quadrilateral){
+    public Builder shaded(DataContainer.Polygon quadrilateral){
         this.object(new ShadedArea(quadrilateral,guardViewRangeShaded.getValue()/guardViewRangeNormal.getValue(),
                 intruderViewRangeShaded.getValue()/intruderViewRangeNormal.getValue()));
         return this;
     }
 
-    public Builder door(PointContainer.Polygon quadrilateral){
+    public Builder door(DataContainer.Polygon quadrilateral){
         this.object(new Door(quadrilateral,
                 guardViewRangeShaded.getValue()/guardViewRangeNormal.getValue(), intruderViewRangeShaded.getValue()/intruderViewRangeNormal.getValue(),
                 this.doorSoundRadius.getValue(),
@@ -274,7 +274,7 @@ public class Builder
         return this;
     }
 
-    public Builder window(PointContainer.Polygon quadrilateral){
+    public Builder window(DataContainer.Polygon quadrilateral){
         this.object(new Window(quadrilateral,
                 guardViewRangeShaded.getValue()/guardViewRangeNormal.getValue(), intruderViewRangeShaded.getValue()/intruderViewRangeNormal.getValue(),
                 this.windowSoundRadius.getValue(),
@@ -282,12 +282,12 @@ public class Builder
         ));
         return this;
     }
-    public Builder sentry(PointContainer.Polygon outsideArea, PointContainer.Polygon insideArea){
-        this.object(new SentryTower(insideArea, sentrySlowdownModifier, this.sentryViewRange));
+    public Builder sentry(DataContainer.Polygon outsideArea, DataContainer.Polygon insideArea){
+        this.object(new SentryTower(insideArea, sentrySlowdownModifier, this.sentryDefaultViewRange));
         return this;
     }
 
-    private Builder object(MapObject object)
+    private Builder object(AbstractObject object)
     {
         this.objects.add(object);
         return this;
@@ -303,7 +303,7 @@ public class Builder
         return new GameMap(new GameSettings(scenarioPercepts, this.width, this.height,
                 this.guardMaxMoveDistance, this.winRounds, this.intruderMaxMoveDistance, this.intruderMaxSprintDistance,
                 this.sprintCooldown, this.numGuards, this.numIntruders, this.intruderViewRangeNormal, this.intruderViewRangeShaded,
-                this.guardViewRangeNormal, this.guardViewRangeShaded, this.sentryViewRange, this.yellSoundRadius,
+                this.guardViewRangeNormal, this.guardViewRangeShaded, this.sentryDefaultViewRange, this.yellSoundRadius,
                 this.moveMaxSoundRadius, this.windowSoundRadius, this.doorSoundRadius, this.viewAngle, this.viewRays, this.pheromoneExpireRounds)
         , this.objects);
     }

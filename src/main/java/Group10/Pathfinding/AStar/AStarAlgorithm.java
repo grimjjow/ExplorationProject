@@ -5,7 +5,6 @@ import Group10.Pathfinding.Network;
 
 import java.util.ArrayList;
 
-
 public class AStarAlgorithm {
 
     private Network network;

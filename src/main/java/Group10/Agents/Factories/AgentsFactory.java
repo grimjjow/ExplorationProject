@@ -7,7 +7,7 @@ import java.util.List;
 
 public class AgentsFactory {
 
-    private final static DefaultAgentFactory agentFactory = new DefaultAgentFactory();
+    private final static DefaultFactory agentFactory = new DefaultFactory();
 
     static public List<Intruder> createIntruders(int number) {
         return agentFactory.createIntruders(number);

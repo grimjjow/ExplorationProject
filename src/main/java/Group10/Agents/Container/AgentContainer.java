@@ -1,11 +1,11 @@
 package Group10.Agents.Container;
 
 import Group10.Engine.Game;
-import Group10.World.Area.EffectArea;
-import Group10.World.Area.ModifyViewEffect;
-import Group10.World.Area.ModifyViewRangeEffect;
+import Group10.World.Area.PropertyArea;
+import Group10.World.Area.ModifyViewProperty;
+import Group10.World.Area.ModifyViewRangeProperty;
 import Group10.Algebra.Vector;
-import Group10.Tree.PointContainer;
+import Group10.Container.DataContainer;
 import Interop.Geometry.Distance;
 import Interop.Percept.Vision.FieldOfView;
 
@@ -17,7 +17,7 @@ public abstract class AgentContainer<T> {
 
     private T agent;
     private FieldOfView normalFOV;
-    private PointContainer.Circle shape = null;
+    private DataContainer.Circle shape = null;
     private Vector direction = null;
 
     public Map<Cooldown, Integer> cooldowns = new HashMap<>();
@@ -25,7 +25,7 @@ public abstract class AgentContainer<T> {
     public AgentContainer(T agent, Vector position, Vector direction, FieldOfView normalFOV)
     {
         this.agent = agent;
-        this.shape = new PointContainer.Circle(position, _RADIUS);
+        this.shape = new DataContainer.Circle(position, _RADIUS);
         this.direction = direction;
         this.normalFOV = normalFOV;
 
@@ -37,7 +37,7 @@ public abstract class AgentContainer<T> {
         return this.agent;
     }
 
-    public PointContainer.Circle getShape()
+    public DataContainer.Circle getShape()
     {
         return shape;
     }
@@ -52,21 +52,21 @@ public abstract class AgentContainer<T> {
         return direction;
     }
 
-    public FieldOfView getFOV(Set<EffectArea> areas)
+    public FieldOfView getFOV(Set<PropertyArea> areas)
     {
-        Optional<ModifyViewRangeEffect> viewRangeEffect = areas.stream()
-                .filter(a -> a instanceof ModifyViewRangeEffect)
-                .map(a -> (ModifyViewRangeEffect) a).findAny();
+        Optional<ModifyViewRangeProperty> viewRangeEffect = areas.stream()
+                .filter(a -> a instanceof ModifyViewRangeProperty)
+                .map(a -> (ModifyViewRangeProperty) a).findAny();
 
         if(viewRangeEffect.isPresent())
         {
-            return new FieldOfView(new Distance(viewRangeEffect.get().get(this).getMax()), normalFOV.getViewAngle());
+            return new FieldOfView(new Distance(viewRangeEffect.get().get(this).getTo()), normalFOV.getViewAngle());
         }
 
         //---
-        Optional<ModifyViewEffect> viewAffectedArea = areas.stream()
-                .filter(a -> a instanceof ModifyViewEffect)
-                .map(a -> (ModifyViewEffect) a).findAny();
+        Optional<ModifyViewProperty> viewAffectedArea = areas.stream()
+                .filter(a -> a instanceof ModifyViewProperty)
+                .map(a -> (ModifyViewProperty) a).findAny();
 
         if(viewAffectedArea.isPresent())
         {
