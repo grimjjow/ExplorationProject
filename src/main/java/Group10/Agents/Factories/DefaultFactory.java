@@ -1,14 +1,11 @@
 package Group10.Agents.Factories;
 
 import Group10.Agents.BoltzmannAgent;
-import Group10.Agents.RandomAgent;
-import Group10.Agents.RandomIntruderAgent;
 import Group10.Agents.ToTargetAgent;
 import Interop.Agent.Guard;
 import Interop.Agent.Intruder;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class DefaultFactory {
