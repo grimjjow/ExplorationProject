@@ -34,7 +34,10 @@ import Interop.Percept.Vision.FieldOfView;
 import Interop.Percept.Vision.ObjectPercepts;
 import Interop.Percept.Vision.VisionPrecepts;
 import Interop.Utils.Utils;
+import Interop.Utils.WriteInFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +75,9 @@ public class Game implements Runnable {
     //---
     private final boolean queryIntent;
     private Semaphore lock = new Semaphore(1);
+
+    private File filepath = new File("src/data.txt");
+    private WriteInFile data = new WriteInFile(filepath,true);
 
     public Game(GameMap gameMap, final boolean queryIntent)
     {
@@ -335,6 +341,13 @@ public class Game implements Runnable {
                 lockin(() -> {
                     final IntruderAction action = intruder.getAgent().getAction(this.generateIntruderPercepts(intruder));
                     actionSuccess.put(intruder, executeAction(intruder, action));
+                    try {
+                        data.WriteToFile( "intruder vector position " + intruder.getPosition().toString() + "\n");
+                        data.WriteToFile( "Intruder Action " + action.toString() + "\n \n");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                 });
 
                 if((winner = checkForWinner()) != null)
@@ -350,6 +363,13 @@ public class Game implements Runnable {
             lockin(() -> {
                 final GuardAction action = guard.getAgent().getAction(this.generateGuardPercepts(guard));
                 actionSuccess.put(guard, executeAction(guard, action));
+                try {
+                    data.WriteToFile("Guard Position and length " + guard.getPosition().toString() + "\n");
+                    data.WriteToFile("Guard Action " +action.toString()+ "\n \n");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             });
 
             if((winner = checkForWinner()) != null)
