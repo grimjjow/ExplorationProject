@@ -9,6 +9,7 @@ import Interop.Geometry.Point;
 import Interop.Percept.AreaPercepts;
 import Interop.Percept.GuardPercepts;
 import Interop.Percept.Scenario.ScenarioGuardPercepts;
+import Interop.Percept.Scenario.ScenarioPercepts;
 import Interop.Percept.Scenario.SlowDownModifiers;
 import Interop.Percept.Vision.ObjectPercept;
 import Interop.Percept.Vision.ObjectPerceptType;
@@ -22,6 +23,10 @@ public class BoltzmannAgent implements Guard{
 
     private ArrayList<int[]> memory;
     private boolean justRotated = false;
+    private boolean justSawIntruder = false;
+    private Point intruderPoint = null;
+    private int catchedIntruders = 0;
+
 
     public BoltzmannAgent() {
         if(Game.DEBUG) System.out.println("This is the boltzmann guard");
@@ -33,6 +38,7 @@ public class BoltzmannAgent implements Guard{
         boolean lastActionExecuted = percepts.wasLastActionExecuted();
         AreaPercepts area = percepts.getAreaPercepts();
         ScenarioGuardPercepts scenario = percepts.getScenarioGuardPercepts();
+        ScenarioPercepts scenarioPercepts = scenario.getScenarioPercepts();
         //SmellPercepts smells = percepts.getSmells();
         //SoundPercepts sounds = percepts.getSounds();
         VisionPrecepts vision = percepts.getVision();
@@ -52,9 +58,28 @@ public class BoltzmannAgent implements Guard{
             if(Game.DEBUG) System.out.println(objectPercept);
         }*/
 
-        double[][] actionArray = new double[3][2];
-        Angle angleToSentryTower;
+////////////////   winning condition    ///////////////////////////////////
 
+        if(intruderPoint!=null && justSawIntruder){
+            Distance dist = new Distance(new Point(0,0), intruderPoint);
+            System.out.println("Distance guard intruder: " + dist.getValue());
+            if(Math.abs(dist.getValue())<=Math.abs(scenarioPercepts.getCaptureDistance().getValue())){
+                catchedIntruders++;
+                System.out.println("Catched Intruder");
+            }
+        }
+
+        // TODO: do for all intruders:
+        // set:
+        // intruderPoint = null
+        // justSawintruder = false
+        // introduce new counter, remove intruder from field
+
+
+//////////////// look for sentry tower  ///////////////////////////////////
+        // TODO: is this useful?
+
+        Angle angleToSentryTower;
         // iterate through vision to check for sentry tower
         for (ObjectPercept objectPercept : objects.getAll()) {
             if (objectPercept.getType() == ObjectPerceptType.SentryTower) {
@@ -66,34 +91,52 @@ public class BoltzmannAgent implements Guard{
                 return new Rotate(angleToSentryTower);
             }
         }
-        // TODO: remember and update previous temp
-        double temperature = 5;
+
+
+//////////////// chasing the intruder ///////////////////////////////////
 
         ObjectPercept lastknown;
-        Point posIntruder = new Point(0, 0);
-        boolean justSawIntruder = false;
 
         // iterate through vision to check for intruder
         for (ObjectPercept objectPercept : objects.getAll()) {
             if (objectPercept.getType() == ObjectPerceptType.Intruder) {
                 lastknown = objectPercept;
-                posIntruder = lastknown.getPoint();
+                intruderPoint = lastknown.getPoint();
                 GuardAction chase = chaseIntruder(lastknown, objects);
                 justSawIntruder = true;
                 return chase;
             }
             // else explore
         }
-        // move to last known position of intruder
+        // move to last known position of intruder - after rotation
         if (justRotated) {
-            System.out.println("where are you");
             justRotated = false;
-            return new Move(posIntruder.getDistanceFromOrigin());
+            return new Move(intruderPoint.getDistanceFromOrigin());
         }
+
+        if(justSawIntruder){
+            for (ObjectPercept objectPercept : objects.getAll()) {
+                if(objectPercept.getType() != ObjectPerceptType.Wall){
+                    Distance newDistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts));
+                    return new Move(newDistance);
+                }
+            }
+            justSawIntruder = false;
+        }
+
+//////////////// Boltzmann ///////////////////////////////////
+
+        // TODO: remember and update previous temp
+        double temperature = 5;
+        double[][] actionArray = new double[3][2];
 
         // check if agent is inside a door or window -> then always move not rotate
         if (area.isInDoor() || area.isInWindow()) {
             Distance newDistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts));
+            // if guard, gets stuck in intruder wall or window
+            if(!lastActionExecuted){
+                return new Rotate(Angle.fromRadians(Math.PI/4));
+            }
             return new Move(newDistance);
         }
 
@@ -131,6 +174,8 @@ public class BoltzmannAgent implements Guard{
 
         //if(Game.DEBUG) System.out.println("Action: " + action.toString());
         return action;
+
+
     }
 
     // TODO: check for explored space
@@ -210,7 +255,7 @@ public class BoltzmannAgent implements Guard{
         }
         else{
             // rotate such that the intruder is right in front of us
-            justRotated  =true;
+            justRotated  = true;
             return new Rotate(angle);
         }
     }
