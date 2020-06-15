@@ -4,6 +4,7 @@ import Group10.Engine.Game;
 import Interop.Action.*;
 import Interop.Agent.Guard;
 import Interop.Geometry.Angle;
+import Interop.Geometry.Direction;
 import Interop.Geometry.Distance;
 import Interop.Geometry.Point;
 import Interop.Percept.AreaPercepts;
@@ -11,6 +12,9 @@ import Interop.Percept.GuardPercepts;
 import Interop.Percept.Scenario.ScenarioGuardPercepts;
 import Interop.Percept.Scenario.ScenarioPercepts;
 import Interop.Percept.Scenario.SlowDownModifiers;
+import Interop.Percept.Sound.SoundPercept;
+import Interop.Percept.Sound.SoundPerceptType;
+import Interop.Percept.Sound.SoundPercepts;
 import Interop.Percept.Vision.ObjectPercept;
 import Interop.Percept.Vision.ObjectPerceptType;
 import Interop.Percept.Vision.ObjectPercepts;
@@ -22,8 +26,8 @@ import java.util.Random;
 public class BoltzmannAgent implements Guard{
 
     private ArrayList<int[]> memory;
-    private boolean justRotated = false;
     private boolean justSawIntruder = false;
+    private boolean rotateAgain = false;
     private Point intruderPoint = null;
     private int catchedIntruders = 0;
 
@@ -40,7 +44,7 @@ public class BoltzmannAgent implements Guard{
         ScenarioGuardPercepts scenario = percepts.getScenarioGuardPercepts();
         ScenarioPercepts scenarioPercepts = scenario.getScenarioPercepts();
         //SmellPercepts smells = percepts.getSmells();
-        //SoundPercepts sounds = percepts.getSounds();
+        SoundPercepts sounds = percepts.getSounds();
         VisionPrecepts vision = percepts.getVision();
         ObjectPercepts objects = vision.getObjects();
 
@@ -58,14 +62,17 @@ public class BoltzmannAgent implements Guard{
             if(Game.DEBUG) System.out.println(objectPercept);
         }*/
 
+
 ////////////////   winning condition    ///////////////////////////////////
 
         if(intruderPoint!=null && justSawIntruder){
             Distance dist = new Distance(new Point(0,0), intruderPoint);
-            System.out.println("Distance guard intruder: " + dist.getValue());
+            //System.out.println(Math.abs(scenarioPercepts.getCaptureDistance().getValue()));
             if(Math.abs(dist.getValue())<=Math.abs(scenarioPercepts.getCaptureDistance().getValue())){
                 catchedIntruders++;
                 System.out.println("Catched Intruder");
+                intruderPoint = null;
+                justSawIntruder = false;
             }
         }
 
@@ -93,7 +100,7 @@ public class BoltzmannAgent implements Guard{
         }
 
 
-//////////////// chasing the intruder ///////////////////////////////////
+//////////////// chasing the intruder (visual) ///////////////////////////////////
 
         ObjectPercept lastknown;
 
@@ -108,21 +115,44 @@ public class BoltzmannAgent implements Guard{
             }
             // else explore
         }
-        // move to last known position of intruder - after rotation
+        /*// move to last known position of intruder - after rotation
         if (justRotated) {
             justRotated = false;
             return new Move(intruderPoint.getDistanceFromOrigin());
-        }
+        }*/
 
         if(justSawIntruder){
-            for (ObjectPercept objectPercept : objects.getAll()) {
+            /*for (ObjectPercept objectPercept : objects.getAll()) {
+                // move or rotate
                 if(objectPercept.getType() != ObjectPerceptType.Wall){
                     Distance newDistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts));
                     return new Move(newDistance);
                 }
+            }*/
+
+            // check if we still hear him, although we cannot see him
+            for(SoundPercept soundPercept : sounds.getAll()) {
+                if(soundPercept.getType() == SoundPerceptType.Noise){
+                    Direction direction = soundPercept.getDirection();
+                    // check if direction in degrees is over 180 (pi in radians)
+                    //if(direction.getRadians()>Math.PI){
+                        // then turn left
+
+                    //}
+                    if(direction.getRadians() >= maxAngle.getRadians()){
+                        return new Rotate(maxAngle);
+                    }
+                    return new Rotate(Angle.fromRadians(direction.getRadians()));
+                }
             }
             justSawIntruder = false;
         }
+//////////////// chasing the intruder 2 (sound) ////////////////////////////////
+
+        for(SoundPercept soundPercept : sounds.getAll()){
+            // if we haven't seen an intruder
+        }
+
 
 //////////////// Boltzmann ///////////////////////////////////
 
@@ -247,17 +277,17 @@ public class BoltzmannAgent implements Guard{
      */
     public GuardAction chaseIntruder(ObjectPercept objectPercept, ObjectPercepts objects){
         Point posIntruder = objectPercept.getPoint();
-        Point posGuard = new Point(0,0);
         Angle angle = findAngle(posIntruder, objects);
         // if the angle is in this range, then we do not have to change direction
-        if((angle.getDegrees() <= 1.5) && (angle.getDegrees() >= -1.5)){
+        return new Move(posIntruder.getDistanceFromOrigin());
+        /*if((angle.getDegrees() <= 30) && (angle.getDegrees() >= -30)){
             return new Move(objectPercept.getPoint().getDistanceFromOrigin());
         }
         else{
             // rotate such that the intruder is right in front of us
             justRotated  = true;
             return new Rotate(angle);
-        }
+        }*/
     }
 
 
