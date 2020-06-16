@@ -134,15 +134,34 @@ public class BoltzmannAgent implements Guard{
             for(SoundPercept soundPercept : sounds.getAll()) {
                 if(soundPercept.getType() == SoundPerceptType.Noise){
                     Direction direction = soundPercept.getDirection();
+                    Distance newdistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue());
                     // check if direction in degrees is over 180 (pi in radians)
+                    System.out.println(direction.getDegrees());
                     //if(direction.getRadians()>Math.PI){
                         // then turn left
 
                     //}
-                    if(direction.getRadians() >= maxAngle.getRadians()){
-                        return new Rotate(maxAngle);
+                    if(direction.getDegrees() < 5  || direction.getDegrees() > 350){
+                        System.out.println("Hear and move");
+                        return new Move(newdistance);
                     }
-                    return new Rotate(Angle.fromRadians(direction.getRadians()));
+                    else if(direction.getRadians()<= Math.PI/4 || direction.getRadians()>= 3*Math.PI/2){
+                        System.out.println("we hear but dont rotate to much");
+                        return new Rotate(Angle.fromRadians(direction.getRadians()));
+                    }
+                    else if(direction.getRadians() >= Math.PI){
+                        //Rotate right
+                        System.out.println("Rotate Right");
+                        return new Rotate(Angle.fromRadians(Math.PI/4));
+                    }
+                    else if(direction.getRadians() <= Math.PI){
+                        //Rotate left
+                        System.out.println("Rotate Left");
+                        return new Rotate(Angle.fromRadians(-Math.PI/4));
+                    }
+                    else {
+                        return new Rotate(Angle.fromRadians(direction.getRadians()));
+                    }
                 }
             }
             justSawIntruder = false;
