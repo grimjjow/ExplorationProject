@@ -1,6 +1,7 @@
 package Group10.Agents;
 
 import Group10.Engine.Game;
+import Group10.World.Dynamic.Pheromone;
 import Interop.Action.*;
 import Interop.Agent.Guard;
 import Interop.Geometry.Angle;
@@ -23,11 +24,13 @@ import Interop.Percept.Vision.VisionPrecepts;
 import java.util.ArrayList;
 import java.util.Random;
 
+import static Interop.Percept.Smell.SmellPerceptType.Pheromone1;
+
 public class BoltzmannAgent implements Guard{
 
     private ArrayList<int[]> memory;
     private boolean justSawIntruder = false;
-    private boolean rotateAgain = false;
+    private boolean seeIntruder = false;
     private Point intruderPoint = null;
     private int catchedIntruders = 0;
 
@@ -62,6 +65,11 @@ public class BoltzmannAgent implements Guard{
             if(Game.DEBUG) System.out.println(objectPercept);
         }*/
 
+        // drop the pheromone type 1 on the last position of the intruder
+        if(seeIntruder){
+            return new DropPheromone(Pheromone1);
+        }
+
 
 ////////////////   winning condition    ///////////////////////////////////
 
@@ -83,22 +91,6 @@ public class BoltzmannAgent implements Guard{
         // introduce new counter, remove intruder from field
 
 
-//////////////// look for sentry tower  ///////////////////////////////////
-        // TODO: is this useful?
-
-        Angle angleToSentryTower;
-        // iterate through vision to check for sentry tower
-        for (ObjectPercept objectPercept : objects.getAll()) {
-            if (objectPercept.getType() == ObjectPerceptType.SentryTower) {
-                angleToSentryTower = findAngle(objectPercept.getPoint(), objects);
-                // then the sentry tower will be in our current direction
-                if (angleToSentryTower.getDegrees() < 1) {
-                    return new Move(objectPercept.getPoint().getDistanceFromOrigin());
-                }
-                return new Rotate(angleToSentryTower);
-            }
-        }
-
 
 //////////////// chasing the intruder (visual) ///////////////////////////////////
 
@@ -109,10 +101,13 @@ public class BoltzmannAgent implements Guard{
             if (objectPercept.getType() == ObjectPerceptType.Intruder) {
                 lastknown = objectPercept;
                 intruderPoint = lastknown.getPoint();
-                GuardAction chase = chaseIntruder(lastknown, objects);
                 justSawIntruder = true;
+                seeIntruder = true;
+                Distance dis = new Distance(intruderPoint.getDistanceFromOrigin().getValue() * getSpeedModifier(percepts));
+                Move chase = new Move(dis);
                 return chase;
             }
+            seeIntruder = false;
             // else explore
         }
         /*// move to last known position of intruder - after rotation
@@ -165,13 +160,39 @@ public class BoltzmannAgent implements Guard{
                 }
             }
             justSawIntruder = false;
+
         }
 //////////////// chasing the intruder 2 (sound) ////////////////////////////////
 
         for(SoundPercept soundPercept : sounds.getAll()){
             // if we haven't seen an intruder
+            if(soundPercept.getType() == SoundPerceptType.Noise){
+                Direction dir = soundPercept.getDirection();
+                System.out.println("Direction " + dir.getDegrees());
+                return new Rotate(Angle.fromRadians(dir.getRadians()));
+            }
         }
 
+//////////////// look for sentry tower  ///////////////////////////////////
+        // TODO: is this useful?
+
+        Angle angleToSentryTower;
+        // iterate through vision to check for sentry tower
+        for (ObjectPercept objectPercept : objects.getAll()) {
+            if (objectPercept.getType() == ObjectPerceptType.SentryTower) {
+                angleToSentryTower = findAngle(objectPercept.getPoint(), objects);
+                // then the sentry tower will be in our current direction
+                if (angleToSentryTower.getDegrees() < 1) {
+                    return new Move(objectPercept.getPoint().getDistanceFromOrigin());
+                }
+                return new Rotate(angleToSentryTower);
+            }
+        }
+
+        // rotate if in sentry tower and currently not seeing intruder
+        if(area.isInSentryTower() && !seeIntruder){
+            return new Rotate(maxAngle);
+        }
 
 //////////////// Boltzmann ///////////////////////////////////
 
@@ -286,29 +307,6 @@ public class BoltzmannAgent implements Guard{
 
         return Angle.fromRadians(angle);
     }
-
-    /**
-     * chaseIntruder checks when the intruder is in out visual field if he is right infront of us -> return move
-     *                                                                  or if he have to rotate a bit such that he is right infront of us
-     * @param objectPercept
-     * @param objects
-     * @return
-     */
-    public GuardAction chaseIntruder(ObjectPercept objectPercept, ObjectPercepts objects){
-        Point posIntruder = objectPercept.getPoint();
-        Angle angle = findAngle(posIntruder, objects);
-        // if the angle is in this range, then we do not have to change direction
-        return new Move(posIntruder.getDistanceFromOrigin());
-        /*if((angle.getDegrees() <= 30) && (angle.getDegrees() >= -30)){
-            return new Move(objectPercept.getPoint().getDistanceFromOrigin());
-        }
-        else{
-            // rotate such that the intruder is right in front of us
-            justRotated  = true;
-            return new Rotate(angle);
-        }*/
-    }
-
 
     private double getSpeedModifier(GuardPercepts guardPercepts)
     {
