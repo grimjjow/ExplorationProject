@@ -32,7 +32,7 @@ public class Gui extends Application {
         Thread thread = new Thread(controller);
         thread.start();
         primaryStage.setOnCloseRequest(event -> {
-            System.out.println("See Ya");
+            System.out.println("Game over");
             controller.kill();
         });
     }

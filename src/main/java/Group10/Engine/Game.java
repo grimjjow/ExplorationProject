@@ -55,9 +55,11 @@ public class Game implements Runnable {
         _RANDOM = new Random(_RANDOM_SEED);
     }
 
+    public GameSettings settings;
+
     private GameMap gameMap;
     private ScenarioPercepts scenarioPercepts;
-    protected GameSettings settings;
+
 
     protected List<GuardContainer> guards = new ArrayList<>();
     protected List<IntruderContainer> intruders = new ArrayList<>();
@@ -400,7 +402,7 @@ public class Game implements Runnable {
 
     }
 
-    protected  <T> boolean executeAction(AgentContainer<T> agentContainer, Action action)
+    public <T> boolean executeAction(AgentContainer<T> agentContainer, Action action)
     {
 
         boolean isGuard = agentContainer.getAgent() instanceof Guard;

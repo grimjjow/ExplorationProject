@@ -1,5 +1,6 @@
 package Group10.Algebra;
 
+import Interop.Geometry.Direction;
 import Interop.Geometry.Point;
 import Interop.Utils.Utils;
 
@@ -16,6 +17,13 @@ public class Vector {
     {
         this.x = x;
         this.y = y;
+        this.length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+    }
+
+    public Vector(Point point, Direction direction) {
+
+        this.x = point.getX() + Math.cos(direction.getRadians());
+        this.y = point.getY() + Math.sin(direction.getRadians());
         this.length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
 
@@ -136,10 +144,10 @@ public class Vector {
 
     @Override
     public String toString() {
-        return "Vector2{" +
-                "x=" + x +
-                ", y=" + y +
-                ", length=" + length +
+        return "Vector {" +
+                "x = " + x +
+                ", y = " + y +
+                ", length = " + length +
                 '}';
     }
 
@@ -162,6 +170,13 @@ public class Vector {
         return new Vector(this.x, this.y);
     }
 
+    public Point toPoint() {
+        return new Point(x, y);
+    }
+
+    public Vector(Point point) {
+        this(point.getX(), point.getY());
+    }
 
     public static class Random extends Vector {
         public Random() {

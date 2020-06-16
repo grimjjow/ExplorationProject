@@ -31,11 +31,8 @@ public class Line {
         }
 
         Point intersectionPoint = new Point((b2 * c1 - b1 * c2) / delta, (a1 * c2 - a2 * c1) / delta);
-        if (l1.isPointOnLine(intersectionPoint) && l2.isPointOnLine(intersectionPoint)){
-            return intersectionPoint;
-        }
 
-        return null;
+        return intersectionPoint;
     }
 
     public boolean isPointOnLine(Point c) {
