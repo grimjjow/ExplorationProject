@@ -11,7 +11,7 @@ public final class Point {
     private double y;
 
     public Point(double x, double y) {
-        Require.realNumber(x, "A point on cartesian coordinate system must have real coordinates!");
+       Require.realNumber(x, "A point on cartesian coordinate system must have real coordinates!");
         Require.realNumber(y, "A point on cartesian coordinate system must have real coordinates!");
         this.x = x;
         this.y = y;

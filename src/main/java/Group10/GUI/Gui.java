@@ -11,7 +11,7 @@ import java.io.File;
 import java.util.List;
 
 public class Gui extends Application {
-    private File mapFile = new File("src/main/java/Group10/World/Maps/test_3.map");
+    private File mapFile = new File("src/main/java/Group10/World/Maps/test_5_1v1.map");
     private Controller controller = new Controller(this,mapFile,true);
     private MainScene scene = new MainScene(new StackPane(), controller.getGame().getGameMap(),this);
     private Stage primary = new Stage();

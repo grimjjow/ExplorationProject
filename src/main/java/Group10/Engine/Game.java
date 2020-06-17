@@ -76,8 +76,8 @@ public class Game implements Runnable {
     private final boolean queryIntent;
     private Semaphore lock = new Semaphore(1);
 
-    private File filepath = new File("src/data.txt");
-    private WriteInFile data = new WriteInFile(filepath,true);
+    //private File filepath = new File("src/data.csv");
+    //private WriteInFile data = new WriteInFile(filepath,true);
 
     public Game(GameMap gameMap, final boolean queryIntent)
     {
@@ -341,12 +341,12 @@ public class Game implements Runnable {
                 lockin(() -> {
                     final IntruderAction action = intruder.getAgent().getAction(this.generateIntruderPercepts(intruder));
                     actionSuccess.put(intruder, executeAction(intruder, action));
-                    try {
+                   /* try {
                         data.WriteToFile( "intruder vector position " + intruder.getPosition().toString() + "\n");
                         data.WriteToFile( "Intruder Action " + action.toString() + "\n \n");
                     } catch (IOException e) {
                         e.printStackTrace();
-                    }
+                    }*/
 
                 });
 
@@ -363,12 +363,12 @@ public class Game implements Runnable {
             lockin(() -> {
                 final GuardAction action = guard.getAgent().getAction(this.generateGuardPercepts(guard));
                 actionSuccess.put(guard, executeAction(guard, action));
-                try {
+               /* try {
                     data.WriteToFile("Guard Position and length " + guard.getPosition().toString() + "\n");
                     data.WriteToFile("Guard Action " +action.toString()+ "\n \n");
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
+                }*/
 
             });
 
@@ -729,6 +729,7 @@ public class Game implements Runnable {
          */
         void call(Semaphore lock);
     }
+
 
 }
 

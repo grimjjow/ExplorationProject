@@ -18,10 +18,11 @@ public class Angle {
      * @see #fromDegrees
      */
     protected Angle(double radians) {
-        //if(!Utils.isRealNumber(radians)) {
-          //  throw new RuntimeException("Wrong angle! Angle needs to be a real number, but given: " + radians);
-        //}
+        if(!Utils.isRealNumber(radians)) {
+            //throw new RuntimeException("Wrong angle! Angle needs to be a real number, but given: " + radians);
+        }
         this.radians = radians;
+
     }
 
     public static Angle fromRadians(double radians) {
