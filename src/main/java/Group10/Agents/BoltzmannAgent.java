@@ -40,6 +40,7 @@ public class BoltzmannAgent implements Guard {
     private boolean rotate = true;
     private Point intruderPoint = null;
     private Distance deltaDistance;
+    private Angle currentDir = Direction.fromRadians(1.5*Math.PI);
 
     public BoltzmannAgent() {
         if (Game.DEBUG) System.out.println("This is the boltzmann guard");
@@ -198,7 +199,7 @@ public class BoltzmannAgent implements Guard {
         for(ObjectPercept objectPercept : objects.getAll()){
             if(objectPercept.getType() == ObjectPerceptType.Guard){
                 Point guardPoint = objectPercept.getPoint();
-                Angle angleToGuard = findAngle(guardPoint, objects); // TODO: findAngle is not working perferctly, test again
+                Angle angleToGuard = findAngle(guardPoint);
                 System.out.println("Angle in degrees away from the guard " + Angle.fromDegrees(-angleToGuard.getDegrees()).getDegrees());
                 return new Rotate(Angle.fromRadians(-angleToGuard.getRadians()));
             }
@@ -210,7 +211,7 @@ public class BoltzmannAgent implements Guard {
         // iterate through vision to check for sentry tower
         for (ObjectPercept objectPercept : objects.getAll()) {
             if (objectPercept.getType() == ObjectPerceptType.SentryTower) {
-                angleToSentryTower = findAngle(objectPercept.getPoint(), objects);
+                angleToSentryTower = findAngle(objectPercept.getPoint());
                 // then the sentry tower will be in our current direction
                 if (angleToSentryTower.getDegrees() < 1) {
                     return new Move(objectPercept.getPoint().getDistanceFromOrigin());
@@ -268,8 +269,9 @@ public class BoltzmannAgent implements Guard {
         }
 
         if (whatAction == 1 || !lastActionExecuted) {
-            action = new Rotate(Angle.fromRadians(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble()));
-
+            double rotate = percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble();
+            action = new Rotate(Angle.fromRadians(rotate));
+            updateCurrentDir(Angle.fromRadians(rotate));
         }
 
         //if(Game.DEBUG) System.out.println("Action: " + action.toString());
@@ -278,7 +280,6 @@ public class BoltzmannAgent implements Guard {
 
     }
 
-    // TODO: check for explored space
     public double evaluateAction(GuardAction action, ObjectPercepts objects) {
 
         int countWalls = 0;
@@ -302,6 +303,7 @@ public class BoltzmannAgent implements Guard {
             // check if future square is visited/explored/unexplored
             for (ObjectPercept objectPercept : objects.getAll()) {
                 if (objectPercept.getType() == ObjectPerceptType.Wall) {
+                    //System.out.println("\nWall seen at x: " + objectPercept.getPoint().getX() + " y: " + objectPercept.getPoint().getY() + " angle: " + findAngle(objectPercept.getPoint()).getRadians());
                     countWalls++;
                 }
             }
@@ -312,30 +314,35 @@ public class BoltzmannAgent implements Guard {
     }
 
     /**
-     * Given a point and the vision percepts
+     * Given a point, this method return the relative angle of the point from the y-axis. (counter-clockwise, in radians)
+     * There's a method findRelativeAngle which returns the relative angle of a point to agents current direction. if negative, can convert to positive by (2*PI+(-angle))
+     * @param point
+     * @return Angle
+     */
+    public Angle findAngle(Point point) {
+        Angle theta = Angle.fromRadians((Math.atan2(point.getY(),point.getX()) - Math.PI/2)%(Math.PI*2) );
+        return theta;
+    }
+
+
+    /**
+     * This method is used to find the relative angle between our current direction and given point
+     * returns a double value because if value is negative then the given point is on agents current left, if positive then on its right
+     * Hence angle cannot be negative so use this (+-) information to decide which side (counter/clockwise) to rotate
      *
      * @param point
-     * @param objectPercepts
      * @return
      */
-    public Angle findAngle(Point point, ObjectPercepts objectPercepts) {
 
-        double yMean = 0;
-        double xMean = 0;
+    public double findRelativeAngle(Point point){
+        double theta =Math.atan2(point.getY(),point.getX()) - Math.PI/2; // to set direction North
+        theta = (currentDir.getRadians() - theta);
+        return theta;
+    }
 
-        // calculate middle point
-        for (ObjectPercept objectPercept : objectPercepts.getAll()) {
-            xMean += objectPercept.getPoint().getX();
-            yMean += objectPercept.getPoint().getY();
-        }
-
-        xMean = xMean / objectPercepts.getAll().size();
-        yMean = yMean / objectPercepts.getAll().size();
-
-        double m = (yMean - point.getY()) / (xMean - point.getX());
-        double angle = Math.atan(m);
-
-        return Angle.fromRadians(angle);
+    public void updateCurrentDir(Angle angle){
+        this.currentDir = Angle.fromRadians((currentDir.getRadians()+angle.getRadians())%(2*Math.PI));
+        //System.out.println("New currDir: " + currentDir.getRadians()/Math.PI);
     }
 
     private double getSpeedModifier(GuardPercepts guardPercepts) {
