@@ -1,8 +1,7 @@
 package Group10.Agents;
 
-import Group10.Agents.Learning.Memory;
-import Group10.Algebra.Maths;
 import Group10.Engine.Game;
+import Group10.World.Dynamic.Pheromone;
 import Interop.Action.*;
 import Interop.Agent.Guard;
 import Interop.Geometry.Angle;
@@ -14,6 +13,9 @@ import Interop.Percept.GuardPercepts;
 import Interop.Percept.Scenario.ScenarioGuardPercepts;
 import Interop.Percept.Scenario.ScenarioPercepts;
 import Interop.Percept.Scenario.SlowDownModifiers;
+import Interop.Percept.Smell.SmellPercept;
+import Interop.Percept.Smell.SmellPerceptType;
+import Interop.Percept.Smell.SmellPercepts;
 import Interop.Percept.Sound.SoundPercept;
 import Interop.Percept.Sound.SoundPerceptType;
 import Interop.Percept.Sound.SoundPercepts;
@@ -22,42 +24,44 @@ import Interop.Percept.Vision.ObjectPerceptType;
 import Interop.Percept.Vision.ObjectPercepts;
 import Interop.Percept.Vision.VisionPrecepts;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.rmi.MarshalException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
-import static java.lang.Float.NaN;
+import static Interop.Percept.Smell.SmellPerceptType.Pheromone1;
 
-public class BoltzmannAgent implements Guard{
+public class BoltzmannAgent implements Guard {
 
-    Memory memory = new Memory();
+    private ArrayList<int[]> memory;
     private boolean justSawIntruder = false;
-    private final boolean rotateAgain = false;
+    private boolean justSmelledPheromone = false;
+    private boolean seeIntruder = false;
+    private boolean moveFirst = false;
+    private boolean rotate = true;
     private Point intruderPoint = null;
-    private int catchedIntruders = 0;
-    private Point currentLoc = new Point(0,0);
+    private Distance deltaDistance;
     private Angle currentDir = Direction.fromRadians(1.5*Math.PI);
-    double count = 0;
-    int agentID = 0;
-
-
 
     public BoltzmannAgent() {
-        if(Game.DEBUG) System.out.println("This is the boltzmann guard");
+        if (Game.DEBUG) System.out.println("This is the boltzmann guard");
     }
 
 
+    /**
+     * This represents the rule-based agent:
+     *              1.) check if intruder is in visual field -> pursuit
+     *              2.) if not, check if any pheromones are perceived (of type 1) -> move towards/around pheromone
+     *              3.) if not, check if any other guards are perceived (we don't need all the guards exploring one point)
+     *              4.) if not, check if a sentry tower is perceived -> move to it
+     * @param percepts The precepts represent the world as perceived by that agent.
+     * @return
+     */
     public GuardAction getAction(GuardPercepts percepts) {
-       // System.out.println(memory);
+
         boolean lastActionExecuted = percepts.wasLastActionExecuted();
         AreaPercepts area = percepts.getAreaPercepts();
         ScenarioGuardPercepts scenario = percepts.getScenarioGuardPercepts();
         ScenarioPercepts scenarioPercepts = scenario.getScenarioPercepts();
-        //SmellPercepts smells = percepts.getSmells();
+        SmellPercepts smells = percepts.getSmells();
         SoundPercepts sounds = percepts.getSounds();
         VisionPrecepts vision = percepts.getVision();
         ObjectPercepts objects = vision.getObjects();
@@ -76,42 +80,26 @@ public class BoltzmannAgent implements Guard{
             if(Game.DEBUG) System.out.println(objectPercept);
         }*/
 
+        // drop the pheromone type 1 on the last position of the intruder
+        if (seeIntruder) {
+            seeIntruder = false;
+            System.out.println("Drop Pheromone 1");
+            return new DropPheromone(Pheromone1);
+        }
+
 
 ////////////////   winning condition    ///////////////////////////////////
 
-        if(intruderPoint!=null && justSawIntruder){
-            Distance dist = new Distance(new Point(0,0), intruderPoint);
+        if (intruderPoint != null && justSawIntruder) {
+            Distance dist = new Distance(new Point(0, 0), intruderPoint);
             //System.out.println(Math.abs(scenarioPercepts.getCaptureDistance().getValue()));
-            if(Math.abs(dist.getValue())<=Math.abs(scenarioPercepts.getCaptureDistance().getValue())){
-                catchedIntruders++;
+            if (Math.abs(dist.getValue()) <= Math.abs(scenarioPercepts.getCaptureDistance().getValue())) {
                 System.out.println("Catched Intruder");
                 intruderPoint = null;
                 justSawIntruder = false;
             }
         }
 
-        // TODO: do for all intruders:
-        // set:
-        // intruderPoint = null
-        // justSawintruder = false
-        // introduce new counter, remove intruder from field
-
-
-//////////////// look for sentry tower  ///////////////////////////////////
-        // TODO: is this useful? -> at some point yes; when using boltzmann in different strategies
-
-        Angle angleToSentryTower;
-        // iterate through vision to check for sentry tower
-        for (ObjectPercept objectPercept : objects.getAll()) {
-            if(objectPercept.getType() == ObjectPerceptType.SentryTower) {
-                angleToSentryTower = findAngle(objectPercept.getPoint(), objects);
-                // then the sentry tower will be in our current direction
-                if (angleToSentryTower.getDegrees() < 1) {
-                    return new Move(objectPercept.getPoint().getDistanceFromOrigin());
-                }
-                return new Rotate(angleToSentryTower);
-            }
-        }
 
 
 //////////////// chasing the intruder (visual) ///////////////////////////////////
@@ -123,10 +111,13 @@ public class BoltzmannAgent implements Guard{
             if (objectPercept.getType() == ObjectPerceptType.Intruder) {
                 lastknown = objectPercept;
                 intruderPoint = lastknown.getPoint();
-                GuardAction chase = chaseIntruder(lastknown, objects);
                 justSawIntruder = true;
+                seeIntruder = true;
+                Distance dis = new Distance(intruderPoint.getDistanceFromOrigin().getValue() * getSpeedModifier(percepts));
+                Move chase = new Move(dis);
                 return chase;
             }
+            seeIntruder = false;
             // else explore
         }
         /*// move to last known position of intruder - after rotation
@@ -135,7 +126,7 @@ public class BoltzmannAgent implements Guard{
             return new Move(intruderPoint.getDistanceFromOrigin());
         }*/
 
-        if(justSawIntruder){
+        if (justSawIntruder) {
             /*for (ObjectPercept objectPercept : objects.getAll()) {
                 // move or rotate
                 if(objectPercept.getType() != ObjectPerceptType.Wall){
@@ -145,47 +136,92 @@ public class BoltzmannAgent implements Guard{
             }*/
 
             // check if we still hear him, although we cannot see him
-            for(SoundPercept soundPercept : sounds.getAll()) {
-                if(soundPercept.getType() == SoundPerceptType.Noise){
+            for (SoundPercept soundPercept : sounds.getAll()) {
+                if (soundPercept.getType() == SoundPerceptType.Noise) {
                     Direction direction = soundPercept.getDirection();
                     Distance newdistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue());
-                    // check if direction in degrees is over 180 (pi in radians)
-                    System.out.println(direction.getDegrees());
-                    //if(direction.getRadians()>Math.PI){
-                        // then turn left
-
-                    //}
-                    if(direction.getDegrees() < 5  || direction.getDegrees() > 350){
-                        System.out.println("Hear and move");
-                        return new Move(newdistance);
-                    }
-                    else if(direction.getRadians()<= Math.PI/4 || direction.getRadians()>= 3*Math.PI/2){
-                        System.out.println("we hear but dont rotate to much");
-                        return new Rotate(Angle.fromRadians(direction.getRadians()));
-                    }
-                    else if(direction.getRadians() >= Math.PI){
-                        //Rotate right
-                        System.out.println("Rotate Right");
-                        return new Rotate(Angle.fromRadians(Math.PI/4));
-                    }
-                    else if(direction.getRadians() <= Math.PI){
-                        //Rotate left
-                        System.out.println("Rotate Left");
-                        return new Rotate(Angle.fromRadians(-Math.PI/4));
-                    }
-                    else {
-                        return new Rotate(Angle.fromRadians(direction.getRadians()));
-                    }
+                    return correctRotation(newdistance, direction);
                 }
             }
             justSawIntruder = false;
+
         }
+
+
 //////////////// chasing the intruder 2 (sound) ////////////////////////////////
 
-        for(SoundPercept soundPercept : sounds.getAll()){
+        // TODO: problem here is that the noise could be caused by a guard
+        /*for(SoundPercept soundPercept : sounds.getAll()){
             // if we haven't seen an intruder
+            if(soundPercept.getType() == SoundPerceptType.Noise){
+                Direction dir = soundPercept.getDirection();
+                return correctRoation( , dir)
+            }
+        }*/
+
+//////////////// chasing the intruder 3 (smell) ////////////////////////////////
+        // note that an agent just perceives the distance to a pheromone
+        if (justSmelledPheromone) {
+            // since we only rotate: move now the distance
+            if (moveFirst) {
+                moveFirst = false;
+                System.out.println("Moving in some direction");
+                return new Move(new Distance(deltaDistance.getValue()/2));
+            }
+            // check if pheromone is still perceived
+            for (SmellPercept smellPercept : smells.getAll()) {
+                if (smellPercept.getType() == SmellPerceptType.Pheromone1) {
+                    System.out.println("Moved to the correct direction");
+                    // we still perceive the same pheromone -> this means that the agent is walking towards/around the
+                    // source, the intruder
+                    justSmelledPheromone = false;
+                    rotate = false;
+                }
+            }
+            if(rotate){
+                System.out.println("turned into wrong direction");
+                moveFirst = true;
+                return new Rotate(maxAngle);
+            }
         }
 
+
+        for (SmellPercept smellPercept : smells.getAll()) {
+            if (smellPercept.getType() == SmellPerceptType.Pheromone1) {
+                deltaDistance = smellPercept.getDistance();
+                justSmelledPheromone = true;
+                moveFirst = true;
+                System.out.println("First time smelling a pheromone");
+                return new Rotate(maxAngle);
+            }
+        }
+//////////////// look for other guards (3) ////////////////////////////////
+
+        for(ObjectPercept objectPercept : objects.getAll()){
+            if(objectPercept.getType() == ObjectPerceptType.Guard){
+
+            }
+        }
+
+//////////////// look for sentry tower  ///////////////////////////////////
+
+        Angle angleToSentryTower;
+        // iterate through vision to check for sentry tower
+        for (ObjectPercept objectPercept : objects.getAll()) {
+            if (objectPercept.getType() == ObjectPerceptType.SentryTower) {
+                angleToSentryTower = findAngle(objectPercept.getPoint());
+                // then the sentry tower will be in our current direction
+                if (angleToSentryTower.getDegrees() < 1) {
+                    return new Move(objectPercept.getPoint().getDistanceFromOrigin());
+                }
+                return new Rotate(angleToSentryTower);
+            }
+        }
+
+        // rotate if in sentry tower and currently not seeing intruder
+        if (area.isInSentryTower() && !seeIntruder) {
+            return new Rotate(maxAngle);
+        }
 
 //////////////// Boltzmann ///////////////////////////////////
 
@@ -194,11 +230,11 @@ public class BoltzmannAgent implements Guard{
         double[][] actionArray = new double[3][2];
 
         // check if agent is inside a door or window -> then always move not rotate
-        if(area.isInDoor() || area.isInWindow()){
+        if (area.isInDoor() || area.isInWindow()) {
             Distance newDistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts));
             // if guard, gets stuck in intruder wall or window
-            if(!lastActionExecuted){
-                return new Rotate(Angle.fromRadians(Math.PI/4));
+            if (!lastActionExecuted) {
+                return new Rotate(Angle.fromRadians(Math.PI / 4));
             }
             return new Move(newDistance);
         }
@@ -226,33 +262,31 @@ public class BoltzmannAgent implements Guard{
                 whatAction = i;
             }
         }
-        if(whatAction == 0){
+        if (whatAction == 0) {
             action = new Move(distance);
-            updateCurrentLoc(distance);
         }
 
-        if(whatAction == 1 || !lastActionExecuted){
-              double rotate = percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble();
-              action = new Rotate(Angle.fromRadians(rotate));
-              updateCurrentDir(Angle.fromRadians(rotate));
+        if (whatAction == 1 || !lastActionExecuted) {
+            double rotate = percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble();
+            action = new Rotate(Angle.fromRadians(rotate));
+            updateCurrentDir(Angle.fromRadians(rotate));
         }
 
         //if(Game.DEBUG) System.out.println("Action: " + action.toString());
-        count++;
         return action;
+
+
     }
 
-
     // TODO: check for explored space
-    public double evaluateAction(GuardAction action, ObjectPercepts objects){
+    public double evaluateAction(GuardAction action, ObjectPercepts objects) {
 
         int countWalls = 0;
-        ObjectPercept temp;
-        if(action instanceof Move){
+
+        if (action instanceof Move) {
             // check if future square is visited/explored/unexplored
-            for(ObjectPercept objectPercept : objects.getAll()){
-                if(objectPercept.getType() == ObjectPerceptType.Wall){
-                    findRelativePoint(objectPercept);
+            for (ObjectPercept objectPercept : objects.getAll()) {
+                if (objectPercept.getType() == ObjectPerceptType.Wall) {
                     countWalls++;
                     /*if(objectPercept.getPoint().getDistanceFromOrigin().getValue() < 2.5){
                         countWalls = countWalls/10000;
@@ -260,189 +294,81 @@ public class BoltzmannAgent implements Guard{
                 }
             }
             // evaluation based on countWalls
-            return Math.exp(-countWalls/10);
+            return Math.exp(-countWalls / 10);
 
         }
-        if(action instanceof Rotate){
+        if (action instanceof Rotate) {
             // check if after rotation, the future move is visited/explored/unexplored
             // check if future square is visited/explored/unexplored
-            for(ObjectPercept objectPercept : objects.getAll()){
-                if(objectPercept.getType() == ObjectPerceptType.Wall){
-                    findRelativePoint(objectPercept);
+            for (ObjectPercept objectPercept : objects.getAll()) {
+                if (objectPercept.getType() == ObjectPerceptType.Wall) {
+                    System.out.println("\nWall seen at x: " + objectPercept.getPoint().getX() + " y: " + objectPercept.getPoint().getY() + " angle: " + findAngle(objectPercept.getPoint()).getRadians());
                     countWalls++;
                 }
             }
             // evaluation based on countWalls
-            return Math.exp(countWalls/10);
+            return Math.exp(countWalls / 10);
         }
         return 0;
     }
 
-    private void updateCurrentLoc(Distance distance){
-        double cos = Math.cos(currentDir.getRadians());
-        double xbar = distance.getValue() * cos * -1;
-        double sin = Math.sin(currentDir.getRadians());
-        double ybar = distance.getValue() * sin;
-
-        this.currentLoc = new Point(currentLoc.getX() + xbar,currentLoc.getY() + ybar);
-        System.out.println("\n Current Loc: x: " + currentLoc.getX() + " y: " + currentLoc.getY());
-        ObjectPercept memoryLoc = new ObjectPercept(ObjectPerceptType.EmptySpace,currentLoc);
-        addMemory(memoryLoc);
-        //System.out.println(currentLoc);
-    }
-
-
-    private void updateCurrentDir(Angle angle){
-        //System.out.println(currentDir.getRadians()/Math.PI);
-        this.currentDir = Angle.fromRadians((currentDir.getRadians()+angle.getRadians())%(2*Math.PI));
-    }
-
-
     /**
-     * @param  o ObjectPercept
-     * @return objects relative point to our memory-origin
-     * */
-    public void findRelativePoint(ObjectPercept o){
-        double cos = Math.cos(findRelativeAngle(o.getPoint()));
-        double xbar = findDistance(currentLoc,o.getPoint()) * cos * -1;
-        //System.out.println(cos);
-        double sin = Math.sin(findRelativeAngle(o.getPoint()));
-        double ybar = findDistance(currentLoc,o.getPoint()) * sin;
-
-        Point relativePoint = new Point(currentLoc.getX() + xbar,currentLoc.getY() + ybar);
-        System.out.println("\n Wall Loc: x: " + relativePoint.getX() + " y: " + relativePoint.getY());
-        ObjectPercept wallLoc =  new ObjectPercept(ObjectPerceptType.Wall,relativePoint); //here you calculate relative wall positions
-        addMemory(wallLoc);
-    }
-
-
-    public double findRelativeAngle(Point point)
-    {
-        double theta =Math.atan2(point.getY(),point.getX()) - Math.PI/2; // to set direction North
-        theta = (currentDir.getRadians() + theta) % (2*Math.PI);
+     * Given a point, this method return the relative angle of the point from the y-axis. (counter-clockwise, in radians)
+     * There's a method findRelativeAngle which returns the relative angle of a point to agents current direction. if negative, can convert to positive by (2*PI+(-angle))
+     * @param point
+     * @return Angle
+     */
+    public Angle findAngle(Point point) {
+        Angle theta = Angle.fromRadians((Math.atan2(point.getY(),point.getX()) - Math.PI/2)%(Math.PI*2) );
         return theta;
     }
 
     /**
-     * Given a point and the vision percepts
+     * This method is used to find the relative angle between our current direction and given point
+     * returns a double value because if value is negative then the given point is on agents current left, if positive then on its right
+     * Hence angle cannot be negative so use this (+-) information to decide which side (counter/clockwise) to rotate
      *
      * @param point
-     * @param objectPercepts
      * @return
      */
 
-
-    public Angle findAngle(Point point, ObjectPercepts objectPercepts){ //This method is faulty!
-
-        double yMean = 0;
-        double xMean = 0;
-
-        // calculate middle point
-        for(ObjectPercept objectPercept : objectPercepts.getAll()){
-            xMean += objectPercept.getPoint().getX();
-            yMean += objectPercept.getPoint().getY();
-        }
-
-        xMean = xMean/objectPercepts.getAll().size();
-        yMean = yMean/objectPercepts.getAll().size();
-
-        double m = (yMean-point.getY())/(xMean-point.getX());
-        double angle = Math.atan(m);
-        return Angle.fromRadians(angle);
+    public double findRelativeAngle(Point point){
+        double theta =Math.atan2(point.getY(),point.getX()) - Math.PI/2; // to set direction North
+        theta = (currentDir.getRadians() - theta);
+        return theta;
     }
 
-
-    public double findDistance(Point centerPt, Point targetPt){
-        return Math.sqrt((targetPt.getY()-centerPt.getY())*(targetPt.getY()-centerPt.getY()) + (targetPt.getX()-centerPt.getX()) * (targetPt.getX()-centerPt.getX()));
+    public void updateCurrentDir(Angle angle){
+        this.currentDir = Angle.fromRadians((currentDir.getRadians()+angle.getRadians())%(2*Math.PI));
+        System.out.println("New currDir: " + currentDir.getRadians()/Math.PI);
     }
 
-    /**
-     * chaseIntruder checks when the intruder is in out visual field if he is right infront of us -> return move
-     *                                                                  or if he have to rotate a bit such that he is right infront of us
-     * @param objectPercept
-     * @param objects
-     * @return
-     */
-    public GuardAction chaseIntruder(ObjectPercept objectPercept, ObjectPercepts objects){
-        Point posIntruder = objectPercept.getPoint();
-        Angle angle = findAngle(posIntruder, objects);
-        // if the angle is in this range, then we do not have to change direction
-        return new Move(posIntruder.getDistanceFromOrigin());
-        /*if((angle.getDegrees() <= 30) && (angle.getDegrees() >= -30)){
-            return new Move(objectPercept.getPoint().getDistanceFromOrigin());
-        }
-        else{
-            // rotate such that the intruder is right in front of us
-            justRotated  = true;
-            return new Rotate(angle);
-        }*/
-    }
-
-
-    private double getSpeedModifier(GuardPercepts guardPercepts)
-    {
-        SlowDownModifiers slowDownModifiers =  guardPercepts.getScenarioGuardPercepts().getScenarioPercepts().getSlowDownModifiers();
-        if(guardPercepts.getAreaPercepts().isInWindow())
-        {
+    private double getSpeedModifier(GuardPercepts guardPercepts) {
+        SlowDownModifiers slowDownModifiers = guardPercepts.getScenarioGuardPercepts().getScenarioPercepts().getSlowDownModifiers();
+        if (guardPercepts.getAreaPercepts().isInWindow()) {
             return slowDownModifiers.getInWindow();
-        }
-        else if(guardPercepts.getAreaPercepts().isInSentryTower())
-        {
+        } else if (guardPercepts.getAreaPercepts().isInSentryTower()) {
             return slowDownModifiers.getInSentryTower();
-        }
-        else if(guardPercepts.getAreaPercepts().isInDoor())
-        {
+        } else if (guardPercepts.getAreaPercepts().isInDoor()) {
             return slowDownModifiers.getInDoor();
         }
 
         return 1;
     }
 
-    public double changeTemp(double startTemp){
-
-        double newTemp = 0;
-
-        // decrease temperature over time to get from exploration to exploitation
-        // TODO: make better function
-        newTemp = startTemp*0.9;
-
-        return newTemp;
-    }
-
-    public boolean addMemory(ObjectPercept objectPercept){
-        if (!memory.contains(objectPercept)){
-            memory.add(objectPercept);
-            exportToCsv(memory, "guardMemory.csv");
-            return true;
-        } else return false;
-    }
-
-    public Memory getMemory() {
-        return memory;
-    }
-
-    private static void exportToCsv(List<ObjectPercept> memory, String filename) {
-
-        try (PrintWriter writer = new PrintWriter(new File(filename))) {
-
-            StringBuilder sb = new StringBuilder();
-            sb.append(" Point_X, Point_Y, Object Type\n");
-            for (ObjectPercept o : memory) {
-                sb.append(o.getPoint().getX());
-                sb.append(",");
-                sb.append(o.getPoint().getY());
-                sb.append(",");
-                sb.append(o.getType());
-                sb.append("\n");
-            }
-
-
-            writer.write(sb.toString());
-
-
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
+    public GuardAction correctRotation(Distance newdistance, Direction direction) {
+        if (direction.getDegrees() < 5 || direction.getDegrees() > 350) {
+            return new Move(newdistance);
+        } else if (direction.getRadians() <= Math.PI / 4 || direction.getRadians() >= 3 * Math.PI / 2) {
+            return new Rotate(Angle.fromRadians(direction.getRadians()));
+        } else if (direction.getRadians() >= Math.PI) {
+            //Rotate right
+            return new Rotate(Angle.fromRadians(Math.PI / 4));
+        } else if (direction.getRadians() <= Math.PI) {
+            //Rotate left
+            return new Rotate(Angle.fromRadians(-Math.PI / 4));
+        } else {
+            return new Rotate(Angle.fromRadians(direction.getRadians()));
         }
-
     }
 }
