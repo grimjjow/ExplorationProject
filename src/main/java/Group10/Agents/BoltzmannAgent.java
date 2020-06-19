@@ -42,6 +42,7 @@ public class BoltzmannAgent implements Guard{
     private Point currentLoc = new Point(0,0);
     private Angle currentDir = Direction.fromRadians(1.5*Math.PI);
     double count = 0;
+    int agentID = 0;
 
 
 
@@ -251,9 +252,7 @@ public class BoltzmannAgent implements Guard{
             // check if future square is visited/explored/unexplored
             for(ObjectPercept objectPercept : objects.getAll()){
                 if(objectPercept.getType() == ObjectPerceptType.Wall){
-
-                    temp = new ObjectPercept(ObjectPerceptType.Wall,findRelativePoint(objectPercept, objects)); //here you calculate relative wall positions
-                    addMemory(temp);
+                    findRelativePoint(objectPercept);
                     countWalls++;
                     /*if(objectPercept.getPoint().getDistanceFromOrigin().getValue() < 2.5){
                         countWalls = countWalls/10000;
@@ -269,8 +268,7 @@ public class BoltzmannAgent implements Guard{
             // check if future square is visited/explored/unexplored
             for(ObjectPercept objectPercept : objects.getAll()){
                 if(objectPercept.getType() == ObjectPerceptType.Wall){
-                    temp = new ObjectPercept(ObjectPerceptType.Wall,findRelativePoint(objectPercept, objects)); //here you calculate relative wall positions
-                    addMemory(temp);
+                    findRelativePoint(objectPercept);
                     countWalls++;
                 }
             }
@@ -283,11 +281,11 @@ public class BoltzmannAgent implements Guard{
     private void updateCurrentLoc(Distance distance){
         double cos = Math.cos(currentDir.getRadians());
         double xbar = distance.getValue() * cos * -1;
-        //System.out.println(xbar);
         double sin = Math.sin(currentDir.getRadians());
         double ybar = distance.getValue() * sin;
-        //System.out.println(ybar);
+
         this.currentLoc = new Point(currentLoc.getX() + xbar,currentLoc.getY() + ybar);
+        System.out.println("\n Current Loc: x: " + currentLoc.getX() + " y: " + currentLoc.getY());
         ObjectPercept memoryLoc = new ObjectPercept(ObjectPerceptType.EmptySpace,currentLoc);
         addMemory(memoryLoc);
         //System.out.println(currentLoc);
@@ -304,32 +302,24 @@ public class BoltzmannAgent implements Guard{
      * @param  o ObjectPercept
      * @return objects relative point to our memory-origin
      * */
-    public Point findRelativePoint(ObjectPercept o, ObjectPercepts objects){
-        //Angle angleToWall = findAngle(o.getPoint(), objects);
-        double cos = Math.cos(findRelativeAngle(currentDir));
+    public void findRelativePoint(ObjectPercept o){
+        double cos = Math.cos(findRelativeAngle(o.getPoint()));
         double xbar = findDistance(currentLoc,o.getPoint()) * cos * -1;
         //System.out.println(cos);
-        double sin = Math.sin(findRelativeAngle(currentDir));
+        double sin = Math.sin(findRelativeAngle(o.getPoint()));
         double ybar = findDistance(currentLoc,o.getPoint()) * sin;
 
-        xbar = currentLoc.getX() + xbar;
-        System.out.println("x: " + xbar);
-        ybar = currentLoc.getY() + ybar;
-        System.out.println("y: " + ybar);
-        //System.out.println(sin);
-        Point relativePoint = null;
-        if (xbar != NaN && ybar != NaN) {
-            relativePoint = new Point(xbar,ybar);
-        }
-
-        //System.out.println(" x: " + relativePoint.getX() + " \n y: " + relativePoint.getY());
-        return relativePoint;
+        Point relativePoint = new Point(currentLoc.getX() + xbar,currentLoc.getY() + ybar);
+        System.out.println("\n Wall Loc: x: " + relativePoint.getX() + " y: " + relativePoint.getY());
+        ObjectPercept wallLoc =  new ObjectPercept(ObjectPerceptType.Wall,relativePoint); //here you calculate relative wall positions
+        addMemory(wallLoc);
     }
 
 
-    public double findRelativeAngle(Angle angle)
+    public double findRelativeAngle(Point point)
     {
-        double theta = Math.abs(currentDir.getRadians() + angle.getRadians()%(2*Math.PI));
+        double theta =Math.atan2(point.getY(),point.getX()) - Math.PI/2; // to set direction North
+        theta = (currentDir.getRadians() + theta) % (2*Math.PI);
         return theta;
     }
 
