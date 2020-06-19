@@ -23,6 +23,7 @@ import Interop.Percept.Vision.ObjectPercept;
 import Interop.Percept.Vision.ObjectPerceptType;
 import Interop.Percept.Vision.ObjectPercepts;
 import Interop.Percept.Vision.VisionPrecepts;
+import com.sun.security.jgss.GSSUtil;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -98,8 +99,6 @@ public class BoltzmannAgent implements Guard {
                 justSawIntruder = false;
             }
         }
-
-
 
 //////////////// chasing the intruder (visual) ///////////////////////////////////
 
@@ -198,7 +197,10 @@ public class BoltzmannAgent implements Guard {
 
         for(ObjectPercept objectPercept : objects.getAll()){
             if(objectPercept.getType() == ObjectPerceptType.Guard){
-
+                Point guardPoint = objectPercept.getPoint();
+                Angle angleToGuard = findAngle(guardPoint, objects); // TODO: findAngle is not working perferctly, test again
+                System.out.println("Angle in degrees away from the guard " + Angle.fromDegrees(-angleToGuard.getDegrees()).getDegrees());
+                return new Rotate(Angle.fromRadians(-angleToGuard.getRadians()));
             }
         }
 
