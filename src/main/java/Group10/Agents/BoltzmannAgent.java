@@ -13,6 +13,9 @@ import Interop.Percept.GuardPercepts;
 import Interop.Percept.Scenario.ScenarioGuardPercepts;
 import Interop.Percept.Scenario.ScenarioPercepts;
 import Interop.Percept.Scenario.SlowDownModifiers;
+import Interop.Percept.Smell.SmellPercept;
+import Interop.Percept.Smell.SmellPerceptType;
+import Interop.Percept.Smell.SmellPercepts;
 import Interop.Percept.Sound.SoundPercept;
 import Interop.Percept.Sound.SoundPerceptType;
 import Interop.Percept.Sound.SoundPercepts;
@@ -26,27 +29,38 @@ import java.util.Random;
 
 import static Interop.Percept.Smell.SmellPerceptType.Pheromone1;
 
-public class BoltzmannAgent implements Guard{
+public class BoltzmannAgent implements Guard {
 
     private ArrayList<int[]> memory;
     private boolean justSawIntruder = false;
+    private boolean justSmelledPheromone = false;
     private boolean seeIntruder = false;
+    private boolean moveFirst = false;
+    private boolean rotate = true;
     private Point intruderPoint = null;
-    private int catchedIntruders = 0;
-
+    private Distance deltaDistance;
 
     public BoltzmannAgent() {
-        if(Game.DEBUG) System.out.println("This is the boltzmann guard");
+        if (Game.DEBUG) System.out.println("This is the boltzmann guard");
     }
 
 
+    /**
+     * This represents the rule-based agent:
+     *              1.) check if intruder is in visual field -> pursuit
+     *              2.) if not, check if any pheromones are perceived (of type 1) -> move towards/around pheromone
+     *              3.) if not, check if any other guards are perceived (we don't need all the guards exploring one point)
+     *              4.) if not, check if a sentry tower is perceived -> move to it
+     * @param percepts The precepts represent the world as perceived by that agent.
+     * @return
+     */
     public GuardAction getAction(GuardPercepts percepts) {
 
         boolean lastActionExecuted = percepts.wasLastActionExecuted();
         AreaPercepts area = percepts.getAreaPercepts();
         ScenarioGuardPercepts scenario = percepts.getScenarioGuardPercepts();
         ScenarioPercepts scenarioPercepts = scenario.getScenarioPercepts();
-        //SmellPercepts smells = percepts.getSmells();
+        SmellPercepts smells = percepts.getSmells();
         SoundPercepts sounds = percepts.getSounds();
         VisionPrecepts vision = percepts.getVision();
         ObjectPercepts objects = vision.getObjects();
@@ -66,29 +80,24 @@ public class BoltzmannAgent implements Guard{
         }*/
 
         // drop the pheromone type 1 on the last position of the intruder
-        if(seeIntruder){
+        if (seeIntruder) {
+            seeIntruder = false;
+            System.out.println("Drop Pheromone 1");
             return new DropPheromone(Pheromone1);
         }
 
 
 ////////////////   winning condition    ///////////////////////////////////
 
-        if(intruderPoint!=null && justSawIntruder){
-            Distance dist = new Distance(new Point(0,0), intruderPoint);
+        if (intruderPoint != null && justSawIntruder) {
+            Distance dist = new Distance(new Point(0, 0), intruderPoint);
             //System.out.println(Math.abs(scenarioPercepts.getCaptureDistance().getValue()));
-            if(Math.abs(dist.getValue())<=Math.abs(scenarioPercepts.getCaptureDistance().getValue())){
-                catchedIntruders++;
+            if (Math.abs(dist.getValue()) <= Math.abs(scenarioPercepts.getCaptureDistance().getValue())) {
                 System.out.println("Catched Intruder");
                 intruderPoint = null;
                 justSawIntruder = false;
             }
         }
-
-        // TODO: do for all intruders:
-        // set:
-        // intruderPoint = null
-        // justSawintruder = false
-        // introduce new counter, remove intruder from field
 
 
 
@@ -116,7 +125,7 @@ public class BoltzmannAgent implements Guard{
             return new Move(intruderPoint.getDistanceFromOrigin());
         }*/
 
-        if(justSawIntruder){
+        if (justSawIntruder) {
             /*for (ObjectPercept objectPercept : objects.getAll()) {
                 // move or rotate
                 if(objectPercept.getType() != ObjectPerceptType.Wall){
@@ -126,55 +135,74 @@ public class BoltzmannAgent implements Guard{
             }*/
 
             // check if we still hear him, although we cannot see him
-            for(SoundPercept soundPercept : sounds.getAll()) {
-                if(soundPercept.getType() == SoundPerceptType.Noise){
+            for (SoundPercept soundPercept : sounds.getAll()) {
+                if (soundPercept.getType() == SoundPerceptType.Noise) {
                     Direction direction = soundPercept.getDirection();
                     Distance newdistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue());
-                    // check if direction in degrees is over 180 (pi in radians)
-                    System.out.println(direction.getDegrees());
-                    //if(direction.getRadians()>Math.PI){
-                        // then turn left
-
-                    //}
-                    if(direction.getDegrees() < 5  || direction.getDegrees() > 350){
-                        System.out.println("Hear and move");
-                        return new Move(newdistance);
-                    }
-                    else if(direction.getRadians()<= Math.PI/4 || direction.getRadians()>= 3*Math.PI/2){
-                        System.out.println("we hear but dont rotate to much");
-                        return new Rotate(Angle.fromRadians(direction.getRadians()));
-                    }
-                    else if(direction.getRadians() >= Math.PI){
-                        //Rotate right
-                        System.out.println("Rotate Right");
-                        return new Rotate(Angle.fromRadians(Math.PI/4));
-                    }
-                    else if(direction.getRadians() <= Math.PI){
-                        //Rotate left
-                        System.out.println("Rotate Left");
-                        return new Rotate(Angle.fromRadians(-Math.PI/4));
-                    }
-                    else {
-                        return new Rotate(Angle.fromRadians(direction.getRadians()));
-                    }
+                    return correctRotation(newdistance, direction);
                 }
             }
             justSawIntruder = false;
 
         }
+
+
 //////////////// chasing the intruder 2 (sound) ////////////////////////////////
 
-        for(SoundPercept soundPercept : sounds.getAll()){
+        // TODO: problem here is that the noise could be caused by a guard
+        /*for(SoundPercept soundPercept : sounds.getAll()){
             // if we haven't seen an intruder
             if(soundPercept.getType() == SoundPerceptType.Noise){
                 Direction dir = soundPercept.getDirection();
-                System.out.println("Direction " + dir.getDegrees());
-                return new Rotate(Angle.fromRadians(dir.getRadians()));
+                return correctRoation( , dir)
+            }
+        }*/
+
+//////////////// chasing the intruder 3 (smell) ////////////////////////////////
+        // note that an agent just perceives the distance to a pheromone
+        if (justSmelledPheromone) {
+            // since we only rotate: move now the distance
+            if (moveFirst) {
+                moveFirst = false;
+                System.out.println("Moving in some direction");
+                return new Move(new Distance(deltaDistance.getValue()/2));
+            }
+            // check if pheromone is still perceived
+            for (SmellPercept smellPercept : smells.getAll()) {
+                if (smellPercept.getType() == SmellPerceptType.Pheromone1) {
+                    System.out.println("Moved to the correct direction");
+                    // we still perceive the same pheromone -> this means that the agent is walking towards/around the
+                    // source, the intruder
+                    justSmelledPheromone = false;
+                    rotate = false;
+                }
+            }
+            if(rotate){
+                System.out.println("turned into wrong direction");
+                moveFirst = true;
+                return new Rotate(maxAngle);
+            }
+        }
+
+
+        for (SmellPercept smellPercept : smells.getAll()) {
+            if (smellPercept.getType() == SmellPerceptType.Pheromone1) {
+                deltaDistance = smellPercept.getDistance();
+                justSmelledPheromone = true;
+                moveFirst = true;
+                System.out.println("First time smelling a pheromone");
+                return new Rotate(maxAngle);
+            }
+        }
+//////////////// look for other guards (3) ////////////////////////////////
+
+        for(ObjectPercept objectPercept : objects.getAll()){
+            if(objectPercept.getType() == ObjectPerceptType.Guard){
+
             }
         }
 
 //////////////// look for sentry tower  ///////////////////////////////////
-        // TODO: is this useful?
 
         Angle angleToSentryTower;
         // iterate through vision to check for sentry tower
@@ -190,7 +218,7 @@ public class BoltzmannAgent implements Guard{
         }
 
         // rotate if in sentry tower and currently not seeing intruder
-        if(area.isInSentryTower() && !seeIntruder){
+        if (area.isInSentryTower() && !seeIntruder) {
             return new Rotate(maxAngle);
         }
 
@@ -204,8 +232,8 @@ public class BoltzmannAgent implements Guard{
         if (area.isInDoor() || area.isInWindow()) {
             Distance newDistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts));
             // if guard, gets stuck in intruder wall or window
-            if(!lastActionExecuted){
-                return new Rotate(Angle.fromRadians(Math.PI/4));
+            if (!lastActionExecuted) {
+                return new Rotate(Angle.fromRadians(Math.PI / 4));
             }
             return new Move(newDistance);
         }
@@ -249,14 +277,14 @@ public class BoltzmannAgent implements Guard{
     }
 
     // TODO: check for explored space
-    public double evaluateAction(GuardAction action, ObjectPercepts objects){
+    public double evaluateAction(GuardAction action, ObjectPercepts objects) {
 
         int countWalls = 0;
 
-        if(action instanceof Move){
+        if (action instanceof Move) {
             // check if future square is visited/explored/unexplored
-            for(ObjectPercept objectPercept : objects.getAll()){
-                if(objectPercept.getType() == ObjectPerceptType.Wall){
+            for (ObjectPercept objectPercept : objects.getAll()) {
+                if (objectPercept.getType() == ObjectPerceptType.Wall) {
                     countWalls++;
                     /*if(objectPercept.getPoint().getDistanceFromOrigin().getValue() < 2.5){
                         countWalls = countWalls/10000;
@@ -264,19 +292,19 @@ public class BoltzmannAgent implements Guard{
                 }
             }
             // evaluation based on countWalls
-            return Math.exp(-countWalls/10);
+            return Math.exp(-countWalls / 10);
 
         }
-        if(action instanceof Rotate){
+        if (action instanceof Rotate) {
             // check if after rotation, the future move is visited/explored/unexplored
             // check if future square is visited/explored/unexplored
-            for(ObjectPercept objectPercept : objects.getAll()){
-                if(objectPercept.getType() == ObjectPerceptType.Wall){
+            for (ObjectPercept objectPercept : objects.getAll()) {
+                if (objectPercept.getType() == ObjectPerceptType.Wall) {
                     countWalls++;
                 }
             }
             // evaluation based on countWalls
-            return Math.exp(countWalls/10);
+            return Math.exp(countWalls / 10);
         }
         return 0;
     }
@@ -288,71 +316,52 @@ public class BoltzmannAgent implements Guard{
      * @param objectPercepts
      * @return
      */
-    public Angle findAngle(Point point, ObjectPercepts objectPercepts){
+    public Angle findAngle(Point point, ObjectPercepts objectPercepts) {
 
         double yMean = 0;
         double xMean = 0;
 
         // calculate middle point
-        for(ObjectPercept objectPercept : objectPercepts.getAll()){
+        for (ObjectPercept objectPercept : objectPercepts.getAll()) {
             xMean += objectPercept.getPoint().getX();
             yMean += objectPercept.getPoint().getY();
         }
 
-        xMean = xMean/objectPercepts.getAll().size();
-        yMean = yMean/objectPercepts.getAll().size();
+        xMean = xMean / objectPercepts.getAll().size();
+        yMean = yMean / objectPercepts.getAll().size();
 
-        double m = (yMean-point.getY())/(xMean-point.getX());
+        double m = (yMean - point.getY()) / (xMean - point.getX());
         double angle = Math.atan(m);
 
         return Angle.fromRadians(angle);
     }
 
-    private double getSpeedModifier(GuardPercepts guardPercepts)
-    {
-        SlowDownModifiers slowDownModifiers =  guardPercepts.getScenarioGuardPercepts().getScenarioPercepts().getSlowDownModifiers();
-        if(guardPercepts.getAreaPercepts().isInWindow())
-        {
+    private double getSpeedModifier(GuardPercepts guardPercepts) {
+        SlowDownModifiers slowDownModifiers = guardPercepts.getScenarioGuardPercepts().getScenarioPercepts().getSlowDownModifiers();
+        if (guardPercepts.getAreaPercepts().isInWindow()) {
             return slowDownModifiers.getInWindow();
-        }
-        else if(guardPercepts.getAreaPercepts().isInSentryTower())
-        {
+        } else if (guardPercepts.getAreaPercepts().isInSentryTower()) {
             return slowDownModifiers.getInSentryTower();
-        }
-        else if(guardPercepts.getAreaPercepts().isInDoor())
-        {
+        } else if (guardPercepts.getAreaPercepts().isInDoor()) {
             return slowDownModifiers.getInDoor();
         }
 
         return 1;
     }
 
-    public double changeTemp(double startTemp){
-
-        double newTemp = 0;
-
-        // decrease temperature over time to get from exploration to exploitation
-        // TODO: make better function
-        newTemp = startTemp*0.9;
-
-        return newTemp;
-    }
-
-    public ArrayList<int[]> getMemory() {
-        return memory;
-    }
-    // for now: store all the nodes visited
-    public ArrayList<int[]> updateMemory(){
-
-        if(memory == null){
-            memory = new ArrayList<>();
-            int[] firstIter = new int[]{0, 0};
-            memory.add(firstIter);
-        }else{
-
-
-            // get last action executed, update coordinates and add to the list
+    public GuardAction correctRotation(Distance newdistance, Direction direction) {
+        if (direction.getDegrees() < 5 || direction.getDegrees() > 350) {
+            return new Move(newdistance);
+        } else if (direction.getRadians() <= Math.PI / 4 || direction.getRadians() >= 3 * Math.PI / 2) {
+            return new Rotate(Angle.fromRadians(direction.getRadians()));
+        } else if (direction.getRadians() >= Math.PI) {
+            //Rotate right
+            return new Rotate(Angle.fromRadians(Math.PI / 4));
+        } else if (direction.getRadians() <= Math.PI) {
+            //Rotate left
+            return new Rotate(Angle.fromRadians(-Math.PI / 4));
+        } else {
+            return new Rotate(Angle.fromRadians(direction.getRadians()));
         }
-        return memory;
     }
 }
