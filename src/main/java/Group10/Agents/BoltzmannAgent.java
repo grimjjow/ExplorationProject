@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import static Interop.Percept.Smell.SmellPerceptType.Pheromone1;
+import static Interop.Percept.Smell.SmellPerceptType.Pheromone2;
 
 public class BoltzmannAgent implements Guard {
 
@@ -35,9 +36,9 @@ public class BoltzmannAgent implements Guard {
     private boolean justSmelledPheromone = false;
     private boolean moveFirst = false;
     private boolean rotate = true;
-    private boolean dropAType1 = false;
     private boolean yell = true;
     private Distance deltaDistance;
+    private boolean dropType2 = false;
     private Angle currentDir = Direction.fromRadians(1.5*Math.PI);
 
     public BoltzmannAgent() {
@@ -79,7 +80,11 @@ public class BoltzmannAgent implements Guard {
         /*for(ObjectPercept objectPercept : objects.getAll()){
             if(Game.DEBUG) System.out.println(objectPercept);
         }*/
-
+        /*if(dropType2){
+            dropType2 = false;
+            System.out.println("Dropping pheromone 2");
+            return new DropPheromone(Pheromone2);
+        }*/
 
 //////////////// chasing the intruder (visual) ///////////////////////////////////
 
@@ -193,6 +198,15 @@ public class BoltzmannAgent implements Guard {
                 return new Rotate(maxAngle);
             }
         }
+//////////////// check for pheromone type 2 ////////////////////////////////
+
+      /*  for(SmellPercept smellPercept : smells.getAll()){
+                if((smellPercept.getType() == SmellPerceptType.Pheromone2) && (smellPercept.getDistance().getValue()>=1.5)){
+                    System.out.println("Distance to pheromone: " + smellPercept.getDistance().getValue());
+                    System.out.println("Perceiving pheromone 2");
+                    return new Rotate(randomAngle);
+                }
+        }*/
 
 //////////////// look for other guards (4) ////////////////////////////////
 
@@ -251,7 +265,7 @@ public class BoltzmannAgent implements Guard {
         // move
         actionArray[0][0] = 1;
         actionArray[0][1] = actionMoveSingle / sumOfAllActions;
-        // rotate
+        // rotate right
         actionArray[1][0] = 2;
         actionArray[1][1] = actionRotateSingle / sumOfAllActions;
 
@@ -267,27 +281,28 @@ public class BoltzmannAgent implements Guard {
             }
         }
         if (whatAction == 0) {
+            dropType2 = true;
             action = new Move(distance);
         }
 
         if (whatAction == 1 || !lastActionExecuted) {
-            double rotate = percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble();
-            action = new Rotate(Angle.fromRadians(rotate));
-            updateCurrentDir(Angle.fromRadians(rotate));
-        }
-        /*
-        // random agent
-        Distance moveDistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts));
-
-        for(ObjectPercept objectPercept : objects.getAll()) {
-            if (objectPercept.getType() == ObjectPerceptType.Wall) {
-                return new Rotate(randomAngle);
+            int number =  rand.nextInt(2);
+            if(number == 1){
+                // turn right
+                double rotate = percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble();
+                action = new Rotate(Angle.fromRadians(rotate));
+                updateCurrentDir(Angle.fromRadians(rotate));
             }
-        }
-        //f(Game.DEBUG) System.out.println("Action: " + action.toString());
-        return new Move(moveDistance);
-        */
+            else{
+                // turn left
+                double rotate = -percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble();
+                action = new Rotate(Angle.fromRadians(rotate));
+                updateCurrentDir(Angle.fromRadians(rotate));
+            }
 
+        }
+
+        //if(Game.DEBUG) System.out.println("Action: " + action.toString());
         return action;
 
     }
