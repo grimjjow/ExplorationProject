@@ -19,5 +19,6 @@ public class Reinforcement {
            }
 
            //add all memories into graph; traverse to all targetReached nodes; prefer most common one.
+        //Density traversal can be useful
     }
 }
