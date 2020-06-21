@@ -10,7 +10,7 @@ public class Angle {
     /**
      * The angle in radians.
      */
-    private double radians;
+    private final double radians;
 
     /**
      * Please, use explicit named constructor:
@@ -19,7 +19,7 @@ public class Angle {
      */
     protected Angle(double radians) {
         if(!Utils.isRealNumber(radians)) {
-            //throw new RuntimeException("Wrong angle! Angle needs to be a real number, but given: " + radians);
+            throw new RuntimeException("Wrong angle! Angle needs to be a real number, but given: " + radians);
         }
         this.radians = radians;
 

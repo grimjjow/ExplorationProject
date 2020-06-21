@@ -1,5 +1,6 @@
 package Group10.Agents;
 
+import Group10.Agents.Learning.Memory;
 import Group10.Engine.Game;
 import Group10.World.Dynamic.Pheromone;
 import Interop.Action.*;
@@ -24,7 +25,11 @@ import Interop.Percept.Vision.ObjectPerceptType;
 import Interop.Percept.Vision.ObjectPercepts;
 import Interop.Percept.Vision.VisionPrecepts;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static Interop.Percept.Smell.SmellPerceptType.Pheromone1;
@@ -39,7 +44,10 @@ public class BoltzmannAgent implements Guard {
     private boolean rotate = true;
     private Point intruderPoint = null;
     private Distance deltaDistance;
+    private final Point currentLoc = new Point(0,0);
     private Angle currentDir = Direction.fromRadians(1.5*Math.PI);
+    double count = 0;
+
 
     public BoltzmannAgent() {
         if (Game.DEBUG) System.out.println("This is the boltzmann guard");
@@ -140,11 +148,11 @@ public class BoltzmannAgent implements Guard {
                 if (soundPercept.getType() == SoundPerceptType.Noise) {
                     Direction direction = soundPercept.getDirection();
                     Distance newdistance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue());
+                    soundPercept.getDirection();
                     return correctRotation(newdistance, direction);
                 }
             }
             justSawIntruder = false;
-
         }
 
 
@@ -239,10 +247,10 @@ public class BoltzmannAgent implements Guard {
             return new Move(newDistance);
         }
 
-        double actionMoveSingle = Math.exp(evaluateAction(new Move(distance), objects) * temperature);
-        double actionRotateSingle = Math.exp(evaluateAction(new Rotate(Angle.fromRadians(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble())), objects) * temperature);
+            double actionMoveSingle = Math.exp(evaluateAction(new Move(distance), objects) * temperature);
+            double actionRotateSingle = Math.exp(evaluateAction(new Rotate(Angle.fromRadians(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble())), objects) * temperature);
 
-        double sumOfAllActions = actionMoveSingle + actionRotateSingle;
+            double sumOfAllActions = actionMoveSingle + actionRotateSingle;
 
         // move
         actionArray[0][0] = 1;
@@ -371,4 +379,9 @@ public class BoltzmannAgent implements Guard {
             return new Rotate(Angle.fromRadians(direction.getRadians()));
         }
     }
+
+
+
+
+
 }

@@ -1,0 +1,35 @@
+package Group10.Agents.Learning;
+
+import Group10.Pathfinding.AbstractNode;
+import Group10.Pathfinding.Network;
+import Interop.Geometry.Point;
+
+import java.util.ArrayList;
+
+public class Vertex extends AbstractNode {
+
+    private double cost, heuristic, function;
+    private boolean isTarget;
+    Point point;
+
+    Vertex(Point point) {
+        this.point = point;
+    }
+
+    @Override
+    public void calculateNeighbours(Network network) {
+
+    }
+
+    @Override
+    public double distanceTo(AbstractNode dest) {
+        return 0;
+    }
+
+    @Override
+    public double heuristic(AbstractNode dest) {
+        return 0;
+    }
+
+    // add overriding equals and hashCode methods
+}

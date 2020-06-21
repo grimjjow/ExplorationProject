@@ -17,10 +17,10 @@ public final class Direction extends Angle {
         super(radians);
 
         if(radians < 0 || radians >= 2 * Math.PI) {
-            /*throw new RuntimeException(
+            throw new RuntimeException(
                 "The direction angle must be between 0 (including) and 2*PI (excluding) radians!\n" +
                 "The angle given in radians: " + radians
-            );*/
+            );
         }
 
     }
