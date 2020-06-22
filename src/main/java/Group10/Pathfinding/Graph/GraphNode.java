@@ -1,20 +1,23 @@
 package Group10.Pathfinding.Graph;
 
 import java.util.ArrayList;
+
 import Interop.Geometry.Point;
 
 //this is an example of node class that we need for rrt
 
 public class GraphNode {
 
+    public boolean marked = false;
+    NodeType type;
+
     ArrayList<GraphEdge> edges;
     Point center;
     double radius;
     Integer coordinate[];
-    boolean marked = false;
     GraphNode parent = null;
 
-    public GraphNode(Point center, double radius, Integer[] coordinate) {
+    public GraphNode(NodeType none, Point center, double radius, Integer[] coordinate) {
         this.center = center;
         this.radius = radius;
         this.edges = new ArrayList<GraphEdge>();
@@ -34,24 +37,8 @@ public class GraphNode {
         else {
             degrees = degrees + 180;
         }
-        GraphEdge reverseedge = new GraphEdge(endNode, this, degrees);
-        endNode.edges.add(reverseedge);
-    }
-
-    public boolean isInside(Point point) {
-        double xmin = center.getX() - radius;
-        double xmax = center.getX() + radius;
-        double ymin = center.getY() - radius;
-        double ymax = center.getY() + radius;
-        double x = point.getX();
-        double y = point.getY();
-        if((xmin <= x) && (xmax >= x)) {
-            if((ymin <= y) && (ymax >= y)) {
-                return true;
-            }
-            else return false;
-        }
-        else return false;
+        GraphEdge backwards = new GraphEdge(endNode, this, degrees);
+        endNode.edges.add(backwards);
     }
 
     public Point getCenter() {
@@ -76,6 +63,13 @@ public class GraphNode {
 
     public void setParent(GraphNode parent) {
         this.parent = parent;
+    }
+
+    public NodeType getType() {
+        return type;
+    }
+    public void setType(NodeType type) {
+        this.type = type;
     }
 
     public String toString() {

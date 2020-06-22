@@ -4,7 +4,7 @@ import Group10.Engine.Callback;
 import Group10.Engine.Game;
 import Group10.Agents.Container.GuardContainer;
 import Group10.Agents.Container.IntruderContainer;
-import Group10.Agents.Factories.DefaultFactory;
+import Group10.Agents.Factories.MainFactory;
 import Group10.World.Dynamic.DynamicObject;
 import Group10.World.Reader.Reader;
 import javafx.animation.AnimationTimer;
@@ -32,7 +32,7 @@ public class Controller implements Runnable {
     public Controller(Gui gui, File mapFile, boolean generateHistory){
         this.gui = gui;
         this.generateHistory = generateHistory;
-        game = new Game(Reader.parseFile(mapFile.getAbsolutePath()), new DefaultFactory(), false, 15, new Callback<Game>() {
+        game = new Game(Reader.parseFile(mapFile.getAbsolutePath()), new MainFactory(), false, 15, new Callback<Game>() {
             @Override
             public void call(Game game) {
                 if(generateHistory){

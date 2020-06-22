@@ -27,6 +27,13 @@ public class Vector {
         this.length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
 
+    public Vector() {
+        this.x = 0;
+        this.y = 0;
+        this.length = 0;
+    }
+
+
     public double getX()
     {
         return x;
@@ -37,8 +44,8 @@ public class Vector {
         return y;
     }
 
-    public Vector normalise()
-    {
+    public Vector normalise() {
+
         if(this.length == 0)
         {
             return new Vector(0, 0);
@@ -111,6 +118,12 @@ public class Vector {
     {
         return Math.atan2(other.getY(), other.getX()) - Math.atan2(this.getY(), this.getX());
     }
+
+    public double angledSigned(Vector other)
+    {
+        return Math.atan2(other.getY(), other.getX()) - Math.atan2(this.getY(), this.getX());
+    }
+
 
     public double distance(Vector other)
     {
