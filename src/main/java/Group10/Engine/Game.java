@@ -326,8 +326,6 @@ public class Game implements Runnable {
                 if(intrudersCaptured == intruders.size() && !intruders.isEmpty())
                 {
                     return Team.GUARDS;
-                } else {
-                    System.out.println(intrudersCaptured);
                 }
                 break;
         }
@@ -340,8 +338,6 @@ public class Game implements Runnable {
      */
     public final Team turn()
     {
-        numberOfTurn++;
-
         lockin(this::cooldown);
 
         // Note: Intruders move first.
