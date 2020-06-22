@@ -1,5 +1,7 @@
 package Group10.Agents.GuardMode;
 
+import Group10.Agents.AgentActions.ActionsQueue;
+import Group10.Algebra.Vector;
 import Group10.Engine.Game;
 import Interop.Action.*;
 import Interop.Agent.Guard;
@@ -23,6 +25,8 @@ import Interop.Percept.Vision.ObjectPerceptType;
 import Interop.Percept.Vision.ObjectPercepts;
 import Interop.Percept.Vision.VisionPrecepts;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
 
 import static Interop.Percept.Smell.SmellPerceptType.*;
@@ -37,6 +41,7 @@ public class BoltzmannAgent implements Guard {
     private boolean dropAType1 = false;
     private boolean yell = true;
     private boolean dropType3 = false;
+    private boolean dropType3Once = true;
     private boolean dropType2 = false;
     private boolean continueAfterDroppingPheromone2 = false;
     private boolean right;
@@ -44,13 +49,18 @@ public class BoltzmannAgent implements Guard {
     private Distance deltaDistance;
     private Angle currentDir = Direction.fromRadians(1.5*Math.PI);
     private GuardAction lastAction;
-
-    private int countExploredMoves = 0;
-    private int count = 0;
-    double LastknownAngle = 0;
     private Point Lastpoint;
     private Point CurrentPoint;
     private Direction directionofIntruder;
+    private Point intruderPoint;
+
+    private int countExploredMoves = 0;
+    private int rotateThreeTimes = 3;
+    private int count = 0;
+    private double LastknownAngle = 0;
+
+    private Queue<ActionsQueue<GuardAction>> chasing = new LinkedList<>();
+
 
 
     public BoltzmannAgent() {
@@ -84,6 +94,8 @@ public class BoltzmannAgent implements Guard {
         Distance distance = new Distance(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts));
         Angle maxAngle = scenario.getScenarioPercepts().getMaxRotationAngle();
 
+
+
         // creating a random angle from -45 - 45 degrees
         Random rand = new Random();
         int randomNum = rand.nextInt(90) - 45;
@@ -109,24 +121,15 @@ public class BoltzmannAgent implements Guard {
 
 //////////////// check if intruder is in visual field -> pursuit (RULE 1) ///////////////////////////////////
 
-        ////Correct Rotation in multiple turns
-        //Check if we need to rotate multiple turns
+        Vector intruderPosition = seenIntruder(objects);
 
-//////////////// chasing the intruder (visual) ///////////////////////////////////
+        if (intruderPosition != null) {
+            chasing.clear();
+            chasing.addAll(moveToPoint(percepts, new Vector(0, 1), new Vector.Origin(), intruderPosition));
+        }
 
-        ObjectPercept lastknown;
-
-        // iterate through vision to check for intruder
-        for (ObjectPercept objectPercept : objects.getAll()) {
-            if (objectPercept.getType() == ObjectPerceptType.Intruder) {
-                //System.out.println("SEE INTRUDER");
-                lastknown = objectPercept;
-                Point intruderPoint = lastknown.getPoint();
-                justSawIntruder = true;
-                Distance dis = new Distance(intruderPoint.getDistanceFromOrigin().getValue() * getSpeedModifier(percepts));
-                return new Move(dis);
-            }
-            // else explore
+        if (!chasing.isEmpty()) {
+            return chasing.poll().getAction();
         }
 
         if (justSawIntruder) {
@@ -207,30 +210,22 @@ public class BoltzmannAgent implements Guard {
 
 //////////////// drop pheromone type 3 ///////////////////////////////////
 
-        if(area.isInSentryTower()){
+        if(area.isInSentryTower() && dropType3Once){
+            dropType3Once = false;
             dropType3 = true;
             return new DropPheromone(Pheromone3);
         }
 
 //////////////// look for sentry tower ///////////////////////////////////
 
-        Angle angleToSentryTower;
         // iterate through vision to check for sentry tower
         for (ObjectPercept objectPercept : objects.getAll()) {
-            if (objectPercept.getType() == ObjectPerceptType.SentryTower) {
+            if ((objectPercept.getType() == ObjectPerceptType.SentryTower) && !area.isInSentryTower() ) {
                 //System.out.println("Perceiving Sentry Tower");
-                angleToSentryTower = findAngle(objectPercept.getPoint());
-                // then the sentry tower will be in our current direction
-                if (angleToSentryTower.getDegrees() < 1) {
-                    return new Move(objectPercept.getPoint().getDistanceFromOrigin());
-                }
-                return new Rotate(angleToSentryTower);
-            }
-        }
+                Distance dist = new Distance(objectPercept.getPoint().getDistanceFromOrigin().getValue()* percepts.getScenarioGuardPercepts().getScenarioPercepts().getSlowDownModifiers().getInSentryTower());
+                return new Move(dist);
 
-        // rotate if in sentry tower and currently not seeing intruder
-        if (area.isInSentryTower()) {
-            return new Rotate(maxAngle);
+            }
         }
 
 //////////////// perceiving pheromone type 3 ///////////////////////////////////
@@ -243,7 +238,7 @@ public class BoltzmannAgent implements Guard {
         }
 
         for (SmellPercept smellPercept : smells.getAll()) {
-            if (smellPercept.getType() == SmellPerceptType.Pheromone3) {
+            if ((smellPercept.getType() == SmellPerceptType.Pheromone3) && !area.isInSentryTower()) {
                 deltaDistance = smellPercept.getDistance();
                 justSmelledPheromone3 = true;
                 moveFirst = true;
@@ -366,9 +361,7 @@ public class BoltzmannAgent implements Guard {
             for (ObjectPercept objectPercept : objects.getAll()) {
                 if (objectPercept.getType() == ObjectPerceptType.Wall) {
                     countWalls++;
-                    /*if(objectPercept.getPoint().getDistanceFromOrigin().getValue() < 2.5){
-                        countWalls = countWalls/10000;
-                    }*/
+
                 }
             }
             // evaluation based on countWalls
@@ -525,6 +518,52 @@ public class BoltzmannAgent implements Guard {
             //System.out.println("turned into wrong direction");
             moveFirst = true;
             return new Rotate(maxAngle);
+        }
+        return null;
+
+    }
+    protected Queue<ActionsQueue<GuardAction>> moveToPoint(GuardPercepts percepts, Vector direction, Vector source, Vector target) {
+
+        Queue<ActionsQueue<GuardAction>> actionsQueues = new LinkedList<>();
+
+        Vector moveDirection = target.sub(source);
+        double rotationAngle = direction.angledSigned(moveDirection);
+
+        if (Math.abs(rotationAngle) > 1E-1) {
+            actionsQueues.add(ActionsQueue.add(this, new Rotate(Angle.fromRadians(rotationAngle))));
+        }
+
+        final double maxMoveDistance = percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue() * getSpeedModifier(percepts);
+        final double distance = target.distance(source);
+
+        final int fullMoves = (int) (distance / maxMoveDistance);
+        final double remainder = distance % percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard().getValue();
+
+        for (int i = 0; i < fullMoves; i++) {
+            actionsQueues.add(
+                    ActionsQueue.add(this, new Move(new Distance(maxMoveDistance)))
+            );
+        }
+        if (remainder > 0) {
+            actionsQueues.add(
+                    ActionsQueue.add(this, new Move(new Distance(remainder)))
+            );
+        }
+
+        return actionsQueues;
+    }
+    public Vector seenIntruder(ObjectPercepts objects){
+
+        // iterate through vision to check for intruder
+        for (ObjectPercept objectPercept : objects.getAll()) {
+            if (objectPercept.getType() == ObjectPerceptType.Intruder) {
+                //System.out.println("SEE INTRUDER");
+                intruderPoint = objectPercept.getPoint();
+                justSawIntruder = true;
+
+                return Vector.from(intruderPoint);
+            }
+
         }
         return null;
     }
