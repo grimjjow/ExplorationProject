@@ -50,6 +50,7 @@ public class BoltzmannAgent implements Guard {
     double LastknownAngle = 0;
     private Point Lastpoint;
     private Point CurrentPoint;
+    private Direction directionofIntruder;
 
 
     public BoltzmannAgent() {
@@ -85,9 +86,13 @@ public class BoltzmannAgent implements Guard {
 
         // creating a random angle from -45 - 45 degrees
         Random rand = new Random();
-        int randomNum = rand.nextInt(90)-45;
+        int randomNum = rand.nextInt(90) - 45;
         Angle randomAngle = Angle.fromDegrees(randomNum);
 
+        if(LastknownAngle >0){
+            LastknownAngle = LastknownAngle % Math.PI*2;
+            MultipleRotations(Angle.fromRadians(LastknownAngle), percepts);
+        }
         // drop every 29th move a new pheromone of type 2
         // if we drop it at every case than we take to much time
         if(dropType2 && (countExploredMoves % 29 == 0)){
@@ -106,48 +111,7 @@ public class BoltzmannAgent implements Guard {
 
         ////Correct Rotation in multiple turns
         //Check if we need to rotate multiple turns
-        if(LastknownAngle != 0) {
-            LastknownAngle = LastknownAngle % 2*Math.PI;
-            //Check if intruder is right infront of us
-            //It would be in interval [-10,10] Degrees
-            if (LastknownAngle <= Math.PI / 36 || LastknownAngle >= 70 * Math.PI / 36) {
-                //Intruder is right infront of us and we don't need this
-                LastknownAngle = 0;
-                System.out.println("interval [-10,10]");
-                return new Move(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard());
-            }
-            //Check if intruder is on the right in one turn
-            //Interval [315,350]
-            //Check if correct - angle returns right rotation
-            if (LastknownAngle > percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * 7) {
-                Angle rotate = Angle.fromRadians(Math.PI*2 - LastknownAngle);
-                LastknownAngle = 0;
-                System.out.println("interval [315,350] ");
-                return new Rotate(rotate);
-            }
-            //Check if is on the right behind us
-            //interval[180,315]
-            if(LastknownAngle > Math.PI){
-                //Max rotation
-                Angle rotate = Angle.fromRadians(-percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians());
-                LastknownAngle += percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians();
-                System.out.println("interval[180,315]" + LastknownAngle);
-                return  new Rotate(rotate);
-            }
-            //Check if intruder is left behind us
-            //interval [45,180]
-            if (LastknownAngle > Math.PI/4) {
-                LastknownAngle -= percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians();
-                System.out.println("interval [45,180]" + LastknownAngle);
-                return new Rotate(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle());
-            }
-            //
-            if(LastknownAngle > 0);
-            double lastrotation = LastknownAngle;
-            LastknownAngle = 0;
-            System.out.println("interval[10,45]");
-            return new Rotate(Angle.fromRadians(lastrotation));
-        }
+
 //////////////// chasing the intruder (visual) ///////////////////////////////////
 
         ObjectPercept lastknown;
@@ -166,7 +130,7 @@ public class BoltzmannAgent implements Guard {
         }
 
         if (justSawIntruder) {
-            if(yell){
+            if (yell) {
                 yell = false;
                 //System.out.println("yelling");
                 return new Yell();
@@ -429,6 +393,7 @@ public class BoltzmannAgent implements Guard {
     /**
      * Given a point, this method return the relative angle of the point from the y-axis. (counter-clockwise, in radians)
      * There's a method findRelativeAngle which returns the relative angle of a point to agents current direction. if negative, can convert to positive by (2*PI+(-angle))
+     *
      * @param point
      * @return Angle
      */
@@ -487,14 +452,57 @@ public class BoltzmannAgent implements Guard {
         }
     }
 
-    public Angle CalculatePath(Point LastknownPoint, Point CurrentKnownPoint){
+    public Angle CalculatePath(Point LastknownPoint, Point CurrentKnownPoint) {
         // Substract CurrentPoint from Lastpoint
         double newx = CurrentKnownPoint.getX() - LastknownPoint.getX();
         double newy = CurrentKnownPoint.getY() - LastknownPoint.getY();
-        Angle angle = Angle.fromRadians(findRelativeAngle(new Point(newx,newy)));
+        Angle angle = Angle.fromRadians(findRelativeAngle(new Point(newx, newy)));
         return angle;
     }
 
+    public GuardAction MultipleRotations(Angle angle, GuardPercepts percepts) {
+        LastknownAngle = angle.getRadians();
+        LastknownAngle = LastknownAngle % 2 * Math.PI;
+        //Check if intruder is right infront of us
+        //It would be in interval [-10,10] Degrees
+        if (LastknownAngle <= Math.PI / 36 || LastknownAngle >= 70 * Math.PI / 36) {
+            //Intruder is right infront of us and we don't need this
+            LastknownAngle = 0;
+            System.out.println("interval [-10,10]");
+            return new Move(percepts.getScenarioGuardPercepts().getMaxMoveDistanceGuard());
+        }
+        //Check if intruder is on the right in one turn
+        //Interval [315,350]
+        //Check if correct - angle returns right rotation
+        if (LastknownAngle > percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * 7) {
+            Angle rotate = Angle.fromRadians(Math.PI * 2 - LastknownAngle);
+            LastknownAngle = 0;
+            System.out.println("interval [315,350] ");
+            return new Rotate(rotate);
+        }
+        //Check if is on the right behind us
+        //interval[180,315]
+        if (LastknownAngle > Math.PI) {
+            //Max rotation
+            Angle rotate = Angle.fromRadians(-percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians());
+            LastknownAngle += percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians();
+            System.out.println("interval[180,315]" + LastknownAngle);
+            return new Rotate(rotate);
+        }
+        //Check if intruder is left behind us
+        //interval [45,180]
+        if (LastknownAngle > Math.PI / 4) {
+            LastknownAngle -= percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians();
+            System.out.println("interval [45,180]" + LastknownAngle);
+            return new Rotate(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle());
+        }
+        //
+        if (LastknownAngle > 0) ;
+        double lastrotation = LastknownAngle;
+        LastknownAngle = 0;
+        System.out.println("interval[10,45]");
+        return new Rotate(Angle.fromRadians(lastrotation));
+    }
     public GuardAction findPheromone(SmellPercepts smells, Angle maxAngle){
         // since we only rotate: move now the distance
         if (moveFirst) {
