@@ -25,17 +25,18 @@ import Interop.Percept.Vision.VisionPrecepts;
 
 import java.util.Random;
 
-import static Interop.Percept.Smell.SmellPerceptType.Pheromone1;
-import static Interop.Percept.Smell.SmellPerceptType.Pheromone2;
+import static Interop.Percept.Smell.SmellPerceptType.*;
 
 public class BoltzmannAgent implements Guard {
 
     private boolean justSawIntruder = false;
-    private boolean justSmelledPheromone = false;
+    private boolean justSmelledPheromone1 = false;
+    private boolean justSmelledPheromone3 = false;
     private boolean moveFirst = false;
     private boolean rotate = true;
     private boolean dropAType1 = false;
     private boolean yell = true;
+    private boolean dropType3 = false;
     private boolean dropType2 = false;
     private boolean continueAfterDroppingPheromone2 = false;
     private boolean right;
@@ -43,10 +44,8 @@ public class BoltzmannAgent implements Guard {
     private Distance deltaDistance;
     private Angle currentDir = Direction.fromRadians(1.5*Math.PI);
     private GuardAction lastAction;
-    private Point intruderPoint;
 
     private int countExploredMoves = 0;
-    private int catchedIntruders = 0;
     private int count = 0;
     double LastknownAngle = 0;
     private Point Lastpoint;
@@ -91,7 +90,7 @@ public class BoltzmannAgent implements Guard {
 
         // drop every 29th move a new pheromone of type 2
         // if we drop it at every case than we take to much time
-        /*if(dropType2 && (countExploredMoves % 29 == 0)){
+        if(dropType2 && (countExploredMoves % 29 == 0)){
             dropType2 = false;
             continueAfterDroppingPheromone2 = true;
             //System.out.println("Dropping pheromone 2");
@@ -101,7 +100,7 @@ public class BoltzmannAgent implements Guard {
             continueAfterDroppingPheromone2 =  false;
             //System.out.println("Continuing last action after dropping pheromone 2");
             return lastAction;
-        }*/
+        }
 
 //////////////// check if intruder is in visual field -> pursuit (RULE 1) ///////////////////////////////////
 
@@ -202,49 +201,23 @@ public class BoltzmannAgent implements Guard {
         }
 
 
-//////////////// chasing the intruder 3 (smell) ////////////////////////////////
+//////////////// perceive pheromone 1 ////////////////////////////////
         // note that an agent just perceives the distance to a pheromone
-        if (justSmelledPheromone) {
-            // since we only rotate: move now the distance
-            if (moveFirst) {
-                moveFirst = false;
-                //System.out.println("Moving in some direction");
-                return new Move(new Distance(deltaDistance.getValue()/2));
-            }
-            // check if pheromone is still perceived
-            for (SmellPercept smellPercept : smells.getAll()) {
-                if (smellPercept.getType() == SmellPerceptType.Pheromone1) {
-                    //System.out.println("Moved to the correct direction");
-                    // we still perceive the same pheromone -> this means that the agent is walking towards/around the
-                    // source, the intruder
-                    justSmelledPheromone = false;
-                    rotate = false;
-                }
-            }
-            if(rotate){
-                //System.out.println("turned into wrong direction");
-                moveFirst = true;
-                return new Rotate(maxAngle);
+        if (justSmelledPheromone1) {
+            GuardAction guardAction = findPheromone(smells, maxAngle);
+            if(guardAction!=null){
+                return guardAction;
             }
         }
-
 
         for (SmellPercept smellPercept : smells.getAll()) {
             if (smellPercept.getType() == SmellPerceptType.Pheromone1) {
                 deltaDistance = smellPercept.getDistance();
-                justSmelledPheromone = true;
+                justSmelledPheromone1 = true;
                 moveFirst = true;
-                //System.out.println("Perceiving pheromone 1");
+                System.out.println("Perceiving pheromone 1");
                 return new Rotate(maxAngle);
             }
-        }
-//////////////// check for pheromone type 2 ////////////////////////////////
-
-        for(SmellPercept smellPercept : smells.getAll()){
-                if((smellPercept.getType() == SmellPerceptType.Pheromone2) && (smellPercept.getDistance().getValue()>=1.5)){
-                    //System.out.println("Perceiving pheromone 2");
-                    return new Rotate(randomAngle);
-                }
         }
 
 //////////////// look for other guards (4) ////////////////////////////////
@@ -259,7 +232,23 @@ public class BoltzmannAgent implements Guard {
             }
         }
 
-//////////////// look for sentry tower (5) ///////////////////////////////////
+//////////////// check for pheromone type 2 ////////////////////////////////
+
+        for(SmellPercept smellPercept : smells.getAll()){
+            if((smellPercept.getType() == SmellPerceptType.Pheromone2) && (smellPercept.getDistance().getValue()>=1.5)){
+                //System.out.println("Perceiving pheromone 2");
+                return new Rotate(randomAngle);
+            }
+        }
+
+//////////////// drop pheromone type 3 ///////////////////////////////////
+
+        if(area.isInSentryTower()){
+            dropType3 = true;
+            return new DropPheromone(Pheromone3);
+        }
+
+//////////////// look for sentry tower ///////////////////////////////////
 
         Angle angleToSentryTower;
         // iterate through vision to check for sentry tower
@@ -276,8 +265,27 @@ public class BoltzmannAgent implements Guard {
         }
 
         // rotate if in sentry tower and currently not seeing intruder
-        if (area.isInSentryTower() && justSawIntruder) {
+        if (area.isInSentryTower()) {
             return new Rotate(maxAngle);
+        }
+
+//////////////// perceiving pheromone type 3 ///////////////////////////////////
+
+        if (justSmelledPheromone3) {
+            GuardAction guardAction = findPheromone(smells, maxAngle);
+            if(guardAction!=null){
+                return guardAction;
+            }
+        }
+
+        for (SmellPercept smellPercept : smells.getAll()) {
+            if (smellPercept.getType() == SmellPerceptType.Pheromone3) {
+                deltaDistance = smellPercept.getDistance();
+                justSmelledPheromone3 = true;
+                moveFirst = true;
+                //System.out.println("Perceiving pheromone 1");
+                return new Rotate(maxAngle);
+            }
         }
 
 //////////////// Boltzmann ///////////////////////////////////
@@ -485,6 +493,32 @@ public class BoltzmannAgent implements Guard {
         double newy = CurrentKnownPoint.getY() - LastknownPoint.getY();
         Angle angle = Angle.fromRadians(findRelativeAngle(new Point(newx,newy)));
         return angle;
+    }
+
+    public GuardAction findPheromone(SmellPercepts smells, Angle maxAngle){
+        // since we only rotate: move now the distance
+        if (moveFirst) {
+            moveFirst = false;
+            //System.out.println("Moving in some direction");
+            return new Move(new Distance(deltaDistance.getValue()/2));
+        }
+        // check if pheromone is still perceived - moving into the correct direction
+        for (SmellPercept smellPercept : smells.getAll()) {
+            if (smellPercept.getType() == SmellPerceptType.Pheromone1) {
+                //System.out.println("Moved to the correct direction");
+                // we still perceive the same pheromone -> this means that the agent is walking towards/around the
+                // source, the intruder
+                justSmelledPheromone1 = false;
+                rotate = false;
+            }
+        }
+        // means we turned to the wrong direction
+        if(rotate){
+            //System.out.println("turned into wrong direction");
+            moveFirst = true;
+            return new Rotate(maxAngle);
+        }
+        return null;
     }
 
 }
