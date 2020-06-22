@@ -5,81 +5,81 @@ import Interop.Geometry.Direction;
 import Interop.Geometry.Point;
 
 public class AgentState {
-	
-	private Point currentPosition;
-	private boolean lastActionExecuted = false;
-	private Direction targetDirection;
-	private Object agent;
-	private int penalty;
-	private Action lastAction;
-	private int inTarget;
-	private boolean teleported = false;
 
-	
-	public AgentState(Point positon, Direction targetDirection, Object agent) {
-		setCurrentPosition(positon);
-		this.targetDirection = targetDirection;
-		this.agent = agent;
-	}
+    private Point currentPosition;
+    private boolean lastActionExecuted = false;
+    private Direction targetDirection;
+    private Object agent;
+    private int penalty;
+    private Action lastAction;
+    private int inTarget;
+    private boolean teleported = false;
 
-	public boolean isLastActionExecuted() {
-		return lastActionExecuted;
-	}
 
-	public void setLastActionExecuted(boolean lastActionExecuted) {
-		this.lastActionExecuted = lastActionExecuted;
-	}
+    public AgentState(Point positon, Direction targetDirection, Object agent) {
+        setCurrentPosition(positon);
+        this.targetDirection = targetDirection;
+        this.agent = agent;
+    }
 
-	public Direction getTargetDirection() {
-		return targetDirection;
-	}
+    public boolean isLastActionExecuted() {
+        return lastActionExecuted;
+    }
 
-	public void setTargetDirection(Direction targetDirection) {
-		this.targetDirection = targetDirection;
-	}
+    public void setLastActionExecuted(boolean lastActionExecuted) {
+        this.lastActionExecuted = lastActionExecuted;
+    }
 
-	public Object getAgent() {
-		return agent;
-	}
+    public Direction getTargetDirection() {
+        return targetDirection;
+    }
 
-	public int getPenalty() {
-		return penalty;
-	}
+    public void setTargetDirection(Direction targetDirection) {
+        this.targetDirection = targetDirection;
+    }
 
-	public void setPenalty(int penalty) {
-		this.penalty = penalty;
-	}
+    public Object getAgent() {
+        return agent;
+    }
 
-	public Action getLastAction() {
-		return lastAction;
-	}
+    public int getPenalty() {
+        return penalty;
+    }
 
-	public void setLastAction(Action lastAction) {
-		this.lastAction = lastAction;
-	}
+    public void setPenalty(int penalty) {
+        this.penalty = penalty;
+    }
 
-	public int getInTarget(){
-		return inTarget;
-	}
+    public Action getLastAction() {
+        return lastAction;
+    }
 
-	public void addInTarget(double a){
-		this.inTarget += a;
-	}
+    public void setLastAction(Action lastAction) {
+        this.lastAction = lastAction;
+    }
 
-	public Point getCurrentPosition() {
-		return currentPosition;
-	}
+    public int getInTarget() {
+        return inTarget;
+    }
 
-	public void setCurrentPosition(Point currentPosition) {
-		this.currentPosition = currentPosition;
-	}
+    public void addInTarget(double a) {
+        this.inTarget += a;
+    }
 
-	public boolean isTeleported() {
-		return teleported;
-	}
+    public Point getCurrentPosition() {
+        return currentPosition;
+    }
 
-	public void setTeleported(boolean teleported) {
-		this.teleported = teleported;
-	}
+    public void setCurrentPosition(Point currentPosition) {
+        this.currentPosition = currentPosition;
+    }
+
+    public boolean isTeleported() {
+        return teleported;
+    }
+
+    public void setTeleported(boolean teleported) {
+        this.teleported = teleported;
+    }
 
 }

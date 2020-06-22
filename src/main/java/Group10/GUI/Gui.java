@@ -12,8 +12,8 @@ import java.util.List;
 
 public class Gui extends Application {
     private File mapFile = new File("src/main/java/Group10/World/Maps/test_6.map");
-    private Controller controller = new Controller(this,mapFile,true);
-    private MainScene scene = new MainScene(new StackPane(), controller.getGame().getGameMap(),this);
+    private Controller controller = new Controller(this, mapFile, true);
+    private MainScene scene = new MainScene(new StackPane(), controller.getGame().getGameMap(), this);
     private Stage primary = new Stage();
 
     public static void Gui(String[] args) {
@@ -38,14 +38,16 @@ public class Gui extends Application {
     }
 
 
-    public void drawMovables(List<GuardContainer> guards, List<IntruderContainer> intruders, List<DynamicObject<?>> objects){
+    public void drawMovables(List<GuardContainer> guards, List<IntruderContainer> intruders, List<DynamicObject<?>> objects) {
         scene.drawMovables(guards, intruders, objects);
     }
-    public void activateHistory(){
-        if(!scene.isHasHistory()){
+
+    public void activateHistory() {
+        if (!scene.isHasHistory()) {
             scene.activateHistory();
         }
     }
+
     public Stage getPrimary() {
         return primary;
     }
@@ -53,18 +55,19 @@ public class Gui extends Application {
     public Controller getController() {
         return controller;
     }
-    public void restartGame(boolean generateHistory){
+
+    public void restartGame(boolean generateHistory) {
         controller.kill();
-        controller = new Controller(this,mapFile, generateHistory);
+        controller = new Controller(this, mapFile, generateHistory);
         Thread thread = new Thread(controller);
         thread.start();
     }
 
-    public void setMapFile(File mapFile) {
-        this.mapFile = mapFile;
-    }
-
     public File getMapFile() {
         return mapFile;
+    }
+
+    public void setMapFile(File mapFile) {
+        this.mapFile = mapFile;
     }
 }

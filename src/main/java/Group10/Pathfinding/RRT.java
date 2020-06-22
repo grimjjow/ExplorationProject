@@ -28,22 +28,27 @@ public class RRT {
         this.random = new Random();
     }
 
+    public static void main(String[] args) {
+        RRT rrt = new RRT();
+        rrt.generateGraph();
+    }
+
     public void generateGraph() {
         int counter = 300;
         double x = random.nextDouble() * mapWidth;
         double y = random.nextDouble() * mapHeigth;
-        nodes.add(new GraphNode(NodeType.EMPTY, new Point(x, y), 1.0, new Integer[]{(int)Math.ceil(x), (int)Math.ceil(y)}));
+        nodes.add(new GraphNode(NodeType.EMPTY, new Point(x, y), 1.0, new Integer[]{(int) Math.ceil(x), (int) Math.ceil(y)}));
         //graph.addVertex(new Vertex(new Point(random.nextDouble() * mapWidth, random.nextDouble() * mapHeigth)));
 
         while (true && counter > 0) {
             x = random.nextDouble() * mapWidth;
             y = random.nextDouble() * mapHeigth;
-            GraphNode newNode = new GraphNode(NodeType.EMPTY, new Point(x, y), 1.0, new Integer[]{(int)Math.ceil(x), (int)Math.ceil(y)});
+            GraphNode newNode = new GraphNode(NodeType.EMPTY, new Point(x, y), 1.0, new Integer[]{(int) Math.ceil(x), (int) Math.ceil(y)});
 
             System.out.println("New: " + newNode);
 
             // Is obstacle ?
-            if(!isObstacle(newNode)) {
+            if (!isObstacle(newNode)) {
                 GraphNode nearestNode = nearest(newNode);
                 newNode.setParent(nearestNode);
                 newNode.addEdge(nearestNode, 0);
@@ -62,7 +67,7 @@ public class RRT {
     public GraphNode nearest(GraphNode newNode) {
         GraphNode nearest = nodes.get(0);
 
-        for(GraphNode n : nodes) {
+        for (GraphNode n : nodes) {
             if (n.getCenter().getDistance(newNode.getCenter()).getValue() < nearest.getCenter().getDistance(newNode.getCenter()).getValue()) {
                 nearest = n;
             }
@@ -74,7 +79,7 @@ public class RRT {
     }
 
     public boolean isObstacle(GraphNode newNode) {
-        for(AbstractObject o : gameMap.getObjects().stream().filter(o -> o.getType() == ObjectPerceptType.Wall).collect(Collectors.toList())) {
+        for (AbstractObject o : gameMap.getObjects().stream().filter(o -> o.getType() == ObjectPerceptType.Wall).collect(Collectors.toList())) {
             double minX = Double.POSITIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
             for (Vector point : o.getArea().getAsPolygon().getPoints()) {
                 if (point.getX() > maxX)
@@ -94,7 +99,7 @@ public class RRT {
     }
 
     public boolean isInTarget(GraphNode newNode) {
-        for(AbstractObject o : gameMap.getObjects().stream().filter(o -> o.getType() == ObjectPerceptType.TargetArea).collect(Collectors.toList())) {
+        for (AbstractObject o : gameMap.getObjects().stream().filter(o -> o.getType() == ObjectPerceptType.TargetArea).collect(Collectors.toList())) {
             double minX = Double.POSITIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
             for (Vector point : o.getArea().getAsPolygon().getPoints()) {
                 if (point.getX() > maxX)
@@ -111,10 +116,5 @@ public class RRT {
                 return true;
         }
         return false;
-    }
-
-    public static void main(String[] args) {
-        RRT rrt = new RRT();
-        rrt.generateGraph();
     }
 }

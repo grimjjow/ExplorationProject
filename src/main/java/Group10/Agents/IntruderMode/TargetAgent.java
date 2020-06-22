@@ -1,12 +1,9 @@
 package Group10.Agents.IntruderMode;
 
 import Group10.Algebra.Bias;
+import Group10.Algebra.Line;
 import Group10.Pathfinding.Grid.Grid;
-import Interop.Action.IntruderAction;
-import Interop.Action.Move;
-import Interop.Action.NoAction;
-import Interop.Action.Rotate;
-import Interop.Action.Sprint;
+import Interop.Action.*;
 import Interop.Agent.Intruder;
 import Interop.Geometry.Angle;
 import Interop.Geometry.Direction;
@@ -20,304 +17,276 @@ import Interop.Percept.Vision.ObjectPercept;
 import Interop.Percept.Vision.ObjectPerceptType;
 import Interop.Percept.Vision.ObjectPercepts;
 import Interop.Percept.Vision.VisionPrecepts;
-import Group10.Algebra.Line;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.OptionalDouble;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TargetAgent implements Intruder {
 
+    Grid grid;
     private State state;
     private ArrayList<IntruderAction> actionsQueue;
-
     private ORIENTATION ORIENTATION;
-    
     private boolean yellHeard;
     private Direction guardDir;
     private Angle oldDirection;
     private boolean spotted; //If spotted a guard
     private boolean hitWall; //If wall hit/seen
-    
     private boolean queueEmpty;
-    
-    Grid grid;
 
     public TargetAgent() {
 
         state = State.totarget;
         actionsQueue = new ArrayList<>();
 
-        if(Math.random() > 0.5) {
+        if (Math.random() > 0.5) {
             ORIENTATION = ORIENTATION.LEFT;
-        }
-        else{
+        } else {
             ORIENTATION = ORIENTATION.RIGHT;
         }
-        grid = new Grid(new Point(0,0));
+        grid = new Grid(new Point(0, 0));
     }
 
     @Override
     public IntruderAction getAction(IntruderPercepts percepts) {
-    	
-    	if (actionsQueue.size() > 0){
+
+        if (actionsQueue.size() > 0) {
             return queueActions();
         }
 
-    	//System.out.println(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue());
-        Angle orientation = percepts.getTargetDirection().getDistance(Angle.fromDegrees(new Point(0,1).getClockDirection().getDegrees()));
-        
+        //System.out.println(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue());
+        Angle orientation = percepts.getTargetDirection().getDistance(Angle.fromDegrees(new Point(0, 1).getClockDirection().getDegrees()));
+
         //Getting all objects that intruder sees
-    	VisionPrecepts VP;
-		VP = percepts.getVision();
-		ObjectPercepts OPS;
-		OPS = VP.getObjects();
-		Set<ObjectPercept> SOP;
-		SOP = OPS.getAll();
-		
-		//Check each object if it is a guard
-		hitWall=false;
-		for(ObjectPercept OP : SOP) {
-			//If object is guard then intruder spotted a guard
-			if(OP.getType() == ObjectPerceptType.Guard) {
-				//If he wasn't already spotted
-				if(!spotted) {
-					spotted = true;
-					guardDir = OP.getPoint().getClockDirection();
-					oldDirection = grid.getMyDirection();
-				}
-				else {
-					guardDir = OP.getPoint().getClockDirection();
-					oldDirection = grid.getMyDirection();
-				}
-			}
-			//If intruder hits wall
-			if(OP.getType() == ObjectPerceptType.Wall) {
-				if(!hitWall) {
-					hitWall = true;
-				}	
-			}
-		}
-		
-		//Checking for sounds the intruder hears
-		SoundPercepts SP;
-		SP = percepts.getSounds();
-		Set<SoundPercept> SSP;
-		SSP = SP.getAll();
-		
-		if(!spotted) {
-			yellHeard = false;
-		}
-		//For each sound check if it is a yell
-		for(SoundPercept sound : SSP) {
-			if(sound.getType() == SoundPerceptType.Yell) {
-				//If he wasn't already spotted
-				if(!spotted) {
-					spotted = true;
-					yellHeard = true;
-					guardDir = sound.getDirection();
-				}
-				else {
-					yellHeard = true;
-					guardDir = sound.getDirection();
-				}
-			}
-		}
-		//If a guard has been spotted by the intruder
-		if(spotted && !hitWall) {
-			//return moveTo(50,-50,percepts);
-			return evade(oldDirection,guardDir,percepts);
-		}
-		else {
-	        if (!percepts.wasLastActionExecuted()) {
-	            return ifStuck(percepts);
-	        }
-	        
-	        if (orientation.getDegrees() < 90) {
-	            if (ORIENTATION ==  ORIENTATION.LEFT){
-	                ORIENTATION = ORIENTATION.RIGHT;
-	            }
-	        }
-	        else if (orientation.getDegrees() > 270 ){
-	            if (ORIENTATION == ORIENTATION.RIGHT)
-	            ORIENTATION = ORIENTATION.LEFT;
-	        }
+        VisionPrecepts VP;
+        VP = percepts.getVision();
+        ObjectPercepts OPS;
+        OPS = VP.getObjects();
+        Set<ObjectPercept> SOP;
+        SOP = OPS.getAll();
 
-	        if (state == State.totarget) {
-	            return updateToTargetState(percepts);
-	        }
+        //Check each object if it is a guard
+        hitWall = false;
+        for (ObjectPercept OP : SOP) {
+            //If object is guard then intruder spotted a guard
+            if (OP.getType() == ObjectPerceptType.Guard) {
+                //If he wasn't already spotted
+                if (!spotted) {
+                    spotted = true;
+                    guardDir = OP.getPoint().getClockDirection();
+                    oldDirection = grid.getMyDirection();
+                } else {
+                    guardDir = OP.getPoint().getClockDirection();
+                    oldDirection = grid.getMyDirection();
+                }
+            }
+            //If intruder hits wall
+            if (OP.getType() == ObjectPerceptType.Wall) {
+                if (!hitWall) {
+                    hitWall = true;
+                }
+            }
+        }
 
-	        if (state == State.navigate) {
-	            return updateNavigationState(percepts);
-	        }
+        //Checking for sounds the intruder hears
+        SoundPercepts SP;
+        SP = percepts.getSounds();
+        Set<SoundPercept> SSP;
+        SSP = SP.getAll();
 
-	        if (state == State.explore) {
-	            return updateExplorationState(percepts);
-	        }
-		}
+        if (!spotted) {
+            yellHeard = false;
+        }
+        //For each sound check if it is a yell
+        for (SoundPercept sound : SSP) {
+            if (sound.getType() == SoundPerceptType.Yell) {
+                //If he wasn't already spotted
+                if (!spotted) {
+                    spotted = true;
+                    yellHeard = true;
+                    guardDir = sound.getDirection();
+                } else {
+                    yellHeard = true;
+                    guardDir = sound.getDirection();
+                }
+            }
+        }
+        //If a guard has been spotted by the intruder
+        if (spotted && !hitWall) {
+            //return moveTo(50,-50,percepts);
+            return evade(oldDirection, guardDir, percepts);
+        } else {
+            if (!percepts.wasLastActionExecuted()) {
+                return ifStuck(percepts);
+            }
+
+            if (orientation.getDegrees() < 90) {
+                if (ORIENTATION == ORIENTATION.LEFT) {
+                    ORIENTATION = ORIENTATION.RIGHT;
+                }
+            } else if (orientation.getDegrees() > 270) {
+                if (ORIENTATION == ORIENTATION.RIGHT)
+                    ORIENTATION = ORIENTATION.LEFT;
+            }
+
+            if (state == State.totarget) {
+                return updateToTargetState(percepts);
+            }
+
+            if (state == State.navigate) {
+                return updateNavigationState(percepts);
+            }
+
+            if (state == State.explore) {
+                return updateExplorationState(percepts);
+            }
+        }
         return new NoAction();
     }
 
     //Evasion method
     private IntruderAction evade(Angle oldDirection, Direction guardDirection, IntruderPercepts percepts) {
-    	//If guard direction is on the left side
-    	if(guardDirection.getRadians() > Math.PI) {
-    		//Set guard direction to be close to 0 like the right side 
-    		Direction newGuardDirection = Direction.fromRadians(Math.abs(guardDirection.getRadians()-(Math.PI*2)));
-    		
-    		//If the angle between the orientation and the guard direction is less than 0.5 PI
-    		if(Math.abs((oldDirection.getRadians()+newGuardDirection.getRadians()-grid.getMyDirection().getRadians())) < Math.PI/2) {
-        		//System.out.println(Angle.fromRadians(newGuardDirection.getRadians() + (Math.PI/2)).getDegrees());
-        		
-        		double angleTracker = Angle.fromRadians(newGuardDirection.getRadians() + (Math.PI/2)).getRadians();
-        		
-        		while(angleTracker > Math.PI/4) {
-        			actionsQueue.add(new Rotate(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle()));
-        			angleTracker -= (Math.PI/4);
-        		}
-        		actionsQueue.add(new Rotate(Angle.fromRadians(angleTracker)));
-    			//actionsQueue.add(new Rotate(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle()));
-    			//actionsQueue.add(new Rotate(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle()));
-        	}
-    		//If the intruder heard a yell
+        //If guard direction is on the left side
+        if (guardDirection.getRadians() > Math.PI) {
+            //Set guard direction to be close to 0 like the right side
+            Direction newGuardDirection = Direction.fromRadians(Math.abs(guardDirection.getRadians() - (Math.PI * 2)));
+
+            //If the angle between the orientation and the guard direction is less than 0.5 PI
+            if (Math.abs((oldDirection.getRadians() + newGuardDirection.getRadians() - grid.getMyDirection().getRadians())) < Math.PI / 2) {
+                //System.out.println(Angle.fromRadians(newGuardDirection.getRadians() + (Math.PI/2)).getDegrees());
+
+                double angleTracker = Angle.fromRadians(newGuardDirection.getRadians() + (Math.PI / 2)).getRadians();
+
+                while (angleTracker > Math.PI / 4) {
+                    actionsQueue.add(new Rotate(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle()));
+                    angleTracker -= (Math.PI / 4);
+                }
+                actionsQueue.add(new Rotate(Angle.fromRadians(angleTracker)));
+                //actionsQueue.add(new Rotate(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle()));
+                //actionsQueue.add(new Rotate(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle()));
+            }
+            //If the intruder heard a yell
         	/*else if(yellHeard){
         		actionsQueue.add(new Sprint(percepts.getScenarioIntruderPercepts().getMaxSprintDistanceIntruder()));
         	}
         	else {
         		actionsQueue.add(new Move(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder()));
         	}*/
-    		else {
-        		actionsQueue.add(new Sprint(percepts.getScenarioIntruderPercepts().getMaxSprintDistanceIntruder()));
-        	}
-    		//If the sprint cooldown is 0 then set spotted to false
-        	if(percepts.getScenarioIntruderPercepts().getSprintCooldown() == 0) {
-        		spotted = false;
-        	}
-    	}
-    	else {
-    		if(Math.abs((oldDirection.getRadians()+guardDirection.getRadians()-grid.getMyDirection().getRadians())) < Math.PI/2) {
-    			double angleTracker = Angle.fromRadians(guardDirection.getRadians() - (Math.PI/2)).getRadians();
-        		
-        		while(angleTracker < -(Math.PI/4)) {
-        			actionsQueue.add(new Rotate(Angle.fromRadians(-percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
-        			angleTracker += (Math.PI/4);
-        		}
-        		actionsQueue.add(new Rotate(Angle.fromRadians(angleTracker)));
-    			//actionsQueue.add(new Rotate(Angle.fromRadians(-percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
-    			//actionsQueue.add(new Rotate(Angle.fromRadians(-percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
-        	}
+            else {
+                actionsQueue.add(new Sprint(percepts.getScenarioIntruderPercepts().getMaxSprintDistanceIntruder()));
+            }
+            //If the sprint cooldown is 0 then set spotted to false
+            if (percepts.getScenarioIntruderPercepts().getSprintCooldown() == 0) {
+                spotted = false;
+            }
+        } else {
+            if (Math.abs((oldDirection.getRadians() + guardDirection.getRadians() - grid.getMyDirection().getRadians())) < Math.PI / 2) {
+                double angleTracker = Angle.fromRadians(guardDirection.getRadians() - (Math.PI / 2)).getRadians();
+
+                while (angleTracker < -(Math.PI / 4)) {
+                    actionsQueue.add(new Rotate(Angle.fromRadians(-percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
+                    angleTracker += (Math.PI / 4);
+                }
+                actionsQueue.add(new Rotate(Angle.fromRadians(angleTracker)));
+                //actionsQueue.add(new Rotate(Angle.fromRadians(-percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
+                //actionsQueue.add(new Rotate(Angle.fromRadians(-percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
+            }
         	/*else if(yellHeard){
         		actionsQueue.add(new Sprint(percepts.getScenarioIntruderPercepts().getMaxSprintDistanceIntruder()));
         	}
     		else {
         		actionsQueue.add(new Move(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder()));
         	}*/
-    		else {
-        		actionsQueue.add(new Sprint(percepts.getScenarioIntruderPercepts().getMaxSprintDistanceIntruder()));
-        	}
-        	if(percepts.getScenarioIntruderPercepts().getSprintCooldown() == 0) {
-        		spotted = false;
-        	}
-    	}
-    	return queueActions();
+            else {
+                actionsQueue.add(new Sprint(percepts.getScenarioIntruderPercepts().getMaxSprintDistanceIntruder()));
+            }
+            if (percepts.getScenarioIntruderPercepts().getSprintCooldown() == 0) {
+                spotted = false;
+            }
+        }
+        return queueActions();
     }
-    
+
     private IntruderAction moveTo(double X, double Y, IntruderPercepts percepts) {
-    	Point myLocation = grid.getMyLocation();
-    	Direction myDirection = grid.getMyDirection();
-    	Point targetLocation = new Point(X,Y);
-    	Direction directionToTarget;
-    	
-    	if(X==myLocation.getX() && Y<myLocation.getY()) { //Bottom
-    		directionToTarget = Direction.fromRadians(0);
-    	}
-    	else if(X<myLocation.getX() && Y<myLocation.getY()) { //Bottom Left quadrant (1)
-    		directionToTarget = Direction.fromRadians(Math.atan(Math.abs(myLocation.getX()-X)/Math.abs(myLocation.getY()-Y)));
-    	}
-    	else if(X<myLocation.getX() && Y==myLocation.getY()) { //Left
-    		directionToTarget = Direction.fromRadians(Math.PI/2);
-    	}
-    	else if(X<myLocation.getX() && Y>myLocation.getY()) { //Top Left quadrant (2)
-    		directionToTarget = Direction.fromRadians(Math.atan(Math.abs(myLocation.getY()-Y)/Math.abs(myLocation.getX()-X)) + (Math.PI/2));
-    	}
-    	else if(X==myLocation.getX() && Y>myLocation.getY()) { //Top
-    		directionToTarget = Direction.fromRadians(Math.PI);
-    	}
-    	else if(X>myLocation.getX() && Y>myLocation.getY()) { //Top Right quadrant (3)
-    		directionToTarget = Direction.fromRadians(Math.atan(Math.abs(myLocation.getX()-X)/Math.abs(myLocation.getY()-Y)) + (Math.PI));
-    	}
-    	else if(X>myLocation.getX() && Y==myLocation.getY()) { //Right
-    		directionToTarget = Direction.fromRadians(Math.PI*(3.0/2.0));
-    	}
-    	else if(X>myLocation.getX() && Y<myLocation.getY()) { //Bottom Right quadrant (4)
-    		directionToTarget = Direction.fromRadians(Math.atan(Math.abs(myLocation.getY()-Y)/Math.abs(myLocation.getX()-X)) + (Math.PI*(3.0/2.0)));
-    	}
-    	else if(X==myLocation.getX() && Y==myLocation.getY()) { //Center
-    		directionToTarget = null;
-    		spotted=false;
-    		return new NoAction();
-    	}
-    	else {
-    		directionToTarget = null;
-    		spotted=false;
-    		return new NoAction();
-    	}
-    	
-    	double angleToRotate;
-    	if(myDirection.getRadians() > directionToTarget.getRadians()) {
-    		if(Math.PI*2 - myDirection.getRadians() + directionToTarget.getRadians() > myDirection.getRadians() - directionToTarget.getRadians()) {
-    			angleToRotate = -(myDirection.getRadians() - directionToTarget.getRadians());
-    		}
-    		else {
-    			angleToRotate = Math.PI*2 - myDirection.getRadians() + directionToTarget.getRadians();
-    		}
-    	}
-    	else {
-    		if(Math.PI*2 - directionToTarget.getRadians() + myDirection.getRadians() > directionToTarget.getRadians() - myDirection.getRadians()) {
-    			angleToRotate = (directionToTarget.getRadians() - myDirection.getRadians());
-    		}
-    		else {
-    			angleToRotate = -(Math.PI*2 - directionToTarget.getRadians() + myDirection.getRadians());
-    		}
-    	}
-    	
-    	if(angleToRotate < 0) {
-    		while(angleToRotate < Math.PI/4) {
-    			actionsQueue.add(new Rotate(Angle.fromRadians(-percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
-    			angleToRotate += (Math.PI/4);
-    		}
-    		actionsQueue.add(new Rotate(Angle.fromRadians(angleToRotate)));
-    	}
-    	else if(angleToRotate > 0){
-    		while(angleToRotate > Math.PI/4) {
-    			actionsQueue.add(new Rotate(Angle.fromRadians(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
-    			angleToRotate -= (Math.PI/4);
-    		}
-    		actionsQueue.add(new Rotate(Angle.fromRadians(angleToRotate)));
-    	}
-    	
-    	double distanceToTarget = Math.sqrt(Math.pow(Math.abs(myLocation.getX() - targetLocation.getX()), 2) + Math.pow(Math.abs(myLocation.getY() - targetLocation.getY()), 2));
-    	
-    	while(distanceToTarget>percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue()) {
-    		actionsQueue.add(new Move(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder()));
-    		distanceToTarget -= percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue();
-    	}
-    	actionsQueue.add(new Move(new Distance(distanceToTarget)));
-    	
-    	spotted = false;
-    	return queueActions();
+        Point myLocation = grid.getMyLocation();
+        Direction myDirection = grid.getMyDirection();
+        Point targetLocation = new Point(X, Y);
+        Direction directionToTarget;
+
+        if (X == myLocation.getX() && Y < myLocation.getY()) { //Bottom
+            directionToTarget = Direction.fromRadians(0);
+        } else if (X < myLocation.getX() && Y < myLocation.getY()) { //Bottom Left quadrant (1)
+            directionToTarget = Direction.fromRadians(Math.atan(Math.abs(myLocation.getX() - X) / Math.abs(myLocation.getY() - Y)));
+        } else if (X < myLocation.getX() && Y == myLocation.getY()) { //Left
+            directionToTarget = Direction.fromRadians(Math.PI / 2);
+        } else if (X < myLocation.getX() && Y > myLocation.getY()) { //Top Left quadrant (2)
+            directionToTarget = Direction.fromRadians(Math.atan(Math.abs(myLocation.getY() - Y) / Math.abs(myLocation.getX() - X)) + (Math.PI / 2));
+        } else if (X == myLocation.getX() && Y > myLocation.getY()) { //Top
+            directionToTarget = Direction.fromRadians(Math.PI);
+        } else if (X > myLocation.getX() && Y > myLocation.getY()) { //Top Right quadrant (3)
+            directionToTarget = Direction.fromRadians(Math.atan(Math.abs(myLocation.getX() - X) / Math.abs(myLocation.getY() - Y)) + (Math.PI));
+        } else if (X > myLocation.getX() && Y == myLocation.getY()) { //Right
+            directionToTarget = Direction.fromRadians(Math.PI * (3.0 / 2.0));
+        } else if (X > myLocation.getX() && Y < myLocation.getY()) { //Bottom Right quadrant (4)
+            directionToTarget = Direction.fromRadians(Math.atan(Math.abs(myLocation.getY() - Y) / Math.abs(myLocation.getX() - X)) + (Math.PI * (3.0 / 2.0)));
+        } else if (X == myLocation.getX() && Y == myLocation.getY()) { //Center
+            directionToTarget = null;
+            spotted = false;
+            return new NoAction();
+        } else {
+            directionToTarget = null;
+            spotted = false;
+            return new NoAction();
+        }
+
+        double angleToRotate;
+        if (myDirection.getRadians() > directionToTarget.getRadians()) {
+            if (Math.PI * 2 - myDirection.getRadians() + directionToTarget.getRadians() > myDirection.getRadians() - directionToTarget.getRadians()) {
+                angleToRotate = -(myDirection.getRadians() - directionToTarget.getRadians());
+            } else {
+                angleToRotate = Math.PI * 2 - myDirection.getRadians() + directionToTarget.getRadians();
+            }
+        } else {
+            if (Math.PI * 2 - directionToTarget.getRadians() + myDirection.getRadians() > directionToTarget.getRadians() - myDirection.getRadians()) {
+                angleToRotate = (directionToTarget.getRadians() - myDirection.getRadians());
+            } else {
+                angleToRotate = -(Math.PI * 2 - directionToTarget.getRadians() + myDirection.getRadians());
+            }
+        }
+
+        if (angleToRotate < 0) {
+            while (angleToRotate < Math.PI / 4) {
+                actionsQueue.add(new Rotate(Angle.fromRadians(-percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
+                angleToRotate += (Math.PI / 4);
+            }
+            actionsQueue.add(new Rotate(Angle.fromRadians(angleToRotate)));
+        } else if (angleToRotate > 0) {
+            while (angleToRotate > Math.PI / 4) {
+                actionsQueue.add(new Rotate(Angle.fromRadians(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians())));
+                angleToRotate -= (Math.PI / 4);
+            }
+            actionsQueue.add(new Rotate(Angle.fromRadians(angleToRotate)));
+        }
+
+        double distanceToTarget = Math.sqrt(Math.pow(Math.abs(myLocation.getX() - targetLocation.getX()), 2) + Math.pow(Math.abs(myLocation.getY() - targetLocation.getY()), 2));
+
+        while (distanceToTarget > percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue()) {
+            actionsQueue.add(new Move(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder()));
+            distanceToTarget -= percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue();
+        }
+        actionsQueue.add(new Move(new Distance(distanceToTarget)));
+
+        spotted = false;
+        return queueActions();
     }
-    
+
     //Make an Agent Bounce of the Wall
-    private IntruderAction updateNavigationState(IntruderPercepts percepts){
+    private IntruderAction updateNavigationState(IntruderPercepts percepts) {
         ObjectPercepts visionObjects = percepts.getVision().getObjects();
         ObjectPercepts walls = visionObjects.filter(percept -> percept.getType().equals(ObjectPerceptType.Wall));
 
         if (walls.getAll().size() <= 2) {
-        	grid.updateMyLocation(calculateWallDistance(walls,
+            grid.updateMyLocation(calculateWallDistance(walls,
                     new Distance(percepts.getVision().getFieldOfView().getRange().getValue() * 0.5),
                     percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder()).getValue());
             return new Move(calculateWallDistance(walls,
@@ -334,7 +303,6 @@ public class TargetAgent implements Intruder {
         state = State.totarget;
 
 
-
         Angle angle = calculateAngleToLine(wall);
         Angle rotation = percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle();
 
@@ -345,19 +313,18 @@ public class TargetAgent implements Intruder {
         }
 
         double angleToRotate = angle.getRadians() * (1);
-        if (Math.abs(angleToRotate) >= rotation.getRadians()){
+        if (Math.abs(angleToRotate) >= rotation.getRadians()) {
             double rotate = ((int) Math.signum(angleToRotate) * rotation.getRadians());
             grid.updateMyDirection(rotate);
             return new Rotate(Angle.fromRadians(rotate));
-        }
-        else {
+        } else {
             return new NoAction();
         }
 
     }
 
 
-    private Distance calculateWallDistance(ObjectPercepts objectPercepts, Distance distanceFromWall, Distance maxMove){
+    private Distance calculateWallDistance(ObjectPercepts objectPercepts, Distance distanceFromWall, Distance maxMove) {
         OptionalDouble minDistance = objectPercepts.getAll().stream().mapToDouble(p -> p.getPoint().getDistanceFromOrigin().getValue()).min();
         double feasibleDistance = minDistance.orElse(distanceFromWall.getValue() * 2) - distanceFromWall.getValue();
 
@@ -371,7 +338,7 @@ public class TargetAgent implements Intruder {
         Point firstPoint;
         Point lastPoint = null;
         List<Point> points = new ArrayList<Point>();
-        for (ObjectPercept percept: objects.getAll()){
+        for (ObjectPercept percept : objects.getAll()) {
             points.add(percept.getPoint());
         }
         points.sort(Comparator.comparing(Point::getX));
@@ -379,21 +346,20 @@ public class TargetAgent implements Intruder {
 
         for (int i = 0; i < points.size() - 2; i++) {
             firstPoint = points.get(i);
-            Line lineCut = new Line(firstPoint, points.get(i+1));
+            Line lineCut = new Line(firstPoint, points.get(i + 1));
 
-            for (Point point: points.subList(i+2,points.size())){
+            for (Point point : points.subList(i + 2, points.size())) {
                 if (lineCut.isPointOnExtendedLine(point)) {
                     lastPoint = point;
                 }
             }
             if (lastPoint != null) {
-                return new  Line(firstPoint, lastPoint);
+                return new Line(firstPoint, lastPoint);
             }
         }
 
         throw new Exception("error");
     }
-
 
 
     private Angle calculateAngleToLine(Line l) {
@@ -404,15 +370,13 @@ public class TargetAgent implements Intruder {
     }
 
 
-
     private IntruderAction ifStuck(IntruderPercepts percepts) {
 
         double randomRotate = (int) (180 * Math.random());
 
         if (randomRotate < 90) {
             queueRotation(Angle.fromDegrees(90 + randomRotate), percepts);
-        }
-        else {
+        } else {
             queueRotation(Angle.fromDegrees(-randomRotate), percepts);
         }
 
@@ -423,16 +387,16 @@ public class TargetAgent implements Intruder {
     }
 
 
-    private Point wallsInView(ObjectPercepts walls){
+    private Point wallsInView(ObjectPercepts walls) {
         List<ObjectPercept> sortedPoints = walls
                 .getAll()
                 .stream()
                 .filter(p -> p.getPoint().getClockDirection().getDistance(Angle.fromDegrees(0)).getRadians() < 0.2)
                 .sorted(Comparator.comparing(p -> p.getPoint().getClockDirection().getDistance(Angle.fromDegrees(0)).getRadians()))
                 .collect(Collectors.toList());
-        try{
+        try {
             return sortedPoints.get(0).getPoint();
-        } catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
     }
@@ -452,14 +416,14 @@ public class TargetAgent implements Intruder {
 
         Point wallPointStraightAhead = wallsInView(walls);
         if (wallPointStraightAhead == null) {
-        	grid.updateMyLocation(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue());
+            grid.updateMyLocation(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue());
             return new Move(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder());
         }
 
         double distanceToWall = wallPointStraightAhead.getDistanceFromOrigin().getValue();
         double minDistance = percepts.getVision().getFieldOfView().getRange().getValue() * 0.5;
         if (distanceToWall > minDistance) {
-        	grid.updateMyLocation(new Distance(Math.min(distanceToWall - minDistance,
+            grid.updateMyLocation(new Distance(Math.min(distanceToWall - minDistance,
                     percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue())).getValue());
             return new Move(new Distance(Math.min(distanceToWall - minDistance,
                     percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue())));
@@ -468,11 +432,9 @@ public class TargetAgent implements Intruder {
 
         if (orientation.getDegrees() < 90) {
             queueRotation(Angle.fromDegrees(90 * (-1)), percepts);
-        }
-        else if (orientation.getDegrees() > 270 ){
+        } else if (orientation.getDegrees() > 270) {
             queueRotation(Angle.fromDegrees(90 * (1)), percepts);
-        }
-        else queueRotation(Angle.fromDegrees(90 * ORIENTATION.update), percepts);
+        } else queueRotation(Angle.fromDegrees(90 * ORIENTATION.update), percepts);
 
         return queueActions();
     }
@@ -485,14 +447,14 @@ public class TargetAgent implements Intruder {
             double maxRotation = percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians();
 
             if (direction.getRadians() > maxRotation) {
-            	grid.updateMyDirection(maxRotation);
+                grid.updateMyDirection(maxRotation);
                 return new Rotate(Angle.fromRadians(maxRotation));
             }
 
             grid.updateMyDirection(direction.getRadians());
             return new Rotate(Angle.fromRadians(direction.getRadians()));
         } else {
-        	grid.updateMyLocation(movement);
+            grid.updateMyLocation(movement);
             return new Move(new Distance(movement));
         }
     }
@@ -506,7 +468,7 @@ public class TargetAgent implements Intruder {
         double distanceValue = distance.getValue();
         double maxMove = percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue();
 
-        while(distanceValue > 0) {
+        while (distanceValue > 0) {
             actionsQueue.add(new Move(new Distance(Math.min(distanceValue, maxMove))));
             distanceValue = distanceValue - maxMove;
         }
@@ -519,9 +481,9 @@ public class TargetAgent implements Intruder {
         double maxRotate = percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getDegrees();
         double rotateStep;
 
-        while(Math.abs(remainingAngle) > Bias.bias) {
+        while (Math.abs(remainingAngle) > Bias.bias) {
 
-            if (Math.abs(remainingAngle) < maxRotate){
+            if (Math.abs(remainingAngle) < maxRotate) {
                 rotateStep = remainingAngle;
             } else {
                 rotateStep = maxRotate * sign;
@@ -532,19 +494,19 @@ public class TargetAgent implements Intruder {
         }
     }
 
-    private IntruderAction queueActions(){
+    private IntruderAction queueActions() {
         IntruderAction nextAction = actionsQueue.get(0);
-        if(nextAction.getClass().toString().equals("class Interop.ActionsType.Rotate")) {
-        	Rotate nextActionR = (Rotate) nextAction;
-        	grid.updateMyDirection(nextActionR.getAngle().getRadians());
-        	//System.out.println(nextActionR.getAngle().getDegrees());
-        	//System.out.println(nextAction.getClass().toString());
+        if (nextAction.getClass().toString().equals("class Interop.ActionsType.Rotate")) {
+            Rotate nextActionR = (Rotate) nextAction;
+            grid.updateMyDirection(nextActionR.getAngle().getRadians());
+            //System.out.println(nextActionR.getAngle().getDegrees());
+            //System.out.println(nextAction.getClass().toString());
         }
-        if(nextAction.getClass().toString().equals("class Interop.ActionsType.Move")) {
-        	Move nextActionM = (Move) nextAction;
-        	grid.updateMyLocation(nextActionM.getDistance().getValue());
-        	//System.out.println(nextActionR.getDistance().getValue());
-        	//System.out.println(nextAction.getClass().toString());
+        if (nextAction.getClass().toString().equals("class Interop.ActionsType.Move")) {
+            Move nextActionM = (Move) nextAction;
+            grid.updateMyLocation(nextActionM.getDistance().getValue());
+            //System.out.println(nextActionR.getDistance().getValue());
+            //System.out.println(nextAction.getClass().toString());
         }
         actionsQueue.remove(0);
         return nextAction;
@@ -560,7 +522,7 @@ public class TargetAgent implements Intruder {
 
         private final int update;
 
-        ORIENTATION(final int newU){
+        ORIENTATION(final int newU) {
             update = newU;
         }
     }

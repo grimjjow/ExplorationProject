@@ -11,8 +11,7 @@ public class Graph<T> {
     private final Map<T, List<T>> map = new HashMap<>();
 
     // This function adds a new vertex to the graph
-    public void addVertex(T s)
-    {
+    public void addVertex(T s) {
         map.put(s, new LinkedList<T>());
     }
 
@@ -20,8 +19,7 @@ public class Graph<T> {
     // between source to destination
     public void addEdge(T source,
                         T destination,
-                        boolean bidirectional)
-    {
+                        boolean bidirectional) {
 
         if (!map.containsKey(source))
             addVertex(source);
@@ -36,17 +34,15 @@ public class Graph<T> {
     }
 
     // This function gives the count of vertices
-    public double getVertexCount()
-    {
+    public double getVertexCount() {
         System.out.println("The graph has "
                 + map.keySet().size()
                 + " vertex");
-        return  map.keySet().size();
+        return map.keySet().size();
     }
 
     // This function gives the count of edges
-    public double getEdgesCount(boolean bidirection)
-    {
+    public double getEdgesCount(boolean bidirection) {
         int count = 0;
         for (T v : map.keySet()) {
             count += map.get(v).size();
@@ -62,14 +58,13 @@ public class Graph<T> {
 
     // This function gives whether
     // a vertex is present or not.
-    public boolean hasVertex(T s)
-    {   Boolean hasVertex = false;
+    public boolean hasVertex(T s) {
+        Boolean hasVertex = false;
         if (map.containsKey(s)) {
             System.out.println("The graph contains "
                     + s + " as a vertex.");
             hasVertex = true;
-        }
-        else {
+        } else {
             System.out.println("The graph does not contain "
                     + s + " as a vertex.");
         }
@@ -77,14 +72,13 @@ public class Graph<T> {
     }
 
     // This function gives whether an edge is present or not.
-    public boolean hasEdge(T s, T d)
-    {   Boolean hasEdge = false;
+    public boolean hasEdge(T s, T d) {
+        Boolean hasEdge = false;
         if (map.get(s).contains(d)) {
             System.out.println("The graph has an edge between "
                     + s + " and " + d + ".");
             hasEdge = true;
-        }
-        else {
+        } else {
             System.out.println("The graph has no edge between "
                     + s + " and " + d + ".");
         }
@@ -93,12 +87,11 @@ public class Graph<T> {
 
     // Prints the adjancency list of each vertex.
     @Override
-    public String toString()
-    {
+    public String toString() {
         StringBuilder builder = new StringBuilder();
 
         for (T v : map.keySet()) {
-            builder.append( "Key: " + v.toString() + ": ");
+            builder.append("Key: " + v.toString() + ": ");
             for (T w : map.get(v)) {
                 builder.append(" Value: " + w.toString() + " ");
             }
@@ -108,7 +101,7 @@ public class Graph<T> {
         return (builder.toString());
     }
 
-    public List<T> getEdge(T v){
+    public List<T> getEdge(T v) {
         return map.get(v);
     }
 

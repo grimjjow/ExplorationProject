@@ -12,19 +12,13 @@ import Interop.Percept.Scenario.SlowDownModifiers;
 
 public class RandomIntruder implements Intruder {
 
-    private double getSpeedModifier(IntruderPercepts guardPercepts)
-    {
-        SlowDownModifiers slowDownModifiers =  guardPercepts.getScenarioIntruderPercepts().getScenarioPercepts().getSlowDownModifiers();
-        if(guardPercepts.getAreaPercepts().isInWindow())
-        {
+    private double getSpeedModifier(IntruderPercepts guardPercepts) {
+        SlowDownModifiers slowDownModifiers = guardPercepts.getScenarioIntruderPercepts().getScenarioPercepts().getSlowDownModifiers();
+        if (guardPercepts.getAreaPercepts().isInWindow()) {
             return slowDownModifiers.getInWindow();
-        }
-        else if(guardPercepts.getAreaPercepts().isInSentryTower())
-        {
+        } else if (guardPercepts.getAreaPercepts().isInSentryTower()) {
             return slowDownModifiers.getInSentryTower();
-        }
-        else if(guardPercepts.getAreaPercepts().isInDoor())
-        {
+        } else if (guardPercepts.getAreaPercepts().isInDoor()) {
             return slowDownModifiers.getInDoor();
         }
 
@@ -33,12 +27,9 @@ public class RandomIntruder implements Intruder {
 
     @Override
     public IntruderAction getAction(IntruderPercepts percepts) {
-        if(!percepts.wasLastActionExecuted())
-        {
+        if (!percepts.wasLastActionExecuted()) {
             return new Rotate(Angle.fromRadians(percepts.getScenarioIntruderPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble()));
-        }
-        else
-        {
+        } else {
             return new Move(new Distance(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue() * getSpeedModifier(percepts)));
         }
     }

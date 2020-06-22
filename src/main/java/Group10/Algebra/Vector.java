@@ -1,20 +1,18 @@
 package Group10.Algebra;
 
+import Group10.Engine.Game;
 import Interop.Geometry.Direction;
 import Interop.Geometry.Point;
 import Interop.Utils.Utils;
 
 import java.util.Objects;
 
-import Group10.Engine.Game;
-
 public class Vector {
 
     private final double x, y;
     private final double length;
 
-    public Vector(double x, double y)
-    {
+    public Vector(double x, double y) {
         this.x = x;
         this.y = y;
         this.length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
@@ -34,61 +32,59 @@ public class Vector {
     }
 
 
-    public double getX()
-    {
+    public Vector(Point point) {
+        this(point.getX(), point.getY());
+    }
+
+    public static Vector from(Point point) {
+        return new Vector(point.getX(), point.getY());
+    }
+
+    public double getX() {
         return x;
     }
 
-    public double getY()
-    {
+    public double getY() {
         return y;
     }
 
     public Vector normalise() {
 
-        if(this.length == 0)
-        {
+        if (this.length == 0) {
             return new Vector(0, 0);
         }
         return new Vector(this.x / this.length, this.y / this.length);
     }
 
-    public double length()
-    {
+    public double length() {
         return this.length;
     }
 
-    public Vector mul(Vector other)
-    {
+    public Vector mul(Vector other) {
         return mul(other.getX(), other.getY());
     }
 
-    public Vector mul(double x, double y)
-    {
+    public Vector mul(double x, double y) {
         return new Vector(this.x * x, this.y * y);
     }
 
-    public Vector mul(double n){
+    public Vector mul(double n) {
         return new Vector(this.x * n, this.y * n);
     }
 
-    public Vector add(Vector add)
-    {
+    public Vector add(Vector add) {
         return this.add(add.getX(), add.getY());
     }
 
-    public Vector add(double x, double y)
-    {
+    public Vector add(double x, double y) {
         return new Vector(this.x + x, this.y + y);
     }
 
-    public Vector sub(Vector sub)
-    {
+    public Vector sub(Vector sub) {
         return this.add(-sub.getX(), -sub.getY());
     }
 
-    public Vector sub(double x, double y)
-    {
+    public Vector sub(double x, double y) {
         return this.add(-x, -y);
     }
 
@@ -98,43 +94,37 @@ public class Vector {
 
     /**
      * See: https://matthew-brett.github.io/teaching/rotation_2d.html
-     *      https://en.wikipedia.org/wiki/Rotation_matrix
+     * https://en.wikipedia.org/wiki/Rotation_matrix
+     *
      * @param radians
      * @return (new) vector rotated anticlockwise by 'angle' radians
      */
     public Vector rotated(double radians) {
         return new Vector(
-                Math.cos(radians) * x  -  Math.sin(radians) * y,
-                Math.sin(radians) * x  +  Math.cos(radians) * y
+                Math.cos(radians) * x - Math.sin(radians) * y,
+                Math.sin(radians) * x + Math.cos(radians) * y
         );
     }
 
-    public double dot(Vector other)
-    {
+    public double dot(Vector other) {
         return (this.x * other.getX()) + (this.y * other.getY());
     }
 
-    public double angle(Vector other)
-    {
+    public double angle(Vector other) {
         return Math.atan2(other.getY(), other.getX()) - Math.atan2(this.getY(), this.getX());
     }
 
-    public double angledSigned(Vector other)
-    {
+    public double angledSigned(Vector other) {
         return Math.atan2(other.getY(), other.getX()) - Math.atan2(this.getY(), this.getX());
     }
 
-
-    public double distance(Vector other)
-    {
+    public double distance(Vector other) {
         return Math.sqrt(Math.pow(this.x - other.getX(), 2) + Math.pow(this.y - other.getY(), 2));
     }
 
-    public double getAngle()
-    {
+    public double getAngle() {
         double angle = Math.asin(y);
-        if(x < 0)
-        {
+        if (x < 0) {
             angle = Math.PI - angle;
         }
         return angle;
@@ -142,17 +132,11 @@ public class Vector {
     }
 
     public double getClockDirection() {
-        return Utils.clockAngle(this.x, this. y);
+        return Utils.clockAngle(this.x, this.y);
     }
 
-    public Point toVexing()
-    {
+    public Point toVexing() {
         return new Point(this.x, this.y);
-    }
-
-    public static Vector from(Point point)
-    {
-        return new Vector(point.getX(), point.getY());
     }
 
     @Override
@@ -185,10 +169,6 @@ public class Vector {
 
     public Point toPoint() {
         return new Point(x, y);
-    }
-
-    public Vector(Point point) {
-        this(point.getX(), point.getY());
     }
 
     public static class Random extends Vector {

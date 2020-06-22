@@ -12,8 +12,10 @@ public class AgentsFactory {
     static public List<Intruder> createIntruders(int number) {
         return agentFactory.createIntruders(number);
     }
+
     static public List<Guard> createGuards(int number) {
         return agentFactory.createGuards(number);
     }
+
 }
 

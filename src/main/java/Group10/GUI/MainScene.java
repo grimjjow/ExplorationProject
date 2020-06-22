@@ -3,13 +3,13 @@ package Group10.GUI;
 import Group10.Agents.Container.AgentContainer;
 import Group10.Agents.Container.GuardContainer;
 import Group10.Agents.Container.IntruderContainer;
-import Group10.World.GameMap;
+import Group10.Algebra.Vector;
 import Group10.World.Dynamic.DynamicObject;
 import Group10.World.Dynamic.Pheromone;
 import Group10.World.Dynamic.Sound;
-import Group10.World.Objects.*;
+import Group10.World.GameMap;
 import Group10.World.Objects.Window;
-import Group10.Algebra.Vector;
+import Group10.World.Objects.*;
 import Interop.Percept.Vision.FieldOfView;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
@@ -57,20 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 public class MainScene extends Scene {
-    class Settings{
-        public boolean showText=false;
-        public double agentScale = 5;
-        public void toggleText(){
-            showText = !showText;
-        }
-        public void toggleAgentScale(){
-            if(agentScale==5){
-                agentScale=1;
-            }else{
-                agentScale=5;
-            }
-        }
-    }
+    private final GameMap map;
     private StackPane mainStack;
     private HBox mainHBox = new HBox();
     private StackPane menuBackground = new StackPane();
@@ -78,14 +65,14 @@ public class MainScene extends Scene {
     private VBox menu = new VBox();
     private StackPane menuPane = new StackPane();
     private StackPane canvasPane = new StackPane();
-    private Canvas canvas = new Canvas(200,200);
-    private Canvas canvasAgents = new Canvas(200,200);
+    private Canvas canvas = new Canvas(200, 200);
+    private Canvas canvasAgents = new Canvas(200, 200);
     private double mapScale = 1;
     private Settings settings = new Settings();
     private HBox quickSettings = new HBox();
     private HBox quickSettingsBar = new HBox();
-    private Slider animationSpeedSlider = new Slider(0,120,15);
-    private Slider slider = new Slider(0.0,1,1);
+    private Slider animationSpeedSlider = new Slider(0, 120, 15);
+    private Slider slider = new Slider(0.0, 1, 1);
     private Label sliderInfo = new Label("0.5");
     private StackPane playContainer = new StackPane();
     private StackPane stopContainer = new StackPane();
@@ -100,16 +87,13 @@ public class MainScene extends Scene {
     private HBox historyPane = new HBox();
     private Label historyLabel = new Label("Safe History");
     private CheckBox history = new CheckBox();
-    private final GameMap map;
     private Gui gui;
     private FileChooser fileChooser = new FileChooser();
     private boolean hasHistory = false;
     private CheckBox maxSpeed = new CheckBox();
-
     private boolean ffmpegWindows;
     private boolean ffmpegLinux;
     private final boolean ffmpegInstalled = isFFMPEGInstalled();
-
     //Buttons
     private Label reloadMapButton = new Label("Scale Map");
     private Label descriptionButton = new Label("Toggle Description");
@@ -118,10 +102,10 @@ public class MainScene extends Scene {
     private Label renderButton = new Label(String.format("Render Video%s", (ffmpegInstalled ? "" : " (ffmpeg unavailable)")));
     private Label reloadButton = new Label("Reload Game");
     private Label helpButton = new Label("Help");
-
     ///Agent
     private List<AbstractObject> elements;
-    public MainScene(StackPane mainStack, GameMap map,Gui gui) {
+
+    public MainScene(StackPane mainStack, GameMap map, Gui gui) {
         super(mainStack);
         this.gui = gui;
         this.mainStack = mainStack;
@@ -132,10 +116,11 @@ public class MainScene extends Scene {
         style();
         listener();
     }
-    private void build(){
+
+    private void build() {
         menu.getChildren().addAll(loadMapButton, reloadButton, reloadMapButton, descriptionButton, toggleZoomButton,
-                renderButton,animationSettings, historyPane,maxSpeedSetting,helpButton);
-        historyPane.getChildren().addAll(historyLabel,history);
+                renderButton, animationSettings, historyPane, maxSpeedSetting, helpButton);
+        historyPane.getChildren().addAll(historyLabel, history);
         menuPane.getChildren().add(menu);
         canvasPane.getChildren().add(canvas);
         canvasPane.getChildren().add(canvasAgents);
@@ -147,58 +132,60 @@ public class MainScene extends Scene {
         menuBackground.getChildren().add(menuBackgroundLabel);
         playContainer.getChildren().add(play);
         stopContainer.getChildren().add(stop);
-        quickSettingsBar.getChildren().addAll(playContainer,stopContainer,slider,sliderInfo);
+        quickSettingsBar.getChildren().addAll(playContainer, stopContainer, slider, sliderInfo);
         quickSettings.getChildren().add(quickSettingsBar);
-        maxSpeedSetting.getChildren().addAll(maxSpeedLabel,maxSpeed);
-        animationSettings.getChildren().addAll(animationLabel,animationSpeedSlider,animationSliderInfo);
+        maxSpeedSetting.getChildren().addAll(maxSpeedLabel, maxSpeed);
+        animationSettings.getChildren().addAll(animationLabel, animationSpeedSlider, animationSliderInfo);
     }
-    private void scale(boolean first){
+
+    private void scale(boolean first) {
         double height = this.getHeight();
         double width = this.getWidth();
-        if(first){
+        if (first) {
             height = GuiSettings.defaultHeight;
             width = GuiSettings.defaultWidth;
         }
-        canvasPane.setMaxSize(width-GuiSettings.widthMenu,height);
-        canvasPane.setMinSize(width-GuiSettings.widthMenu,height);
+        canvasPane.setMaxSize(width - GuiSettings.widthMenu, height);
+        canvasPane.setMinSize(width - GuiSettings.widthMenu, height);
         menu.setMaxSize(GuiSettings.widthMenuFocus, height);
         menu.setMinSize(GuiSettings.widthMenuFocus, height);
         menuBackground.setPrefSize(GuiSettings.widthMenu, height);
-        menuPane.setPrefSize(width,height);
+        menuPane.setPrefSize(width, height);
         calcScale();
-        canvas.setWidth(map.getGameSettings().getWidth()*mapScale);
-        canvas.setHeight(map.getGameSettings().getHeight()*mapScale);
-        canvasAgents.setWidth(map.getGameSettings().getWidth()*mapScale);
-        canvasAgents.setHeight(map.getGameSettings().getHeight()*mapScale);
+        canvas.setWidth(map.getGameSettings().getWidth() * mapScale);
+        canvas.setHeight(map.getGameSettings().getHeight() * mapScale);
+        canvasAgents.setWidth(map.getGameSettings().getWidth() * mapScale);
+        canvasAgents.setHeight(map.getGameSettings().getHeight() * mapScale);
         quickSettingsBar.setMaxHeight(GuiSettings.quickSettingsBarHeight);
         quickSettingsBar.setMinHeight(GuiSettings.quickSettingsBarHeight);
         //Buttons
-        reloadMapButton.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        reloadMapButton.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        descriptionButton.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        descriptionButton.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        toggleZoomButton.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        toggleZoomButton.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        loadMapButton.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        loadMapButton.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        renderButton.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        renderButton.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        reloadButton.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        reloadButton.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        helpButton.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        helpButton.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
+        reloadMapButton.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        reloadMapButton.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        descriptionButton.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        descriptionButton.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        toggleZoomButton.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        toggleZoomButton.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        loadMapButton.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        loadMapButton.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        renderButton.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        renderButton.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        reloadButton.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        reloadButton.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        helpButton.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        helpButton.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
         renderButton.setDisable(!ffmpegInstalled);
-        animationSettings.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        animationSettings.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        historyPane.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        historyPane.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        maxSpeedSetting.setMaxSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
-        maxSpeedSetting.setMinSize(GuiSettings.widthMenuFocus,GuiSettings.buttonHeight);
+        animationSettings.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        animationSettings.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        historyPane.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        historyPane.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        maxSpeedSetting.setMaxSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
+        maxSpeedSetting.setMinSize(GuiSettings.widthMenuFocus, GuiSettings.buttonHeight);
         slider.setPrefWidth(800);
         quickSettingsBar.setMaxWidth(800);
 
     }
-    private void style(){
+
+    private void style() {
         File file = new File("./src/main/java/Group9/gui2/style.css");
         this.getStylesheets().add(file.toURI().toString());
         menu.getStyleClass().add("bg-nav");
@@ -237,7 +224,8 @@ public class MainScene extends Scene {
         play.setDisable(true);
         stop.setDisable(true);
     }
-    private void listener(){
+
+    private void listener() {
         ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> rescale();
         this.widthProperty().addListener(stageSizeListener);
         this.heightProperty().addListener(stageSizeListener);
@@ -250,59 +238,58 @@ public class MainScene extends Scene {
             menuPane.setMouseTransparent(true);
         });
         this.setOnKeyPressed(event -> {
-            if(event.getText().equalsIgnoreCase("+")){
-                mapScale = mapScale*1.1;
-                canvas.setWidth(map.getGameSettings().getWidth()*mapScale);
-                canvas.setHeight(map.getGameSettings().getHeight()*mapScale);
-                canvasAgents.setWidth(map.getGameSettings().getWidth()*mapScale);
-                canvasAgents.setHeight(map.getGameSettings().getHeight()*mapScale);
+            if (event.getText().equalsIgnoreCase("+")) {
+                mapScale = mapScale * 1.1;
+                canvas.setWidth(map.getGameSettings().getWidth() * mapScale);
+                canvas.setHeight(map.getGameSettings().getHeight() * mapScale);
+                canvasAgents.setWidth(map.getGameSettings().getWidth() * mapScale);
+                canvasAgents.setHeight(map.getGameSettings().getHeight() * mapScale);
                 draw();
             }
-            if(event.getText().equalsIgnoreCase("-")){
-                mapScale = mapScale*0.9;
-                canvas.setWidth(map.getGameSettings().getWidth()*mapScale);
-                canvas.setHeight(map.getGameSettings().getHeight()*mapScale);
-                canvasAgents.setWidth(map.getGameSettings().getWidth()*mapScale);
-                canvasAgents.setHeight(map.getGameSettings().getHeight()*mapScale);
+            if (event.getText().equalsIgnoreCase("-")) {
+                mapScale = mapScale * 0.9;
+                canvas.setWidth(map.getGameSettings().getWidth() * mapScale);
+                canvas.setHeight(map.getGameSettings().getHeight() * mapScale);
+                canvasAgents.setWidth(map.getGameSettings().getWidth() * mapScale);
+                canvasAgents.setHeight(map.getGameSettings().getHeight() * mapScale);
                 draw();
             }
         });
         reloadMapButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             rescaleMap();
-        } );
+        });
         descriptionButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             settings.toggleText();
             draw();
-        } );
+        });
         toggleZoomButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             settings.toggleAgentScale();
             draw();
-        } );
+        });
         loadMapButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             File file = fileChooser.showOpenDialog(gui.getPrimary());
-            if(file != null){
+            if (file != null) {
                 gui.setMapFile(file);
                 gui.restartGame(history.isSelected());
                 updateButtons();
             }
-        } );
+        });
         renderButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             generateVideo();
         });
         reloadButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             play.setDisable(true);
             stop.setDisable(true);
-            if(playbackAnimationTimer != null)
-            {
+            if (playbackAnimationTimer != null) {
                 playbackAnimationTimer.stop();
                 playbackAnimationTimer = null;
             }
             hasHistory = false;
             gui.restartGame(history.isSelected());
             updateButtons();
-            if(maxSpeed.isSelected()){
+            if (maxSpeed.isSelected()) {
                 gui.getController().updateGameSpeed(-1);
-            }else{
+            } else {
                 gui.getController().updateGameSpeed((int) animationSpeedSlider.getValue());
             }
         });
@@ -313,20 +300,17 @@ public class MainScene extends Scene {
         slider.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
             event.consume();
             int shiftModifier = event.isShiftDown() ? 10 : 0;
-            if(event.getCode() == KeyCode.RIGHT)
-            {
+            if (event.getCode() == KeyCode.RIGHT) {
                 slider.setValue(Math.min((int) (slider.getValue() + 1 + shiftModifier), gui.getController().getHistoryIndex()));
-            }
-            else if(event.getCode() == KeyCode.LEFT)
-            {
+            } else if (event.getCode() == KeyCode.LEFT) {
                 slider.setValue(Math.max((int) (slider.getValue() - (1 + shiftModifier)), 0));
             }
         });
         slider.valueProperty().addListener((observableValue, number, t1) -> {
-           if(hasHistory){
-               int newVal = t1.intValue();
-               gui.getController().getHistoryViewIndex().set(newVal);
-           }
+            if (hasHistory) {
+                int newVal = t1.intValue();
+                gui.getController().getHistoryViewIndex().set(newVal);
+            }
         });
         animationSpeedSlider.valueProperty().addListener((observableValue, number, t1) -> {
             int newVal = t1.intValue();
@@ -334,9 +318,9 @@ public class MainScene extends Scene {
             gui.getController().updateGameSpeed(newVal);
         });
         maxSpeed.selectedProperty().addListener((observableValue, aBoolean, t1) -> {
-            if(t1){
+            if (t1) {
                 gui.getController().updateGameSpeed(-1);
-            }else{
+            } else {
                 gui.getController().updateGameSpeed((int) animationSpeedSlider.getValue());
             }
         });
@@ -352,19 +336,15 @@ public class MainScene extends Scene {
             Optional<GuardContainer> guard = entry.guardContainers.stream()
                     .filter(e -> e.getPosition().distance(scene) < 15).findAny();
 
-            if(intruder.isPresent())
-            {
+            if (intruder.isPresent()) {
                 System.out.println(intruder);
-            }
-            else if(guard.isPresent())
-            {
+            } else if (guard.isPresent()) {
                 System.out.println(guard);
             }
         });
 
         play.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            if(!play.isDisabled())
-            {
+            if (!play.isDisabled()) {
                 stop.setDisable(false);
                 play.setDisable(true);
                 this.playbackAnimationTimer = new AnimationTimer() {
@@ -379,19 +359,15 @@ public class MainScene extends Scene {
 
                         final double frameTime = 1E9 / animationSpeedSlider.getValue();
 
-                        if(delta >= frameTime)
-                        {
-                            if(gui.getController().getHistoryViewIndex().get() < gui.getController().getHistoryIndex())
-                            {
+                        if (delta >= frameTime) {
+                            if (gui.getController().getHistoryViewIndex().get() < gui.getController().getHistoryIndex()) {
                                 this.lastFrame = now;
                                 drawFrames += (delta / frameTime);
 
                                 final int frames = (int) drawFrames;
                                 drawFrames -= frames;
                                 slider.setValue(gui.getController().getHistoryViewIndex().get() + frames);
-                            }
-                            else
-                            {
+                            } else {
                                 stop.setDisable(true);
                                 play.setDisable(false);
                                 this.stop();
@@ -406,8 +382,7 @@ public class MainScene extends Scene {
         });
 
         stop.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            if(play.isDisabled())
-            {
+            if (play.isDisabled()) {
                 play.setDisable(false);
                 stop.setDisable(true);
                 this.playbackAnimationTimer.stop();
@@ -416,37 +391,41 @@ public class MainScene extends Scene {
         });
 
     }
-    public void updateButtons()
-    {
+
+    public void updateButtons() {
         this.play.setDisable(!history.isSelected());
         this.stop.setDisable(!history.isSelected());
         this.slider.setDisable(!history.isSelected());
         this.renderButton.setDisable(!history.isSelected());
     }
-    public void activateHistory(){
-        hasHistory =true;
+
+    public void activateHistory() {
+        hasHistory = true;
         int age = gui.getController().getHistoryIndex();
         slider.setMax(age);
         slider.setValue(age);
         slider.setMin(0);
         play.setDisable(false);
     }
-    public void rescale(){
+
+    public void rescale() {
         scale(false);
         draw();
     }
-    public void rescaleMap(){
+
+    public void rescaleMap() {
         calcScale();
         scale(false);
         draw();
     }
-    private void draw(){
+
+    private void draw() {
         GraphicsContext g = canvas.getGraphicsContext2D();
-        g.clearRect(0,0,canvas.getWidth(),canvas.getHeight());
+        g.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         g.setFill(GuiSettings.backgroundColor);
-        g.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
-        g.setFont(new Font("TimesRoman", 3*mapScale));
-        for(AbstractObject e : elements){
+        g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        g.setFont(new Font("TimesRoman", 3 * mapScale));
+        for (AbstractObject e : elements) {
             GuiObject guiObject = calculateGraphicElement(e);
 
             Vector[] points = e.getArea().getAsPolygon().getPoints();
@@ -460,26 +439,25 @@ public class MainScene extends Scene {
                 yPoints[i] = point.getY();
             }
 
-            if(guiObject.fill){
+            if (guiObject.fill) {
                 g.setFill(guiObject.color);
-                g.fillPolygon(scalePoints(xPoints,mapScale),scalePoints(yPoints,mapScale),4);
-            }else {
+                g.fillPolygon(scalePoints(xPoints, mapScale), scalePoints(yPoints, mapScale), 4);
+            } else {
                 g.setStroke(guiObject.color);
                 g.setLineWidth(2);
-                g.strokePolygon(scalePoints(xPoints,mapScale),scalePoints(yPoints,mapScale),4);
+                g.strokePolygon(scalePoints(xPoints, mapScale), scalePoints(yPoints, mapScale), 4);
             }
 
             Vector center = e.getArea().getCenter();
             g.setTextAlign(TextAlignment.CENTER);
-            if(settings.showText){
+            if (settings.showText) {
                 g.setFill(Color.WHITE);
-                g.fillText(guiObject.text,center.getX()*mapScale,center.getY()*mapScale+1.5*mapScale);
+                g.fillText(guiObject.text, center.getX() * mapScale, center.getY() * mapScale + 1.5 * mapScale);
             }
         }
     }
 
-    private void generateScreenshot(AtomicBoolean rendering, Controller.History history, File file)
-    {
+    private void generateScreenshot(AtomicBoolean rendering, Controller.History history, File file) {
 
         Function<WritableImage, BufferedImage> convert = (input) -> {
             BufferedImage bufferedImage = new BufferedImage((int) Math.rint(input.getWidth()), (int) Math.rint(input.getHeight()),
@@ -509,7 +487,7 @@ public class MainScene extends Scene {
                 canvas.snapshot(null, writableImage);
                 i.decrementAndGet();
             });
-            while (i.get() > 0);
+            while (i.get() > 0) ;
             graphics.drawImage(convert.apply(writableImage), 0, 0, null);
         }
 
@@ -524,7 +502,7 @@ public class MainScene extends Scene {
                 canvasAgents.snapshot(snapshotParameters, writableImage);
                 i.decrementAndGet();
             });
-            while (i.get() > 0);
+            while (i.get() > 0) ;
             graphics.drawImage(convert.apply(writableImage), 0, 0, null);
         }
 
@@ -532,8 +510,7 @@ public class MainScene extends Scene {
         graphics.dispose();
 
         try {
-            if(rendering.get())
-            {
+            if (rendering.get()) {
                 ImageIO.write(screenshot, "png", file);
             }
         } catch (IOException e) {
@@ -541,10 +518,8 @@ public class MainScene extends Scene {
         }
     }
 
-    private void generateVideo()
-    {
-        if(hasHistory)
-        {
+    private void generateVideo() {
+        if (hasHistory) {
             AtomicBoolean hasRenderedFrames = new AtomicBoolean(false);
             VBox root = new VBox();
             Stage stage = new Stage();
@@ -576,7 +551,7 @@ public class MainScene extends Scene {
             fpsSlider.setShowTickLabels(true);
             fpsSlider.setShowTickMarks(true);
             progressBarHolder.getChildren().add(progressBar);
-            root.getChildren().addAll(selectFileLocation, resolution, fpsSlider, renderButton,progressBarHolder, console);
+            root.getChildren().addAll(selectFileLocation, resolution, fpsSlider, renderButton, progressBarHolder, console);
             AtomicReference<File> output = new AtomicReference<>();
             //Styling
             progressBarHolder.setMinWidth(360);
@@ -593,12 +568,10 @@ public class MainScene extends Scene {
                 selectFileLocation.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
                     FileChooser fileChooser = new FileChooser();
                     File file = fileChooser.showSaveDialog(stage);
-                    if(file != null)
-                    {
+                    if (file != null) {
                         String path = file.getAbsolutePath();
                         int index = path.lastIndexOf(".");
-                        if(index == -1 || !path.substring(index).equalsIgnoreCase(".mp4"))
-                        {
+                        if (index == -1 || !path.substring(index).equalsIgnoreCase(".mp4")) {
                             path += ".mp4";
                         }
                         output.set(new File(path));
@@ -623,18 +596,15 @@ public class MainScene extends Scene {
 
                             Process pr = null;
 
-                            if(ffmpegWindows)
-                            {
+                            if (ffmpegWindows) {
                                 pr = new ProcessBuilder(String.format(
                                         "ffmpeg -y -framerate %.2f -start_number 0 -i %s\\%%d.png -vf \"scale=%s:trunc(ow/a/2)*2:flags=lanczos\" -c:v libx264 -preset slow -crf 21 %s",
                                         fpsSlider.getValue(), tempDirectory.getAbsolutePath(), frameWidth, output.get().getAbsolutePath()).split(" "))
                                         .redirectErrorStream(true).start();
-                            }
-                            else if(ffmpegLinux)
-                            {
+                            } else if (ffmpegLinux) {
                                 pr = Runtime.getRuntime().exec(String.format(
                                         "ffmpeg -y -framerate %.2f -start_number 0 -i %s/%%d.png -vf scale=%s:trunc(ow/a/2)*2:flags=lanczos -c:v libx264 -preset slow -crf 21 %s",
-                                            fpsSlider.getValue(), tempDirectory.getAbsolutePath(), frameWidth, output.get().getAbsolutePath()));
+                                        fpsSlider.getValue(), tempDirectory.getAbsolutePath(), frameWidth, output.get().getAbsolutePath()));
                             }
 
                             BufferedReader logInfo = new BufferedReader(new InputStreamReader(pr.getInputStream()));
@@ -656,11 +626,10 @@ public class MainScene extends Scene {
                         }
                     });
 
-                    if(!hasRenderedFrames.get())
-                    {
+                    if (!hasRenderedFrames.get()) {
                         hasRenderedFrames.set(true);
 
-                        if(tempDirectory.exists()) {
+                        if (tempDirectory.exists()) {
                             try {
                                 deleteDirectory(tempDirectory);
                             } catch (IOException e) {
@@ -669,23 +638,22 @@ public class MainScene extends Scene {
                             }
                         }
 
-                        if(!tempDirectory.mkdir())
-                        {
+                        if (!tempDirectory.mkdir()) {
                             return;
                         }
 
 
                         Thread generateFramesThread = new Thread(() -> {
                             renderButton.setDisable(true);
-                            for(int i = 0; i <= gui.getController().getHistoryIndex() && rendering.get(); i++)
-                            {
+                            for (int i = 0; i <= gui.getController().getHistoryIndex() && rendering.get(); i++) {
                                 gui.getController().getHistoryViewIndex().set(i);
                                 Controller.History entry = gui.getController().getCurrentHistory();
 
                                 generateScreenshot(rendering, entry, new File(String.format("%s%s%d.png", tempDirectory.getAbsolutePath(),
                                         File.separator, i)));
                                 progressBar.setProgress((i / (double) gui.getController().getHistoryIndex()) * 0.9D);
-                            };
+                            }
+                            ;
                             renderVideoThread.start();
 
                         });
@@ -713,7 +681,8 @@ public class MainScene extends Scene {
 
         }
     }
-    private void openHelp(){
+
+    private void openHelp() {
         String text = "History - History is storing the state of the game after each turn. History generation can be" +
                 " disabled in the menu. If it is disabled, playback, step-by-step inspection, and video rendering will not" +
                 " be available.\n\n" +
@@ -722,7 +691,6 @@ public class MainScene extends Scene {
                 "Reload Game - This button starts a new instance of the simulation.\n\n" +
                 "Render Video - This renders the simulation to a MP4 file. This feature requires history to be enabled." +
                 " ffmpeg also needs to be installed.";
-
 
 
         VBox root = new VBox();
@@ -742,8 +710,7 @@ public class MainScene extends Scene {
         stage.showAndWait();
     }
 
-    private boolean isFFMPEGInstalled()
-    {
+    private boolean isFFMPEGInstalled() {
         try {
             new ProcessBuilder("cmd.exe /c ffmpeg".split(" ")).start().waitFor();
             this.ffmpegWindows = true;
@@ -751,8 +718,7 @@ public class MainScene extends Scene {
             this.ffmpegWindows = false;
         }
 
-        if(!ffmpegWindows)
-        {
+        if (!ffmpegWindows) {
             try {
                 Runtime.getRuntime().exec("ffmpeg");
                 this.ffmpegLinux = true;
@@ -766,61 +732,56 @@ public class MainScene extends Scene {
 
     private void deleteDirectory(File f) throws IOException {
         if (f.isDirectory()) {
-            for (File c : f.listFiles())
-            {
+            for (File c : f.listFiles()) {
                 deleteDirectory(c);
             }
         }
         f.delete();
     }
 
-    public void drawMovables(List<GuardContainer> guards, List<IntruderContainer> intruders, List<DynamicObject<?>> objects){
+    public void drawMovables(List<GuardContainer> guards, List<IntruderContainer> intruders, List<DynamicObject<?>> objects) {
         GraphicsContext g = canvasAgents.getGraphicsContext2D();
-        g.clearRect(0,0,canvasAgents.getWidth(),canvasAgents.getHeight());
-        for(DynamicObject<?> dynamicObject : objects)
-        {
-            if(dynamicObject instanceof Pheromone)
-            {
+        g.clearRect(0, 0, canvasAgents.getWidth(), canvasAgents.getHeight());
+        for (DynamicObject<?> dynamicObject : objects) {
+            if (dynamicObject instanceof Pheromone) {
                 g.setFill(GuiSettings.pheromoneColor);
                 drawPheromone(g, (Pheromone) dynamicObject);
 
-            }
-            else if(dynamicObject instanceof Sound)
-            {
+            } else if (dynamicObject instanceof Sound) {
                 g.setFill(Color.ORCHID);
                 //TODO draw sounds
-            }
-            else
-            {
+            } else {
                 throw new IllegalArgumentException();
             }
         }
         g.setFill(GuiSettings.guardColor);
-        for(GuardContainer movables : guards){
+        for (GuardContainer movables : guards) {
             drawAgent(g, movables);
         }
 
         g.setFill(GuiSettings.intruderColor);
-        for(IntruderContainer movables : intruders){
+        for (IntruderContainer movables : intruders) {
             drawAgent(g, movables);
         }
     }
-    private void drawPheromone(GraphicsContext g, Pheromone pheromone){
+
+    private void drawPheromone(GraphicsContext g, Pheromone pheromone) {
         Vector z = pheromone.getCenter();
         double radius = mapScale * pheromone.getRadius();
-        double x = z.getX()*mapScale;
-        double y = z.getY()*mapScale;
-        g.fillOval(x-radius/2,y-radius/2,radius,radius);
+        double x = z.getX() * mapScale;
+        double y = z.getY() * mapScale;
+        g.fillOval(x - radius / 2, y - radius / 2, radius, radius);
     }
+
     private void drawAgent(GraphicsContext g, AgentContainer<?> agent) {
 
         Vector center = agent.getPosition().mul(mapScale);
 
         {
-            double radius = mapScale*settings.agentScale * AgentContainer._RADIUS;
+            double radius = mapScale * settings.agentScale * AgentContainer._RADIUS;
             double x = center.getX();
             double y = center.getY();
-            g.fillOval(x-radius/2,y-radius/2,radius,radius);
+            g.fillOval(x - radius / 2, y - radius / 2, radius, radius);
         }
 
         {
@@ -833,63 +794,83 @@ public class MainScene extends Scene {
             final double angle = agent.getDirection().rotated(alpha / 2).getClockDirection() - Math.PI / 2;
             g.setStroke(g.getFill());
 
-            g.strokeArc(center.getX() - r, center.getY() - r, r*2, r*2,
+            g.strokeArc(center.getX() - r, center.getY() - r, r * 2, r * 2,
                     (angle / (2 * Math.PI)) * 360,
                     fov.getViewAngle().getDegrees(), ArcType.ROUND);
 
         }
 
     }
-    private void calcScale(){
+
+    private void calcScale() {
         double height = canvasPane.getHeight();
         double width = canvasPane.getWidth();
-        double scale = height/map.getGameSettings().getHeight();
-        if(scale*map.getGameSettings().getWidth()< width){
-            this.mapScale = scale*0.9;
-        }else{
-            this.mapScale = width/map.getGameSettings().getWidth()*0.9;
+        double scale = height / map.getGameSettings().getHeight();
+        if (scale * map.getGameSettings().getWidth() < width) {
+            this.mapScale = scale * 0.9;
+        } else {
+            this.mapScale = width / map.getGameSettings().getWidth() * 0.9;
         }
     }
 
-    protected GuiObject calculateGraphicElement(AbstractObject element){
-        if(element instanceof Wall){
-            return new GuiObject(GuiSettings.wallColor,"",true);
+    protected GuiObject calculateGraphicElement(AbstractObject element) {
+        if (element instanceof Wall) {
+            return new GuiObject(GuiSettings.wallColor, "", true);
         }
-        if(element instanceof TargetArea){
-            return new GuiObject(GuiSettings.targetAreaColor,"T",false);
+        if (element instanceof TargetArea) {
+            return new GuiObject(GuiSettings.targetAreaColor, "T", false);
         }
-        if(element instanceof Spawn.Intruder){
-            return new GuiObject(GuiSettings.spawnIntrudersColor,"SI",false);
+        if (element instanceof Spawn.Intruder) {
+            return new GuiObject(GuiSettings.spawnIntrudersColor, "SI", false);
         }
-        if(element instanceof Spawn.Guard){
-            return new GuiObject(GuiSettings.spawnGuardsColor,"SG",false);
+        if (element instanceof Spawn.Guard) {
+            return new GuiObject(GuiSettings.spawnGuardsColor, "SG", false);
         }
-        if(element instanceof ShadedArea){
-            return new GuiObject(GuiSettings.shadedColor,"",true);
+        if (element instanceof ShadedArea) {
+            return new GuiObject(GuiSettings.shadedColor, "", true);
         }
-        if(element instanceof Door){
-            return new GuiObject(GuiSettings.doorColor,"D",true);
+        if (element instanceof Door) {
+            return new GuiObject(GuiSettings.doorColor, "D", true);
         }
-        if(element instanceof Window){
-            return new GuiObject(GuiSettings.windowColor,"",true);
+        if (element instanceof Window) {
+            return new GuiObject(GuiSettings.windowColor, "", true);
         }
-        if(element instanceof SentryTower){
-            return new GuiObject(GuiSettings.sentryColor,"",true);
+        if (element instanceof SentryTower) {
+            return new GuiObject(GuiSettings.sentryColor, "", true);
         }
-        if(element instanceof TeleportArea){
-            return new GuiObject(GuiSettings.teleportColor,"Tp",true);
+        if (element instanceof TeleportArea) {
+            return new GuiObject(GuiSettings.teleportColor, "Tp", true);
         }
         System.out.println("Unknown");
-        return new GuiObject(Color.RED,"",false);
+        return new GuiObject(Color.RED, "", false);
     }
-    protected double[]  scalePoints(double[] points,double scale){
+
+    protected double[] scalePoints(double[] points, double scale) {
         double[] newPoints = new double[points.length];
-        for(int i=0;i<points.length;i++){
-            newPoints[i] = points[i]*scale;
+        for (int i = 0; i < points.length; i++) {
+            newPoints[i] = points[i] * scale;
         }
         return newPoints;
     }
+
     public boolean isHasHistory() {
         return hasHistory;
+    }
+
+    class Settings {
+        public boolean showText = false;
+        public double agentScale = 5;
+
+        public void toggleText() {
+            showText = !showText;
+        }
+
+        public void toggleAgentScale() {
+            if (agentScale == 5) {
+                agentScale = 1;
+            } else {
+                agentScale = 5;
+            }
+        }
     }
 }

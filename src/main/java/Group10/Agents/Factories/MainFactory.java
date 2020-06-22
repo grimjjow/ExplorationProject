@@ -12,25 +12,18 @@ public class MainFactory {
 
     public List<Intruder> createIntruders(int number) {
         List<Intruder> intruders = new ArrayList<>();
-        for(int i = 0; i < number; i++)
-        {
-            //intruders.add(new RandomIntruder());
+        for (int i = 0; i < number; i++) {
             intruders.add(new IntruderAgent());
-            //intruders.add(new GridAgent());
-
         }
         return intruders;
     }
 
     public List<Guard> createGuards(int number) {
         List<Guard> guards = new ArrayList<>();
-        for(int i = 0; i < number; i++)
-        {
-            //guards.add(new BoltzmannAgent());
+        for (int i = 0; i < number; i++) {
             guards.add(new CampingAgent());
-            //guards.add(new Guard2());
-
         }
         return guards;
     }
+
 }

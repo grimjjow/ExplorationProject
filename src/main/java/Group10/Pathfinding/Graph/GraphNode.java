@@ -1,8 +1,8 @@
 package Group10.Pathfinding.Graph;
 
-import java.util.ArrayList;
-
 import Interop.Geometry.Point;
+
+import java.util.ArrayList;
 
 //this is an example of node class that we need for rrt
 
@@ -31,10 +31,9 @@ public class GraphNode {
     public void addEdge(GraphNode endNode, int degrees) {
         GraphEdge edge = new GraphEdge(this, endNode, degrees);
         this.edges.add(edge);
-        if(degrees >= 180) {
+        if (degrees >= 180) {
             degrees = degrees - 180;
-        }
-        else {
+        } else {
             degrees = degrees + 180;
         }
         GraphEdge backwards = new GraphEdge(endNode, this, degrees);
@@ -68,6 +67,7 @@ public class GraphNode {
     public NodeType getType() {
         return type;
     }
+
     public void setType(NodeType type) {
         this.type = type;
     }

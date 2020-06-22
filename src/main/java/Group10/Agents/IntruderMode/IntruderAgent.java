@@ -2,8 +2,8 @@ package Group10.Agents.IntruderMode;
 
 
 import Group10.Agents.AgentActions.ActionsType;
-import Group10.Pathfinding.Graph.GraphEdge;
 import Group10.Pathfinding.Graph.Graph;
+import Group10.Pathfinding.Graph.GraphEdge;
 import Group10.Pathfinding.Graph.GraphNode;
 import Group10.Pathfinding.Graph.NodeType;
 import Group10.Pathfinding.IDDFS;
@@ -38,31 +38,36 @@ public class IntruderAgent implements Intruder {
     public IntruderAgent() {
     }
 
+    /**
+     * Choose and generate an action for the intruder.
+     *
+     * @param percepts The precepts represent the world as perceived by that agent.
+     *
+     * @return The action that the agent want to execute.
+     */
     @Override
     public IntruderAction getAction(IntruderPercepts percepts) {
 
-        if(this.map == null || percepts.getAreaPercepts().isJustTeleported()) {
+        if (this.map == null || percepts.getAreaPercepts().isJustTeleported()) {
             viewAngle = percepts.getVision().getFieldOfView().getViewAngle().getDegrees();
-            radius = Math.sqrt(Math.pow(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue(),2)/2)/2;
+            radius = Math.sqrt(Math.pow(percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue(), 2) / 2) / 2;
             angle = Angle.fromDegrees(0);
             this.map = new Graph();
-            currentPosition = new GraphNode(NodeType.EMPTY, new Point(0, 0), radius, new Integer[] {0,0});
+            currentPosition = new GraphNode(NodeType.EMPTY, new Point(0, 0), radius, new Integer[]{0, 0});
             map.addVertice(currentPosition);
             lastActionsType = null;
-            if(percepts.wasLastActionExecuted()) {
+            if (percepts.wasLastActionExecuted()) {
                 actionsTypeList.offer(ActionsType.MOVE);
-            }
-            else {
+            } else {
                 actionsTypeList.offer(ActionsType.RIGHT);
             }
         }
-        if(distanceCounter.size() != 0) {
+        if (distanceCounter.size() != 0) {
             return new Move(new Distance(distanceCounter.poll()));
         }
-        if(percepts.wasLastActionExecuted()) {
+        if (percepts.wasLastActionExecuted()) {
             updateState();
-        }
-        else {
+        } else {
             actionsTypeList = new LinkedList<ActionsType>();
             actionsTypeList.offer(ActionsType.LEFT);
             actionsTypeList.offer(ActionsType.MOVE);
@@ -71,36 +76,40 @@ public class IntruderAgent implements Intruder {
 
         evaluateVision(percepts.getVision());
 
-        if(actionsTypeList.size() == 0) {
+        if (actionsTypeList.size() == 0) {
             getNextAction(percepts);
-            if(actionsTypeList.size() == 0) {
+            if (actionsTypeList.size() == 0) {
                 actionsTypeList.offer(ActionsType.MOVE);
             }
             return returnAction(actionsTypeList.poll(), percepts);
-        }
-        else {
+        } else {
             return returnAction(actionsTypeList.poll(), percepts);
         }
     }
 
+    /**
+     * Return an action object given an actionsType (left, right or move) and the perceptions.
+     *
+     * @param actionsType An type of action. It can be either left, right or move.
+     * @param percepts The precepts represent the world as perceived by that agent.
+     *
+     * @return An action to be executed by the agent.
+     */
     private IntruderAction returnAction(ActionsType actionsType, IntruderPercepts percepts) {
-        switch(actionsType) {
+        switch (actionsType) {
             case LEFT:
                 return turnLeft();
             case RIGHT:
                 return turnRight();
             case MOVE:
                 double maxMoveDistance = percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue();
-                if(percepts.getAreaPercepts().isInSentryTower()) {
+                if (percepts.getAreaPercepts().isInSentryTower()) {
                     maxMoveDistance = maxMoveDistance * percepts.getScenarioIntruderPercepts().getScenarioPercepts().getSlowDownModifiers().getInSentryTower();
-                }
-                else if(percepts.getAreaPercepts().isInDoor()) {
+                } else if (percepts.getAreaPercepts().isInDoor()) {
                     maxMoveDistance = maxMoveDistance * percepts.getScenarioIntruderPercepts().getScenarioPercepts().getSlowDownModifiers().getInDoor();
-                }
-                else if(percepts.getAreaPercepts().isInWindow()) {
+                } else if (percepts.getAreaPercepts().isInWindow()) {
                     maxMoveDistance = maxMoveDistance * percepts.getScenarioIntruderPercepts().getScenarioPercepts().getSlowDownModifiers().getInWindow();
-                }
-                else {
+                } else {
                     maxMoveDistance = percepts.getScenarioIntruderPercepts().getMaxMoveDistanceIntruder().getValue();
                 }
                 return forward(maxMoveDistance);
@@ -109,16 +118,21 @@ public class IntruderAgent implements Intruder {
         }
     }
 
+    /**
+     * Update the variables based on what the agent see.
+     *
+     * @param vision The vision perception of the agent.
+     */
     private void evaluateVision(VisionPrecepts vision) {
         Set<ObjectPercept> objectPercepts = vision.getObjects().getAll();
-        for(ObjectPercept percept : objectPercepts) {
+        for (ObjectPercept percept : objectPercepts) {
             double addX = currentPosition.getCenter().getX();
             double addY = currentPosition.getCenter().getY();
             Point rotatePoint = truePoint(percept.getPoint());
             Point truePoint = new Point(rotatePoint.getX() + addX, rotatePoint.getY() + addY);
             int l = 1;
             GraphNode gNode = getRelativeNode(truePoint);
-            switch(percept.getType()) {
+            switch (percept.getType()) {
                 case Door:
                     gNode.setType(NodeType.DOOR);
                     break;
@@ -137,7 +151,7 @@ public class IntruderAgent implements Intruder {
                     break;
                 case Teleport:
                     gNode.setType(NodeType.TELEPORT);
-                    if(foundTeleport == 0) foundTeleport = 1;
+                    if (foundTeleport == 0) foundTeleport = 1;
                     break;
                 case Wall:
                     gNode.setType(NodeType.WALL);
@@ -153,11 +167,10 @@ public class IntruderAgent implements Intruder {
                 case Intruder:
                     Random rand = new Random();
                     int r = rand.nextInt(2);
-                    if(r == 0) {
+                    if (r == 0) {
                         actionsTypeList.add(ActionsType.LEFT);
                         actionsTypeList.add(ActionsType.MOVE);
-                    }
-                    else {
+                    } else {
                         actionsTypeList.add(ActionsType.RIGHT);
                         actionsTypeList.add(ActionsType.MOVE);
                     }
@@ -168,8 +181,10 @@ public class IntruderAgent implements Intruder {
         }
     }
 
+    /**
+     * Generate a list of action type to find an escape.
+     */
     private void findEscape() {
-
         actionsTypeList = new LinkedList<ActionsType>();
 
         for (int i = 0; i < 10; i++) {
@@ -188,21 +203,26 @@ public class IntruderAgent implements Intruder {
         }
     }
 
+    /**
+     * Find out what the next action should be based on the percepts.
+     *
+     * @param percepts The precepts represent the world as perceived by that agent.
+     */
     private void getNextAction(IntruderPercepts percepts) {
-        if(foundTeleport == 1) {
+        if (foundTeleport == 1) {
             foundTeleport = 2;
             map.unMark();
             Stack<GraphNode> path = IDDFS.findDFSPath(currentPosition, NodeType.TELEPORT);
             generateActionList(path);
         }
-        if(escape) {
+        if (escape) {
             escape = false;
             findEscape();
         }
-        if(foundTarget) {
+        if (foundTarget) {
             map.unMark();
             Stack<GraphNode> target = IDDFS.findDFSPath(currentPosition, NodeType.TARGET_AREA);
-            if(target != null) {
+            if (target != null) {
                 generateActionList(target);
             }
         }
@@ -210,77 +230,79 @@ public class IntruderAgent implements Intruder {
         List<ActionsType> actionsTypeSpace = new ArrayList<ActionsType>();
         actionsTypeSpace.add(ActionsType.LEFT);
         actionsTypeSpace.add(ActionsType.RIGHT);
-        Integer[] nextPosition = Graph.getCoordinate((int)angle.getDegrees(), currentPosition.getCoordinate());
+        Integer[] nextPosition = Graph.getCoordinate((int) angle.getDegrees(), currentPosition.getCoordinate());
         GraphNode nextVertice = map.getVertice(nextPosition);
-        if(IDDFS.checkDFSVertice(nextVertice)) {
+        if (IDDFS.checkDFSVertice(nextVertice)) {
             actionsTypeSpace.add(ActionsType.MOVE);
         }
 
         double actionValue = 0;
         ActionsType selectedActionsType = null;
-        for(ActionsType actionsType : actionsTypeSpace) {
+        for (ActionsType actionsType : actionsTypeSpace) {
             Angle angle = Angle.fromRadians(this.angle.getRadians());
             GraphNode currentPosition = this.currentPosition;
-            switch(actionsType) {
+            switch (actionsType) {
                 case LEFT:
-                    angle = Angle.fromDegrees(getTrueAngle(this.angle.getDegrees() +45));
+                    angle = Angle.fromDegrees(getTrueAngle(this.angle.getDegrees() + 45));
                     break;
                 case RIGHT:
-                    angle = Angle.fromDegrees(getTrueAngle(this.angle.getDegrees() -45));
+                    angle = Angle.fromDegrees(getTrueAngle(this.angle.getDegrees() - 45));
                     break;
                 case MOVE:
-                    Integer[] newPosition = Graph.getCoordinate((int)angle.getDegrees(), currentPosition.getCoordinate());
+                    Integer[] newPosition = Graph.getCoordinate((int) angle.getDegrees(), currentPosition.getCoordinate());
                     currentPosition = map.getVertice(newPosition);
                     break;
             }
             double value = simulateAction(percepts.getVision(), angle, currentPosition);
-            if(value > actionValue) {
+            if (value > actionValue) {
                 actionValue = value;
                 selectedActionsType = actionsType;
             }
         }
 
-        if(selectedActionsType == null) {
+        if (selectedActionsType == null) {
             map.unMark();
             Stack<GraphNode> path = IDDFS.findNonCompleteVertice(currentPosition);
-            if(path == null) {
+            if (path == null) {
                 map.unMark();
                 path = IDDFS.findDFSPath(currentPosition, NodeType.TELEPORT);
             }
             generateActionList(path);
-        }
-        else {
+        } else {
             actionsTypeList.offer(selectedActionsType);
         }
     }
 
+    /**
+     * Generate a action list based on a given path.
+     *
+     * @param path A stack of nodes composing a path.
+     */
     private void generateActionList(Stack<GraphNode> path) {
-        if(path == null) {
+        if (path == null) {
             actionsTypeList.add(ActionsType.MOVE);
             return;
         }
         GraphNode start = path.pop();
-        int currentDegrees = (int)angle.getDegrees();
-        while(path.size() != 0) {
+        int currentDegrees = (int) angle.getDegrees();
+        while (path.size() != 0) {
             GraphNode end = path.pop();
-            for(GraphEdge e : start.getEdges()) {
-                if(e.getEndNode() == end) {
+            for (GraphEdge e : start.getEdges()) {
+                if (e.getEndNode() == end) {
                     int degrees = e.getAngle();
                     double add;
-                    if(currentDegrees > 180) {
+                    if (currentDegrees > 180) {
                         add = 360 - currentDegrees;
-                    }
-                    else {
+                    } else {
                         add = -currentDegrees;
                     }
-                    while(Math.abs(currentDegrees - degrees)>2) {
-                        if(getTrueAngle(degrees + add) < 180) {
+                    while (Math.abs(currentDegrees - degrees) > 2) {
+                        if (getTrueAngle(degrees + add) < 180) {
                             actionsTypeList.add(ActionsType.LEFT);
-                            currentDegrees = (int)getTrueAngle(currentDegrees +45);
-                        }
-                        else {
+                            currentDegrees = (int) getTrueAngle(currentDegrees + 45);
+                        } else {
                             actionsTypeList.add(ActionsType.RIGHT);
-                            currentDegrees = (int)getTrueAngle(currentDegrees -45);
+                            currentDegrees = (int) getTrueAngle(currentDegrees - 45);
                         }
                     }
                     break;
@@ -291,65 +313,96 @@ public class IntruderAgent implements Intruder {
         }
     }
 
-
+    /**
+     *
+     * @param percepts
+     * @param angle
+     * @param currentPosition
+     *
+     * @return
+     */
     public double simulateAction(VisionPrecepts percepts, Angle angle, GraphNode currentPosition) {
         int vertexMultiply = 1;
-        double result = vertexMultiply*numberNewVerticesInSight(angle,currentPosition, percepts);
+        double result = vertexMultiply * numberNewVerticesInSight(angle, currentPosition, percepts);
         return result;
     }
 
+    /**
+     *
+     * @param angle
+     * @param currentPosition
+     * @param percepts
+     *
+     * @return
+     */
     private int numberNewVerticesInSight(Angle angle, GraphNode currentPosition, VisionPrecepts percepts) {
         int count = 0;
         int samples = 10;
         double viewRange = percepts.getFieldOfView().getRange().getValue();
         double step = viewRange / samples;
-        if(step > radius) {
-            samples = (int)(viewRange / radius);
+        if (step > radius) {
+            samples = (int) (viewRange / radius);
             step = radius;
         }
-        double currentAngle = (viewAngle+4)/2;
-        while(currentAngle >= -viewAngle/2) {
+        double currentAngle = (viewAngle + 4) / 2;
+        while (currentAngle >= -viewAngle / 2) {
             double finalAngle = 0;
-            if(angle.getDegrees() > 180) finalAngle = getTrueAngle(currentAngle + (angle.getDegrees()-360) + 90);
+            if (angle.getDegrees() > 180) finalAngle = getTrueAngle(currentAngle + (angle.getDegrees() - 360) + 90);
             else finalAngle = getTrueAngle(currentAngle + angle.getDegrees() + 90);
 
             Angle pAngle = Angle.fromDegrees(finalAngle);
-            for(int i=1; i < samples+2; i++) {
-                double x=i*step*Math.cos(pAngle.getRadians());
-                double y=i*step*Math.sin(pAngle.getRadians());
+            for (int i = 1; i < samples + 2; i++) {
+                double x = i * step * Math.cos(pAngle.getRadians());
+                double y = i * step * Math.sin(pAngle.getRadians());
                 x += currentPosition.getCenter().getX();
                 y += currentPosition.getCenter().getY();
-                Integer[] position = getRelativeVerticeCoordinate(new Point(x,y));
-                if(!map.checkNode(position)) {
-                    count ++;
+                Integer[] position = getRelativeVerticeCoordinate(new Point(x, y));
+                if (!map.checkNode(position)) {
+                    count++;
                 }
             }
-            currentAngle = currentAngle -1;
+            currentAngle = currentAngle - 1;
         }
         return count;
     }
 
+    /**
+     * Generate a Rotate object of -45 degrees
+     *
+     * @return The generated Rotate object.
+     */
     private Rotate turnLeft() {
         lastActionsType = ActionsType.LEFT;
         return new Rotate(Angle.fromDegrees(-45));
     }
 
+    /**
+     * Generate a Rotate object of 45 degrees
+     *
+     * @return The generated Rotate object.
+     */
     private Rotate turnRight() {
         lastActionsType = ActionsType.RIGHT;
         return new Rotate(Angle.fromDegrees(+45));
     }
 
+    /**
+     * Generate a Move object
+     *
+     * @param maxDistance The maximal distance.
+     *
+     * @return The generated Move object.
+     */
     private Move forward(double maxDistance) {
         this.lastActionsType = ActionsType.MOVE;
         double distance;
 
-        if(this.angle.getDegrees() % 90 == 0) {
-            distance = 2*radius;
+        if (this.angle.getDegrees() % 90 == 0) {
+            distance = 2 * radius;
+        } else {
+            distance = Math.sqrt(2 * Math.pow(2 * radius, 2));
         }
-        else {
-            distance = Math.sqrt(2*Math.pow(2*radius, 2));
-        }
-        while(distance > maxDistance) {
+        while (distance > maxDistance) {
             distanceCounter.offer(maxDistance);
             distance = distance - maxDistance;
         }
@@ -357,64 +410,72 @@ public class IntruderAgent implements Intruder {
     }
 
     private void updateState() {
-        if(lastActionsType != null) {
-            switch(lastActionsType) {
+        if (lastActionsType != null) {
+            switch (lastActionsType) {
                 case LEFT:
-                    this.angle = Angle.fromDegrees(getTrueAngle(this.angle.getDegrees() +45));
+                    this.angle = Angle.fromDegrees(getTrueAngle(this.angle.getDegrees() + 45));
                     break;
                 case RIGHT:
-                    this.angle = Angle.fromDegrees(getTrueAngle(this.angle.getDegrees() -45));
+                    this.angle = Angle.fromDegrees(getTrueAngle(this.angle.getDegrees() - 45));
                     break;
                 case MOVE:
-                    Integer[] newPosition = Graph.getCoordinate((int)angle.getDegrees(), currentPosition.getCoordinate());
+                    Integer[] newPosition = Graph.getCoordinate((int) angle.getDegrees(), currentPosition.getCoordinate());
                     currentPosition = map.getVertice(newPosition);
                     break;
             }
         }
     }
 
+    /**
+     *
+     * @param percepts The vision perception of the agent.
+     */
     private void createNewVerticesInSight(VisionPrecepts percepts) {
         int samples = 10;
         double viewRange = percepts.getFieldOfView().getRange().getValue();
         double step = viewRange / samples;
-        if(step > radius) {
-            samples = (int)(viewRange / radius);
+        if (step > radius) {
+            samples = (int) (viewRange / radius);
             step = radius;
         }
-        double currentAngle = (viewAngle+4)/2;
-        while(currentAngle >= -(viewAngle+4)/2) {
+        double currentAngle = (viewAngle + 4) / 2;
+        while (currentAngle >= -(viewAngle + 4) / 2) {
             double finalAngle = 0;
-            if(angle.getDegrees() > 180) finalAngle = getTrueAngle(currentAngle + (angle.getDegrees()-360) + 90);
+            if (angle.getDegrees() > 180) finalAngle = getTrueAngle(currentAngle + (angle.getDegrees() - 360) + 90);
             else finalAngle = getTrueAngle(currentAngle + angle.getDegrees() + 90);
 
             Angle pAngle = Angle.fromDegrees(finalAngle);
-            for(int i=1; i < samples+2; i++) {
-                double x=i*step*Math.cos(pAngle.getRadians());
-                double y=i*step*Math.sin(pAngle.getRadians());
+            for (int i = 1; i < samples + 2; i++) {
+                double x = i * step * Math.cos(pAngle.getRadians());
+                double y = i * step * Math.sin(pAngle.getRadians());
                 x += currentPosition.getCenter().getX();
                 y += currentPosition.getCenter().getY();
-                Integer[] position = getRelativeVerticeCoordinate(new Point(x,y));
-                if(!map.checkNode(position)) {
-                    map.addVertice(new GraphNode(NodeType.EMPTY, new Point(2*radius*position[0], 2*radius*position[1]), radius, position));
+                Integer[] position = getRelativeVerticeCoordinate(new Point(x, y));
+                if (!map.checkNode(position)) {
+                    map.addVertice(new GraphNode(NodeType.EMPTY, new Point(2 * radius * position[0], 2 * radius * position[1]), radius, position));
                 }
             }
-            if(radius < 0.05) {
-                currentAngle = currentAngle -.1;
-            }
-            else {
-                currentAngle = currentAngle -1;
+            if (radius < 0.05) {
+                currentAngle = currentAngle - .1;
+            } else {
+                currentAngle = currentAngle - 1;
             }
         }
     }
 
+    /**
+     * Make the angle between 0 and 360 degree.
+     *
+     * @param angle The angle to normalize.
+     *
+     * @return The normalized angle.
+     */
     private double getTrueAngle(double angle) {
-        if(angle < 0) {
+        if (angle < 0) {
             angle = 360 + angle;
-        }
-        else if(angle > 360) {
+        } else if (angle > 360) {
             angle = 0 + (angle - 360);
-        }
-        else if(angle == 360) {
+        } else if (angle == 360) {
             angle = 0;
         }
         return angle;
@@ -435,43 +496,39 @@ public class IntruderAgent implements Intruder {
         double y = point.getY();
         int xVertice = 0;
         int yVertice = 0;
-        if(!(Math.abs(x)<=radius)) {
-            if(x<0) {
+        if (!(Math.abs(x) <= radius)) {
+            if (x < 0) {
                 xVertice--;
                 x = x + radius;
-            }
-            else {
+            } else {
                 xVertice++;
                 x = x - radius;
             }
-            while(Math.abs(x) >= 2*radius) {
-                if(x<0) {
+            while (Math.abs(x) >= 2 * radius) {
+                if (x < 0) {
                     xVertice--;
-                    x = x + 2*radius;
-                }
-                else {
+                    x = x + 2 * radius;
+                } else {
                     xVertice++;
-                    x = x - 2*radius;
+                    x = x - 2 * radius;
                 }
             }
         }
-        if(!(Math.abs(y)<=radius)) {
-            if(y<0) {
+        if (!(Math.abs(y) <= radius)) {
+            if (y < 0) {
                 yVertice--;
                 y = y + radius;
-            }
-            else {
+            } else {
                 yVertice++;
                 y = y - radius;
             }
-            while(Math.abs(y) >= 2*radius) {
-                if(y<0) {
+            while (Math.abs(y) >= 2 * radius) {
+                if (y < 0) {
                     yVertice--;
-                    y = y + 2*radius;
-                }
-                else {
+                    y = y + 2 * radius;
+                } else {
                     yVertice++;
-                    y = y - 2*radius;
+                    y = y - 2 * radius;
                 }
             }
         }
@@ -483,8 +540,8 @@ public class IntruderAgent implements Intruder {
         double x = -point.getX();
         double y = point.getY();
 
-        double x_ = x*Math.cos(angle.getRadians()) - y * Math.sin(angle.getRadians());
-        double y_ = y*Math.cos(angle.getRadians()) + x * Math.sin(angle.getRadians());
+        double x_ = x * Math.cos(angle.getRadians()) - y * Math.sin(angle.getRadians());
+        double y_ = y * Math.cos(angle.getRadians()) + x * Math.sin(angle.getRadians());
         return new Point(x_, y_);
     }
 
@@ -492,23 +549,23 @@ public class IntruderAgent implements Intruder {
         double x = currentPosition.getCenter().getX();
         double y = currentPosition.getCenter().getY();
 
-        switch(degrees) {
+        switch (degrees) {
             case 0:
-                return new Point(x, y+2*radius);
+                return new Point(x, y + 2 * radius);
             case 45:
-                return new Point(x+2*radius, y+2*radius);
+                return new Point(x + 2 * radius, y + 2 * radius);
             case 90:
-                return new Point(x+2*radius, y);
+                return new Point(x + 2 * radius, y);
             case 135:
-                return new Point(x+2*radius, y-2*radius);
+                return new Point(x + 2 * radius, y - 2 * radius);
             case 180:
-                return new Point(x, y-2*radius);
+                return new Point(x, y - 2 * radius);
             case 225:
-                return new Point(x-2*radius, y-2*radius);
+                return new Point(x - 2 * radius, y - 2 * radius);
             case 270:
-                return new Point(x-2*radius, y);
+                return new Point(x - 2 * radius, y);
             case 315:
-                return new Point(x-2*radius, y+2*radius);
+                return new Point(x - 2 * radius, y + 2 * radius);
             default:
                 return null;
         }

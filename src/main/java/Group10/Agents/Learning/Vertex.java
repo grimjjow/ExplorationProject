@@ -4,13 +4,11 @@ import Group10.Pathfinding.AbstractNode;
 import Group10.Pathfinding.Network;
 import Interop.Geometry.Point;
 
-import java.util.ArrayList;
-
 public class Vertex extends AbstractNode {
 
+    Point point;
     private double cost, heuristic, function;
     private boolean isTarget;
-    Point point;
 
     Vertex(Point point) {
         this.point = point;
@@ -35,16 +33,15 @@ public class Vertex extends AbstractNode {
 
     // Prints the vertex.
     @Override
-    public String toString()
-    {
+    public String toString() {
         StringBuilder builder = new StringBuilder();
 
 
-            builder.append("x: " + this.getPoint().getX() + ": ");
+        builder.append("x: " + this.getPoint().getX() + ": ");
 
-            builder.append("y: " + this.getPoint().getX() + " ");
+        builder.append("y: " + this.getPoint().getX() + " ");
 
-            builder.append("\n");
+        builder.append("\n");
 
 
         return (builder.toString());

@@ -1,7 +1,7 @@
 package Group10.Agents.Container;
 
-import Group10.Engine.Game;
 import Group10.Algebra.Vector;
+import Group10.Engine.Game;
 import Interop.Agent.Intruder;
 import Interop.Percept.Vision.FieldOfView;
 
@@ -14,23 +14,19 @@ public class IntruderContainer extends AgentContainer<Intruder> {
         super(agent, position, direction, normalFOV);
     }
 
-    public int getZoneCounter()
-    {
+    public int getZoneCounter() {
         return this.zoneCounter;
     }
 
-    public boolean isCaptured()
-    {
-        return this.captured;
-    }
-
-    public void setZoneCounter(int zoneCounter)
-    {
+    public void setZoneCounter(int zoneCounter) {
         this.zoneCounter = zoneCounter;
     }
 
-    public void setCaptured(boolean captured)
-    {
+    public boolean isCaptured() {
+        return this.captured;
+    }
+
+    public void setCaptured(boolean captured) {
         this.captured = captured;
     }
 
@@ -40,10 +36,10 @@ public class IntruderContainer extends AgentContainer<Intruder> {
                 getFOV(game.getGameMap().getPropertyAreas(this)));
         cloned.setZoneCounter(getZoneCounter());
         cloned.setCaptured(isCaptured());
-        for(Cooldown cooldown : Cooldown.values())
-        {
+        for (Cooldown cooldown : Cooldown.values()) {
             cloned.addCooldown(cooldown, this.getCooldown(cooldown));
         }
         return cloned;
     }
+
 }

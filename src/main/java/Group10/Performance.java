@@ -22,7 +22,7 @@ public class Performance {
         intruderWin = new boolean[iteration];
         turns = new int[iteration];
 
-        for(int i = 0; i < iteration; i++) {
+        for (int i = 0; i < iteration; i++) {
             System.out.println("Iteration #" + i);
             game = new Game(Reader.parseFile(mapFile.getAbsolutePath()), new MainFactory(), false, 15, new Callback<Game>() {
                 @Override
@@ -31,13 +31,14 @@ public class Performance {
             });
             Thread thread = new Thread(game);
             thread.start();
-            while (thread.isAlive()) {}
+            while (thread.isAlive()) {
+            }
             System.out.println("Finish with winner: " + game.getWinner() + " in " + game.getNumberOfTurn() + " turns.");
 
             turns[i] = game.getNumberOfTurn();
             intruderWin[i] = game.getWinner() == Game.Team.INTRUDERS;
 
-            if(intruderWin[i]) {
+            if (intruderWin[i]) {
                 numberOfIntruderWins++;
                 totalIntruderTurn += turns[i];
             } else {
@@ -48,8 +49,10 @@ public class Performance {
 
         System.out.println("\nAfter " + iteration + " iterations:");
         System.out.println("\tIntruders have wins " + numberOfIntruderWins + " games");
-        if(numberOfIntruderWins > 0) System.out.println("\twith an average of " + totalIntruderTurn/numberOfIntruderWins + " turns.");
+        if (numberOfIntruderWins > 0)
+            System.out.println("\twith an average of " + totalIntruderTurn / numberOfIntruderWins + " turns.");
         System.out.println("\tGuards have wins " + numberOfGuardWins + " games");
-        if(numberOfGuardWins > 0) System.out.println("\twith an average of " + totalGuardTurn/numberOfGuardWins + " turns.");
+        if (numberOfGuardWins > 0)
+            System.out.println("\twith an average of " + totalGuardTurn / numberOfGuardWins + " turns.");
     }
 }

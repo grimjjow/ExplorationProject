@@ -7,7 +7,7 @@ public class Line {
     private Point ls;
     private Point le;
 
-    public Line(Point ls, Point le){
+    public Line(Point ls, Point le) {
         this.ls = ls;
         this.le = le;
     }
@@ -48,15 +48,16 @@ public class Line {
         if (Math.abs(cross) > Bias.bias)
             return false;
 
-        if ( (Math.min(ls.getY(), le.getY()) > c.getY()) || (Math.max(ls.getY(), le.getY()) < c.getY()) ) {
+        if ((Math.min(ls.getY(), le.getY()) > c.getY()) || (Math.max(ls.getY(), le.getY()) < c.getY())) {
             return false;
         }
-        if ( (Math.min(ls.getX(), le.getX()) > c.getX()) || (Math.max(ls.getX(), le.getX()) < c.getX()) ) {
+        if ((Math.min(ls.getX(), le.getX()) > c.getX()) || (Math.max(ls.getX(), le.getX()) < c.getX())) {
             return false;
         }
 
         return true;
     }
+
     public boolean isPointOnExtendedLine(Point c) {
 
         double dxc = c.getX() - ls.getX();
@@ -77,7 +78,7 @@ public class Line {
     public boolean isLineIntersecting(Line l2) {
 
         Point pointOfIntersection = getIntersection(l2);
-        if(pointOfIntersection == null) {
+        if (pointOfIntersection == null) {
             return false;
         }
         boolean isPointInBothLines = l2.isPointOnLine(pointOfIntersection) && this.isPointOnLine(pointOfIntersection);

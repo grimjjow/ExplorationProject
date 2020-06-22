@@ -7,7 +7,7 @@ public class GuiObject {
     public String text;
     public boolean fill;
 
-    public GuiObject(Color color, String text, boolean fill){
+    public GuiObject(Color color, String text, boolean fill) {
         this.color = color;
         this.text = text;
         this.fill = fill;
