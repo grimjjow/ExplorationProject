@@ -1,6 +1,6 @@
 package Group10.Agents.Factories;
 
-import Group10.Agents.BoltzmannAgent;
+import Group10.Agents.LearningTestAgent;
 import Group10.Agents.ToTargetAgent;
 import Interop.Agent.Guard;
 import Interop.Agent.Intruder;
@@ -23,7 +23,7 @@ public class DefaultFactory {
         List<Guard> guards = new ArrayList<>();
         for(int i = 0; i < number; i++)
         {
-            guards.add(new BoltzmannAgent());
+            guards.add(new LearningTestAgent());
         }
         return guards;
     }

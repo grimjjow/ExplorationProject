@@ -36,7 +36,6 @@ import static Interop.Percept.Smell.SmellPerceptType.Pheromone1;
 
 public class BoltzmannAgent implements Guard {
 
-    private ArrayList<int[]> memory;
     private boolean justSawIntruder = false;
     private boolean justSmelledPheromone = false;
     private boolean seeIntruder = false;
@@ -45,11 +44,13 @@ public class BoltzmannAgent implements Guard {
     private Point intruderPoint = null;
     private Distance deltaDistance;
     private final Point currentLoc = new Point(0,0);
-    private Angle currentDir = Direction.fromRadians(1.5*Math.PI);
+    private Direction currentDir = Direction.fromRadians(1.5*Math.PI);
     double count = 0;
+    public Memory memory;
 
 
     public BoltzmannAgent() {
+        memory = new Memory();
         if (Game.DEBUG) System.out.println("This is the boltzmann guard");
     }
 
@@ -247,10 +248,10 @@ public class BoltzmannAgent implements Guard {
             return new Move(newDistance);
         }
 
-            double actionMoveSingle = Math.exp(evaluateAction(new Move(distance), objects) * temperature);
-            double actionRotateSingle = Math.exp(evaluateAction(new Rotate(Angle.fromRadians(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble())), objects) * temperature);
+        double actionMoveSingle = Math.exp(evaluateAction(new Move(distance), objects) * temperature);
+        double actionRotateSingle = Math.exp(evaluateAction(new Rotate(Angle.fromRadians(percepts.getScenarioGuardPercepts().getScenarioPercepts().getMaxRotationAngle().getRadians() * Game._RANDOM.nextDouble())), objects) * temperature);
 
-            double sumOfAllActions = actionMoveSingle + actionRotateSingle;
+        double sumOfAllActions = actionMoveSingle + actionRotateSingle;
 
         // move
         actionArray[0][0] = 1;
@@ -296,9 +297,6 @@ public class BoltzmannAgent implements Guard {
             for (ObjectPercept objectPercept : objects.getAll()) {
                 if (objectPercept.getType() == ObjectPerceptType.Wall) {
                     countWalls++;
-                    /*if(objectPercept.getPoint().getDistanceFromOrigin().getValue() < 2.5){
-                        countWalls = countWalls/10000;
-                    }*/
                 }
             }
             // evaluation based on countWalls
@@ -310,7 +308,7 @@ public class BoltzmannAgent implements Guard {
             // check if future square is visited/explored/unexplored
             for (ObjectPercept objectPercept : objects.getAll()) {
                 if (objectPercept.getType() == ObjectPerceptType.Wall) {
-                    System.out.println("\nWall seen at x: " + objectPercept.getPoint().getX() + " y: " + objectPercept.getPoint().getY() + " angle: " + findAngle(objectPercept.getPoint()).getRadians());
+                    //System.out.println("\nWall seen at x: " + objectPercept.getPoint().getX() + " y: " + objectPercept.getPoint().getY() + " angle: " + findAngle(objectPercept.getPoint()).getRadians());
                     countWalls++;
                 }
             }
@@ -347,7 +345,7 @@ public class BoltzmannAgent implements Guard {
     }
 
     public void updateCurrentDir(Angle angle){
-        this.currentDir = Angle.fromRadians((currentDir.getRadians()+angle.getRadians())%(2*Math.PI));
+        this.currentDir = Direction.fromRadians((currentDir.getRadians()+angle.getRadians())%(2*Math.PI));
         System.out.println("New currDir: " + currentDir.getRadians()/Math.PI);
     }
 
@@ -379,9 +377,6 @@ public class BoltzmannAgent implements Guard {
             return new Rotate(Angle.fromRadians(direction.getRadians()));
         }
     }
-
-
-
 
 
 }

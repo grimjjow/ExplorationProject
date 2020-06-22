@@ -32,4 +32,25 @@ public class Vertex extends AbstractNode {
     }
 
     // add overriding equals and hashCode methods
+
+    // Prints the vertex.
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+
+
+            builder.append("x: " + this.getPoint().getX() + ": ");
+
+            builder.append("y: " + this.getPoint().getX() + " ");
+
+            builder.append("\n");
+
+
+        return (builder.toString());
+    }
+
+    public Point getPoint() {
+        return point;
+    }
 }

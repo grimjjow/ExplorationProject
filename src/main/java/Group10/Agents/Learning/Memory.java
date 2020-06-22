@@ -13,9 +13,9 @@ import java.io.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Memory extends ArrayList {
+public class Memory extends LinkedList {
 
-    List<ObjectPercept> memory = new LinkedList<>();
+    private LinkedList<ObjectPercept> memory = new LinkedList<>();
     int agentID = this.hashCode();
     boolean isTargetReached = false;
 
@@ -26,7 +26,7 @@ public class Memory extends ArrayList {
         memory.add(init);
     }
 
-    public Memory(List<ObjectPercept> memory) {
+    public Memory(LinkedList<ObjectPercept> memory) {
         this.memory = memory;
     }
 
@@ -37,7 +37,6 @@ public class Memory extends ArrayList {
      * @return {@code true}
      */
     public boolean add(ObjectPercept o) {
-           // System.out.println(o + " has been added");
         if (o.getType() == ObjectPerceptType.TargetArea)isTargetReached=true;
         if (!this.contains(o)) return super.add(o);
             else System.out.println("Already in memory"); return  false;
@@ -58,12 +57,26 @@ public class Memory extends ArrayList {
         double ybar = distance.getValue() * sin;
 
         currentLoc = new Point(currentLoc.getX() + xbar,currentLoc.getY() + ybar);
-        System.out.println("\n Current Loc: x: " + currentLoc.getX() + " y: " + currentLoc.getY());
+        //System.out.println("\n Current Loc: x: " + currentLoc.getX() + " y: " + currentLoc.getY());
         ObjectPercept memoryLoc = new ObjectPercept(ObjectPerceptType.EmptySpace,currentLoc);
         memory.add(memoryLoc);
         return  currentLoc;
     }
 
+    /* Duplicate code, testing purposes*/
+    public Point updateCurrentLoc(Point currentLoc, Distance distance, Direction currentDir){
+        double cos = Math.cos(currentDir.getRadians());
+        double xbar = distance.getValue() * cos * -1;
+        double sin = Math.sin(currentDir.getRadians());
+        double ybar = distance.getValue() * sin;
+
+        currentLoc = new Point(currentLoc.getX() + xbar,currentLoc.getY() + ybar);
+        //System.out.println("\n Current Loc: x: " + currentLoc.getX() + " y: " + currentLoc.getY());
+        ObjectPercept memoryLoc = new ObjectPercept(ObjectPerceptType.EmptySpace,currentLoc);
+        memory.add(memoryLoc);
+        return  currentLoc;
+    }
+    //if you'd like to go to an object, which angle should you turn to
     public Direction updateCurrentDir(Direction currentDir, ObjectPercept o){
         Angle angle = Angle.fromRadians(findRelativeAngle(o.getPoint(), currentDir));
         currentDir = Direction.fromRadians((currentDir.getRadians()+angle.getRadians())%(2*Math.PI));
@@ -80,14 +93,15 @@ public class Memory extends ArrayList {
         return new Distance(Math.sqrt((targetPt.getY()-centerPt.getY())*(targetPt.getY()-centerPt.getY()) + (targetPt.getX()-centerPt.getX()) * (targetPt.getX()-centerPt.getX())));
     }
 
-    public Memory getMemory() {
-        return this;
+    public LinkedList<ObjectPercept> getMemory() {
+        return memory;
     }
 
     public void setTargetReached(boolean targetReached) {
         isTargetReached = targetReached;
     }
 
+    //set targetReached true if you you reached success state ie. guard cathes intruder, intruder reaches target
     public boolean isTargetReached() {
         return isTargetReached;
     }

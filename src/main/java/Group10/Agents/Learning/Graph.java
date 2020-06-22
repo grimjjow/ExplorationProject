@@ -98,13 +98,18 @@ public class Graph<T> {
         StringBuilder builder = new StringBuilder();
 
         for (T v : map.keySet()) {
-            builder.append(v.toString() + ": ");
+            builder.append( "Key: " + v.toString() + ": ");
             for (T w : map.get(v)) {
-                builder.append(w.toString() + " ");
+                builder.append(" Value: " + w.toString() + " ");
             }
             builder.append("\n");
         }
 
         return (builder.toString());
     }
+
+    public List<T> getEdge(T v){
+        return map.get(v);
+    }
+
 }

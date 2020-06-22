@@ -17,18 +17,18 @@ import Interop.Utils.Require;
  */
 public final class ObjectPercept {
 
-    private ObjectPerceptType type;
-    private Point point;
+    private final ObjectPerceptType type;
+    private final Point point;
 
     public ObjectPercept(ObjectPerceptType type, Point point) {
         Require.notNull(type);
         Require.notNull(point);
-        Require.positive(
+        /*Require.positive(
             point.getDistanceFromOrigin().getValue(),
             "The distance of percept to an agent must not be negative!\n" +
                 "Moreover, the agent can not perceive itself.\n" +
                 "Therefore, the distance to a percept must never be 0!"
-        );
+        );*/
         this.type = type;
         this.point = point;
     }
