@@ -90,7 +90,7 @@ public class BoltzmannAgent implements Guard {
 
         // drop every 29th move a new pheromone of type 2
         // if we drop it at every case than we take to much time
-        /*if(dropType2 && (countExploredMoves % 29 == 0)){
+        if(dropType2 && (countExploredMoves % 29 == 0)){
             dropType2 = false;
             continueAfterDroppingPheromone2 = true;
             //System.out.println("Dropping pheromone 2");
@@ -100,7 +100,7 @@ public class BoltzmannAgent implements Guard {
             continueAfterDroppingPheromone2 =  false;
             //System.out.println("Continuing last action after dropping pheromone 2");
             return lastAction;
-        }*/
+        }
 
 //////////////// check if intruder is in visual field -> pursuit (RULE 1) ///////////////////////////////////
 
@@ -201,10 +201,13 @@ public class BoltzmannAgent implements Guard {
         }
 
 
-//////////////// chasing the intruder 3 (smell) ////////////////////////////////
+//////////////// perceive pheromone 1 ////////////////////////////////
         // note that an agent just perceives the distance to a pheromone
         if (justSmelledPheromone1) {
-            return findPheromone(smells, maxAngle);
+            GuardAction guardAction = findPheromone(smells, maxAngle);
+            if(guardAction!=null){
+                return guardAction;
+            }
         }
 
         for (SmellPercept smellPercept : smells.getAll()) {
@@ -212,7 +215,7 @@ public class BoltzmannAgent implements Guard {
                 deltaDistance = smellPercept.getDistance();
                 justSmelledPheromone1 = true;
                 moveFirst = true;
-                //System.out.println("Perceiving pheromone 1");
+                System.out.println("Perceiving pheromone 1");
                 return new Rotate(maxAngle);
             }
         }
@@ -269,7 +272,10 @@ public class BoltzmannAgent implements Guard {
 //////////////// perceiving pheromone type 3 ///////////////////////////////////
 
         if (justSmelledPheromone3) {
-            return findPheromone(smells, maxAngle);
+            GuardAction guardAction = findPheromone(smells, maxAngle);
+            if(guardAction!=null){
+                return guardAction;
+            }
         }
 
         for (SmellPercept smellPercept : smells.getAll()) {
