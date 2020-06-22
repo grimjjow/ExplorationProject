@@ -1,4 +1,4 @@
-package Group10.Agents;
+package Group10.Agents.GuardMode;
 
 import Group10.Engine.Game;
 import Interop.Action.*;
