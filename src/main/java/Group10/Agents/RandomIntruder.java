@@ -10,7 +10,7 @@ import Interop.Geometry.Distance;
 import Interop.Percept.IntruderPercepts;
 import Interop.Percept.Scenario.SlowDownModifiers;
 
-public class RandomIntruderAgent implements Intruder {
+public class RandomIntruder implements Intruder {
 
     private double getSpeedModifier(IntruderPercepts guardPercepts)
     {

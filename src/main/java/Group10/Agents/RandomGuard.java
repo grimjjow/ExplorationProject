@@ -9,7 +9,7 @@ import Interop.Percept.GuardPercepts;
 import Interop.Percept.Scenario.SlowDownModifiers;
 import Interop.Percept.Smell.SmellPerceptType;
 
-public class RandomAgent implements Guard {
+public class RandomGuard implements Guard {
 
     private double getSpeedModifier(GuardPercepts guardPercepts) {
         SlowDownModifiers slowDownModifiers =  guardPercepts.getScenarioGuardPercepts().getScenarioPercepts().getSlowDownModifiers();

@@ -3,7 +3,7 @@ package Group10.Engine;
 import Group10.Agents.Container.AgentContainer;
 import Group10.Agents.Container.GuardContainer;
 import Group10.Agents.Container.IntruderContainer;
-import Group10.Agents.Factories.DefaultFactory;
+import Group10.Agents.Factories.MainFactory;
 import Group10.World.GameMap;
 import Group10.World.GameSettings;
 import Group10.World.DefaultViewRange;
@@ -55,9 +55,11 @@ public class Game implements Runnable {
         _RANDOM = new Random(_RANDOM_SEED);
     }
 
+    public GameSettings settings;
+
     private GameMap gameMap;
     private ScenarioPercepts scenarioPercepts;
-    protected GameSettings settings;
+
 
     protected List<GuardContainer> guards = new ArrayList<>();
     protected List<IntruderContainer> intruders = new ArrayList<>();
@@ -79,18 +81,20 @@ public class Game implements Runnable {
     private File filepath = new File("src/data.txt");
     private WriteInFile data = new WriteInFile(filepath,true);
 
+    private int numberOfTurn = 0;
+
     public Game(GameMap gameMap, final boolean queryIntent)
     {
-        this(gameMap, new DefaultFactory(), queryIntent, -1, null);
+        this(gameMap, new MainFactory(), queryIntent, -1, null);
     }
 
-    public Game(GameMap gameMap, DefaultFactory agentFactory, final boolean queryIntent)
+    public Game(GameMap gameMap, MainFactory agentFactory, final boolean queryIntent)
     {
         this(gameMap, agentFactory, queryIntent, -1, null);
     }
 
 
-    public Game(GameMap gameMap, DefaultFactory agentFactory, final boolean queryIntent, int ticks,
+    public Game(GameMap gameMap, MainFactory agentFactory, final boolean queryIntent, int ticks,
                 Callback<Game> turnTickCallback)
     {
         gameMap.setGame(this);
@@ -134,6 +138,10 @@ public class Game implements Runnable {
 
     public AtomicInteger getTicks() {
         return ticks;
+    }
+
+    public int getNumberOfTurn() {
+        return numberOfTurn;
     }
 
     public Map<AgentContainer<?>, Boolean> getActionSuccess() {
@@ -343,7 +351,7 @@ public class Game implements Runnable {
                     actionSuccess.put(intruder, executeAction(intruder, action));
                     try {
                         data.WriteToFile( "intruder vector position " + intruder.getPosition().toString() + "\n");
-                        data.WriteToFile( "Intruder Action " + action.toString() + "\n \n");
+                        data.WriteToFile( "Intruder1 ActionsType " + action.toString() + "\n \n");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -365,7 +373,7 @@ public class Game implements Runnable {
                 actionSuccess.put(guard, executeAction(guard, action));
                 try {
                     data.WriteToFile("Guard Position and length " + guard.getPosition().toString() + "\n");
-                    data.WriteToFile("Guard Action " +action.toString()+ "\n \n");
+                    data.WriteToFile("Guard ActionsType " +action.toString()+ "\n \n");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -400,7 +408,7 @@ public class Game implements Runnable {
 
     }
 
-    protected  <T> boolean executeAction(AgentContainer<T> agentContainer, Action action)
+    public <T> boolean executeAction(AgentContainer<T> agentContainer, Action action)
     {
 
         boolean isGuard = agentContainer.getAgent() instanceof Guard;

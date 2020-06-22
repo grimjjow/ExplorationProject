@@ -1,4 +1,4 @@
-package Group10.Agents;
+package Group10.Agents.IntruderMode;
 
 import Group10.Algebra.Bias;
 import Interop.Action.IntruderAction;
@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
-public class ToTargetAgent implements Intruder {
+public class RandomTargetAgent implements Intruder {
 
     private State state;
     private ArrayList<IntruderAction> actionsQueue;
 
     private ORIENTATION ORIENTATION;
 
-    public ToTargetAgent() {
+    public RandomTargetAgent() {
 
         state = State.totarget;
         actionsQueue = new ArrayList<>();
