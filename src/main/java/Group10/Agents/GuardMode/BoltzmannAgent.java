@@ -75,7 +75,6 @@ public class BoltzmannAgent implements Guard {
      * 6. if not, check if a sentry tower is perceived -> move to it
      *
      * @param percepts The precepts represent the world as perceived by that agent.
-     *
      * @return The action that the agent want to execute.
      */
     public GuardAction getAction(GuardPercepts percepts) {
@@ -339,7 +338,6 @@ public class BoltzmannAgent implements Guard {
      *
      * @param action The action to evaluate.
      * @param objects The objects perception given by the view.
-     *
      * @return A score for the action
      */
     public double evaluateAction(GuardAction action, ObjectPercepts objects) {
@@ -379,7 +377,6 @@ public class BoltzmannAgent implements Guard {
      * If negative, can convert to positive by (2*PI+(-angle))
      *
      * @param point
-     *
      * @return The found angle
      */
     public Angle findAngle(Point point) {
@@ -393,7 +390,6 @@ public class BoltzmannAgent implements Guard {
      * Hence angle cannot be negative so use this (+-) information to decide which side (counter/clockwise) to rotate
      *
      * @param point
-     *
      * @return The found angle in double
      */
     public double findRelativeAngle(Point point) {
@@ -410,7 +406,6 @@ public class BoltzmannAgent implements Guard {
      * Check the area perceptions for speed modifiers.
      *
      * @param guardPercepts The guard perceptions of the environment.
-     *
      * @return The speed modifiers
      */
     private double getSpeedModifier(GuardPercepts guardPercepts) {
@@ -431,7 +426,6 @@ public class BoltzmannAgent implements Guard {
      *
      * @param newDistance
      * @param direction
-     *
      * @return
      */
     public GuardAction correctRotation(Distance newDistance, Direction direction) {
@@ -463,7 +457,6 @@ public class BoltzmannAgent implements Guard {
      *
      * @param angle
      * @param percepts
-     *
      * @return
      */
     public GuardAction MultipleRotations(Angle angle, GuardPercepts percepts) {
@@ -518,7 +511,6 @@ public class BoltzmannAgent implements Guard {
      *
      * @param smells
      * @param maxAngle
-     *
      * @return
      */
     public GuardAction findPheromone(SmellPercepts smells, Angle maxAngle) {
@@ -554,7 +546,6 @@ public class BoltzmannAgent implements Guard {
      * @param direction The direction to the target.
      * @param source The position of the source.
      * @param target The position of the target.
-     *
      * @return The queue with the actions.
      */
     protected Queue<ActionsQueue<GuardAction>> moveToPoint(GuardPercepts percepts, Vector direction, Vector source, Vector target) {
@@ -591,7 +582,6 @@ public class BoltzmannAgent implements Guard {
      * Check if the guard see an intruder.
      *
      * @param objects The object perceptions given by the views.
-     *
      * @return A vector with the relative position of the intruder if there is one, null otherwise.
      */
     public Vector seenIntruder(ObjectPercepts objects) {

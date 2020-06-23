@@ -56,7 +56,6 @@ public class GridAgent implements Intruder {
      *
      *
      * @param percepts The precepts represent the world as perceived by that agent.
-     *
      * @return The action that the agent want to execute.
      */
     public IntruderAction getAction(IntruderPercepts percepts) {

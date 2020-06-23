@@ -97,10 +97,10 @@ public class AgentPerception {
     }
 
     public static ScenarioPercepts getScenarioPercepts(Percepts percepts) {
-        if(percepts instanceof IntruderPercepts) return ((IntruderPercepts) percepts)
+        if (percepts instanceof IntruderPercepts) return ((IntruderPercepts) percepts)
                 .getScenarioIntruderPercepts()
                 .getScenarioPercepts();
-        if(percepts instanceof GuardPercepts) return ((GuardPercepts) percepts)
+        if (percepts instanceof GuardPercepts) return ((GuardPercepts) percepts)
                 .getScenarioGuardPercepts()
                 .getScenarioPercepts();
         throw new RuntimeException("Unknown percepts: " + percepts);

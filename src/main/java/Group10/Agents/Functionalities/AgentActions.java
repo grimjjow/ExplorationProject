@@ -52,13 +52,13 @@ public class AgentActions {
     }
 
     public static double getMaxMoveDistance(Percepts percepts) {
-        if(percepts instanceof IntruderPercepts) {
-            return ((IntruderPercepts)percepts)
+        if (percepts instanceof IntruderPercepts) {
+            return ((IntruderPercepts) percepts)
                     .getScenarioIntruderPercepts()
                     .getMaxMoveDistanceIntruder()
                     .getValue();
-        } else if(percepts instanceof GuardPercepts) {
-            return ((GuardPercepts)percepts)
+        } else if (percepts instanceof GuardPercepts) {
+            return ((GuardPercepts) percepts)
                     .getScenarioGuardPercepts()
                     .getMaxMoveDistanceGuard()
                     .getValue();
@@ -72,27 +72,27 @@ public class AgentActions {
         SlowDownModifiers slowDownModifiers = scenarioPercepts.getSlowDownModifiers();
 
         double slowDownModifier = 1;
-        if(percepts.getAreaPercepts().isInDoor()) {
+        if (percepts.getAreaPercepts().isInDoor()) {
             slowDownModifier = Math.min(slowDownModifier, slowDownModifiers.getInDoor());
         }
 
-        if(percepts.getAreaPercepts().isInWindow()) {
+        if (percepts.getAreaPercepts().isInWindow()) {
             slowDownModifier = Math.min(slowDownModifier, slowDownModifiers.getInWindow());
         }
 
-        if(percepts.getAreaPercepts().isInSentryTower()) {
+        if (percepts.getAreaPercepts().isInSentryTower()) {
             slowDownModifier = Math.min(slowDownModifier, slowDownModifiers.getInSentryTower());
         }
         return slowDownModifier;
     }
 
     public static ScenarioPercepts getScenarioPercepts(Percepts percepts) {
-        if(percepts instanceof IntruderPercepts) {
-            return ((IntruderPercepts)percepts)
+        if (percepts instanceof IntruderPercepts) {
+            return ((IntruderPercepts) percepts)
                     .getScenarioIntruderPercepts()
                     .getScenarioPercepts();
-        } else if(percepts instanceof GuardPercepts) {
-            return ((GuardPercepts)percepts)
+        } else if (percepts instanceof GuardPercepts) {
+            return ((GuardPercepts) percepts)
                     .getScenarioGuardPercepts()
                     .getScenarioPercepts();
         } else {
