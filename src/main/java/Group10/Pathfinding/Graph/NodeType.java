@@ -10,5 +10,4 @@ public enum NodeType {
     SENTRY_TOWER,
     TARGET_AREA,
     SEEN,
-    INTRUDER,
 }

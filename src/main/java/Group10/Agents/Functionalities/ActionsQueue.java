@@ -1,4 +1,4 @@
-package Group10.Agents.AgentActions;
+package Group10.Agents.Functionalities;
 
 import Interop.Action.Action;
 

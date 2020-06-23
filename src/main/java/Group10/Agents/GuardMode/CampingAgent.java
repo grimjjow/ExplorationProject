@@ -1,6 +1,6 @@
 package Group10.Agents.GuardMode;
 
-import Group10.Agents.AgentActions.ActionsQueue;
+import Group10.Agents.Functionalities.ActionsQueue;
 import Group10.Algebra.Vector;
 import Group10.Engine.Game;
 import Interop.Action.GuardAction;
